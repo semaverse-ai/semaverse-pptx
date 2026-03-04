@@ -1,4 +1,4 @@
-"""Initialization module for python-pptx package."""
+"""Initialization module for semaverse-pptx package."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from pptx.parts.slide import (
 if TYPE_CHECKING:
     from pptx.opc.package import Part
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 sys.modules["pptx.exceptions"] = exceptions
 del sys

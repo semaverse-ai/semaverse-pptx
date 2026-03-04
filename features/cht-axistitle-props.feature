@@ -1,6 +1,6 @@
 Feature: Axis Title properties
   In order to customize the formatting of an axis title
-  As a developer using python-pptx
+  As a developer using semaverse-pptx
   I need read/write properties on AxisTitle
 
 

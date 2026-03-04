@@ -1,4 +1,4 @@
-"""Exceptions used with python-pptx.
+"""Exceptions used with semaverse-pptx.
 
 The base exception class is PythonPptxError.
 """

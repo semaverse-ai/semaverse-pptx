@@ -11,7 +11,7 @@ import sys
 
 from lxml import objectify
 
-sys.path.append('/Users/scanny/Dropbox/src/python-pptx')
+sys.path.append('/Users/semaverse-ai/Dropbox/src/semaverse-pptx')
 
 # import pdb; pdb.set_trace()
 

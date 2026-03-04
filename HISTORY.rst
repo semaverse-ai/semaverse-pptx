@@ -3,6 +3,11 @@
 Release History
 ---------------
 
+1.0.3 (2026-03-04)
+++++++++++++++++++
+
+- Rebrand fork to ``semaverse-pptx`` and update project links/metadata.
+
 1.0.2 (2024-08-07)
 ++++++++++++++++++
 

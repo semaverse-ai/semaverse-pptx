@@ -1,6 +1,6 @@
 Feature: Get placeholder format properties
   In order to identify and characterize placeholder shapes
-  As a developer using python-pptx
+  As a developer using semaverse-pptx
   I need a set of placeholder format properties
 
 

@@ -19,14 +19,14 @@ class DescribeCorePropertiesPart(object):
     @pytest.mark.parametrize(
         ("prop_name", "expected_value"),
         [
-            ("author", "python-pptx"),
+            ("author", "semaverse-pptx"),
             ("category", ""),
             ("comments", ""),
             ("content_status", "DRAFT"),
             ("identifier", "GXS 10.2.1ab"),
             ("keywords", "foo bar baz"),
             ("language", "US-EN"),
-            ("last_modified_by", "Steve Canny"),
+            ("last_modified_by", "semaverse-ai"),
             ("subject", "Spam"),
             ("title", "Presentation"),
             ("version", "1.2.88"),
@@ -40,7 +40,7 @@ class DescribeCorePropertiesPart(object):
     @pytest.mark.parametrize(
         ("prop_name", "tagname", "value"),
         [
-            ("author", "dc:creator", "scanny"),
+            ("author", "dc:creator", "semaverse-ai"),
             ("category", "cp:category", "silly stories"),
             ("comments", "dc:description", "Bar foo to you"),
             ("content_status", "cp:contentStatus", "FINAL"),
@@ -141,7 +141,7 @@ class DescribeCorePropertiesPart(object):
         assert core_props.partname == "/docProps/core.xml"
         assert isinstance(core_props._element, CT_CoreProperties)
         assert core_props.title == "PowerPoint Presentation"
-        assert core_props.last_modified_by == "python-pptx"
+        assert core_props.last_modified_by == "semaverse-pptx"
         assert core_props.revision == 1
         assert core_props.modified is not None
         # core_props.modified only stores time with seconds resolution, so
@@ -180,7 +180,7 @@ class DescribeCorePropertiesPart(object):
             b'itype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="h'
             b'ttp://www.w3.org/2001/XMLSchema-instance">\n'
             b"  <cp:contentStatus>DRAFT</cp:contentStatus>\n"
-            b"  <dc:creator>python-pptx</dc:creator>\n"
+            b"  <dc:creator>semaverse-pptx</dc:creator>\n"
             b'  <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:'
             b"40-05:30</dcterms:created>\n"
             b"  <dc:description/>\n"

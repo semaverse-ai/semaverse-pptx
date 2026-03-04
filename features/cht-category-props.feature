@@ -1,6 +1,6 @@
 Feature: Category properties
   In order to characterize a chart category
-  As a developer using python-pptx
+  As a developer using semaverse-pptx
   I need properties on the Category object
 
 

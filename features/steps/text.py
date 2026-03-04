@@ -129,8 +129,8 @@ def when_I_assign_value_to_paragraph_space_before_after(context, value_str, befo
 
 @when("I set the hyperlink address")
 def when_set_hyperlink_address(context):
-    context.run_text = "python-pptx @ GitHub"
-    context.address = "https://github.com/scanny/python-pptx"
+    context.run_text = "semaverse-pptx @ GitHub"
+    context.address = "https://github.com/semaverse-ai/semaverse-pptx"
 
     run = context.run
     run.text = context.run_text

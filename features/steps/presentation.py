@@ -189,7 +189,7 @@ def then_ext_rels_are_preserved(context: Context):
     rel = sld.part._rels["rId2"]
     assert rel.is_external
     assert rel.reltype == RT.HYPERLINK
-    assert rel.target_ref == "https://github.com/scanny/python-pptx"
+    assert rel.target_ref == "https://github.com/semaverse-ai/semaverse-pptx"
 
 
 @then("the package has the expected number of .rels parts")

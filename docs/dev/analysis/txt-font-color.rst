@@ -124,7 +124,7 @@ like this::
 
 The ColorFormat object is the first interesting object here, the type of object
 returned by ``TextRange.Font.Color``. It includes the following properties that
-will likely have counterparts in python-pptx:
+will likely have counterparts in semaverse-pptx:
 
 Brightness
     Returns or sets the brightness of the specified object. The value for
@@ -149,7 +149,7 @@ Type
 Legacy properties
 ~~~~~~~~~~~~~~~~~
 
-These two properties will probably not need to be implemented in python-pptx.
+These two properties will probably not need to be implemented in semaverse-pptx.
 
 SchemeColor
     Returns or sets the color in the applied color scheme that's associated

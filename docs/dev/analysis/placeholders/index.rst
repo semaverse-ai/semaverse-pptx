@@ -149,7 +149,7 @@ there if desired.
   + In can be accidentally selected and generally pollutes the shape space of
     the slide.
 
-* I'm not sure python-pptx does the right thing when adding slides from layouts
+* I'm not sure semaverse-pptx does the right thing when adding slides from layouts
   containing footer items, at least not the same thing as PowerPoint does in
   automatically working out which footer items to copy over.
 
@@ -283,4 +283,4 @@ Notes
 
 * http://www.powerpointninja.com/templates/powerpoint-templates-beware-of-the-footers/
 
-* https://github.com/scanny/python-pptx/issues/64
+* https://github.com/semaverse-ai/semaverse-pptx/issues/64

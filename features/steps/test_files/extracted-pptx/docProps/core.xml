@@ -2,7 +2,7 @@
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <dc:title>Presentation</dc:title>
   <dc:subject/>
-  <dc:creator>python-pptx</dc:creator>
+  <dc:creator>semaverse-pptx</dc:creator>
   <cp:keywords/>
   <dc:description/>
   <cp:lastModifiedBy>Steve Canny</cp:lastModifiedBy>

@@ -778,11 +778,11 @@ class Describe_Hyperlink(object):
 
     @pytest.fixture
     def url(self):
-        return "https://github.com/scanny/python-pptx"
+        return "https://github.com/semaverse-ai/semaverse-pptx"
 
     @pytest.fixture
     def url_2(self):
-        return "https://pypi.python.org/pypi/python-pptx"
+        return "https://pypi.python.org/pypi/semaverse-pptx"
 
 
 class Describe_Paragraph(object):
