@@ -1,6 +1,6 @@
 Feature: chart_data properties
   In order to compose data for a chart
-  As a developer using python-pptx
+  As a developer using semaverse-pptx
   I need chart data transfer objects
 
 

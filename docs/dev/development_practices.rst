@@ -35,8 +35,8 @@ Release procedure
 
 * synchronize local repo with github
 
-  + ``$ git push scanny develop``
-  + ``$ git push scanny master``
+  + ``$ git push semaverse-ai develop``
+  + ``$ git push semaverse-ai master``
   + ``$ git push --tags``
 
 * docs regenerated

@@ -538,7 +538,7 @@ def prst_map():
 def const_name_map():
     """
     Sequence of tuples representing the mapping of msoAutoShapeType
-    enumeration names to the constant names used in python-pptx to identify
+    enumeration names to the constant names used in semaverse-pptx to identify
     an auto shape type. The mapping is largely coercing the camel case to
     upper snake case, but some names produced by that transformation require
     transformation to be suitable.

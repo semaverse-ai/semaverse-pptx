@@ -5,7 +5,7 @@ Installing
 
 |pp| is hosted on PyPI, so installing with `pip` is simple::
 
-    pip install python-pptx
+    pip install semaverse-pptx
 
 |pp| depends on the ``lxml`` package and ``Pillow``, the modern version of
 the Python Imaging Library (``PIL``). The charting features depend on

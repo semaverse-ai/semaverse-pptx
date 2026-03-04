@@ -2,9 +2,10 @@
 #
 # environment.py
 #
+# Copyright (C) 2026 Semaverse semaverse-pptx@semaverse.ai
 # Copyright (C) 2013 Steve Canny scanny@cisco.com
 #
-# This module is part of python-pptx and is released under the MIT License:
+# This module is part of semaverse-pptx and is released under the MIT License:
 # http://www.opensource.org/licenses/mit-license.php
 
 """
@@ -14,9 +15,7 @@ tests.
 
 import os
 
-scratch_dir = os.path.abspath(
-    os.path.join(os.path.split(__file__)[0], '_scratch')
-)
+scratch_dir = os.path.abspath(os.path.join(os.path.split(__file__)[0], "_scratch"))
 
 
 def before_all(context):

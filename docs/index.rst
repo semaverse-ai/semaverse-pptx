@@ -1,5 +1,5 @@
 
-python-pptx
+semaverse-pptx
 ===========
 
 Release v\ |version| (:ref:`Installation <install>`)
@@ -41,9 +41,8 @@ features |pp| does not support.
 New features/releases
 ---------------------
 
-New features are generally added via sponsorship. If there's a new feature you need for
-your use case, feel free to reach out at the email address on the github.com/scanny
-profile page. Many of the most used features such as charts were added this way.
+If there's a new feature you need for your use case, feel free to reach out at 
+semaverse-pptx@semaverse.ai.
 
 
 User Guide

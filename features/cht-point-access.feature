@@ -1,6 +1,6 @@
 Feature: Access a point
   In order to operate on an individual data point
-  As a developer using python-pptx
+  As a developer using semaverse-pptx
   I need sequence operations on xPoints objects
 
 

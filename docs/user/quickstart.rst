@@ -32,7 +32,7 @@ Hello World! example
     subtitle = slide.placeholders[1]
 
     title.text = "Hello, World!"
-    subtitle.text = "python-pptx was here!"
+    subtitle.text = "semaverse-pptx was here!"
 
     prs.save('test.pptx')
 

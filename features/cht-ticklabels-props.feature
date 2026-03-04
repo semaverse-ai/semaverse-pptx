@@ -1,6 +1,6 @@
 Feature: Get and set tick label properties
   In order to customize the appearance of the tick labels on a chart
-  As a developer using python-pptx
+  As a developer using semaverse-pptx
   I need a way to get and set tick label properties
 
 

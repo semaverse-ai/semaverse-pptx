@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "python-pptx"
-authors = [{name = "Steve Canny", email = "stcanny@gmail.com"}]
+name = "semaverse-pptx"
+authors = [{ name = "Semaverse", email = "semaverse-pptx@semaverse.ai" }]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -27,7 +27,7 @@ dependencies = [
     "lxml>=3.1.0",
     "typing_extensions>=4.9.0",
 ]
-description = "Create, read, and update PowerPoint 2007+ (.pptx) files."
+description = "Create, read, and update PowerPoint 2007+ (.pptx) files. Forked from github.com/scanny/python-pptx."
 dynamic = ["version"]
 keywords = ["powerpoint", "ppt", "pptx", "openxml", "office"]
 license = { text = "MIT" }
@@ -35,24 +35,18 @@ readme = "README.rst"
 requires-python = ">=3.8"
 
 [project.urls]
-Changelog = "https://github.com/scanny/python-pptx/blob/master/HISTORY.rst"
-Documentation = "https://python-pptx.readthedocs.io/en/latest/"
-Homepage = "https://github.com/scanny/python-pptx"
-Repository = "https://github.com/scanny/python-pptx"
+Changelog = "https://github.com/semaverse-ai/semaverse-pptx/blob/master/HISTORY.rst"
+Documentation = "https://semaverse-pptx.readthedocs.io/en/latest/"
+Homepage = "https://github.com/semaverse-ai/semaverse-pptx"
+Repository = "https://github.com/semaverse-ai/semaverse-pptx"
 
 [tool.black]
 line-length = 100
 
 [tool.pyright]
-exclude = [
-    "**/__pycache__",
-    "**/.*"
-]
-include = [
-    "src/pptx",
-    "tests/"
-]
-ignore =  []
+exclude = ["**/__pycache__", "**/.*"]
+include = ["src/pptx", "tests/"]
+ignore = []
 pythonPlatform = "All"
 pythonVersion = "3.9"
 reportImportCycles = false
@@ -72,10 +66,7 @@ filterwarnings = [
     "ignore:Unknown config option. looponfailroots:pytest.PytestConfigWarning",
 ]
 
-looponfailroots = [
-    "src",
-    "tests",
-]
+looponfailroots = ["src", "tests"]
 norecursedirs = [
     "docs",
     "*.egg-info",
@@ -85,17 +76,8 @@ norecursedirs = [
     "spec",
     ".tox",
 ]
-python_classes = [
-    "Test",
-    "Describe",
-]
-python_functions = [
-    "test_",
-    "it_",
-    "they_",
-    "but_",
-    "and_",
-]
+python_classes = ["Test", "Describe"]
+python_functions = ["test_", "it_", "they_", "but_", "and_"]
 
 [tool.ruff]
 line-length = 100
@@ -114,32 +96,32 @@ exclude = [
 
 [tool.ruff.lint]
 select = [
-    "C4",       # -- flake8-comprehensions --
-    "COM",      # -- flake8-commas --
-    "E",        # -- pycodestyle errors --
-    "F",        # -- pyflakes --
-    "I",        # -- isort (imports) --
-    "PLR0402",  # -- Name compared with itself like `foo == foo` --
-    "PT",       # -- flake8-pytest-style --
-    "SIM",      # -- flake8-simplify --
-    "TCH001",   # -- detect typing-only imports not under `if TYPE_CHECKING` --
-    "UP015",    # -- redundant `open()` mode parameter (like "r" is default) --
-    "UP018",    # -- Unnecessary {literal_type} call like `str("abc")`. (rewrite as a literal) --
-    "UP032",    # -- Use f-string instead of `.format()` call --
-    "UP034",    # -- Avoid extraneous parentheses --
-    "W",        # -- Warnings, including invalid escape-sequence --
+    "C4",      # -- flake8-comprehensions --
+    "COM",     # -- flake8-commas --
+    "E",       # -- pycodestyle errors --
+    "F",       # -- pyflakes --
+    "I",       # -- isort (imports) --
+    "PLR0402", # -- Name compared with itself like `foo == foo` --
+    "PT",      # -- flake8-pytest-style --
+    "SIM",     # -- flake8-simplify --
+    "TCH001",  # -- detect typing-only imports not under `if TYPE_CHECKING` --
+    "UP015",   # -- redundant `open()` mode parameter (like "r" is default) --
+    "UP018",   # -- Unnecessary {literal_type} call like `str("abc")`. (rewrite as a literal) --
+    "UP032",   # -- Use f-string instead of `.format()` call --
+    "UP034",   # -- Avoid extraneous parentheses --
+    "W",       # -- Warnings, including invalid escape-sequence --
 ]
 ignore = [
-    "COM812",   # -- over aggressively insists on trailing commas where not desireable --
-    "PT001",    # -- wants empty parens on @pytest.fixture where not used (essentially always) --
-    "PT005",    # -- flags mock fixtures with names intentionally matching private method name --
-    "PT011",    # -- pytest.raises({exc}) too broad, use match param or more specific exception --
-    "PT012",    # -- pytest.raises() block should contain a single simple statement --
-    "SIM117",   # -- merge `with` statements for context managers that have same scope --
+    "COM812", # -- over aggressively insists on trailing commas where not desireable --
+    "PT001",  # -- wants empty parens on @pytest.fixture where not used (essentially always) --
+    "PT005",  # -- flags mock fixtures with names intentionally matching private method name --
+    "PT011",  # -- pytest.raises({exc}) too broad, use match param or more specific exception --
+    "PT012",  # -- pytest.raises() block should contain a single simple statement --
+    "SIM117", # -- merge `with` statements for context managers that have same scope --
 ]
 
 [tool.ruff.lint.isort]
 known-first-party = ["pptx"]
 
 [tool.setuptools.dynamic]
-version = {attr = "pptx.__version__"}
+version = { attr = "pptx.__version__" }

@@ -1,4 +1,4 @@
-"""Abstract types used by `python-pptx`."""
+"""Abstract types used by `semaverse-pptx`."""
 
 from __future__ import annotations
 

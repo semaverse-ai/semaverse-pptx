@@ -57,7 +57,7 @@ def step_when_set_core_doc_props_to_valid_values(context):
 def step_then_a_core_props_part_with_def_vals_is_added(context):
     core_props = context.prs.core_properties
     assert core_props.title == "PowerPoint Presentation"
-    assert core_props.last_modified_by == "python-pptx"
+    assert core_props.last_modified_by == "semaverse-pptx"
     assert core_props.revision == 1
     # core_props.modified only stores time with seconds resolution, so
     # comparison needs to be a little loose (within two seconds)

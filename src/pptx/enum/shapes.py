@@ -880,11 +880,11 @@ class PP_MEDIA_TYPE(BaseEnum):
     MIXED = (
         -2,
         "Return value only; indicates multiple media types, typically for a collection of shapes."
-        " May not be applicable in python-pptx.",
+        " May not be applicable in semaverse-pptx.",
     )
     """Return value only; indicates multiple media types.
 
-    Typically for a collection of shapes. May not be applicable in python-pptx.
+    Typically for a collection of shapes. May not be applicable in semaverse-pptx.
     """
 
 
