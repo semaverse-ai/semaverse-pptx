@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.abspath(".."))
 from pptx import __version__  # noqa: E402
 
 
-# -- Allow nonlocal image URI's to accommodate travis-ci status image -------
+# -- Allow nonlocal image URI's to accommodate external status images -------
 
 import sphinx.environment  # noqa: E402
 from docutils.utils import get_source_line  # noqa: E402

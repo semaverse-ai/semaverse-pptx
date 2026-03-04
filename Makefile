@@ -1,4 +1,4 @@
-BEHAVE = behave
+BEHAVE = uv run behave
 MAKE   = make
 
 .PHONY: help
@@ -8,7 +8,7 @@ help:
 	@echo "  build        generate both sdist and wheel suitable for upload to PyPI"
 	@echo "  clean        delete intermediate work product and start fresh"
 	@echo "  cleandocs    delete cached HTML documentation and start fresh"
-	@echo "  coverage     run nosetests with coverage"
+	@echo "  coverage     run pytest with coverage"
 	@echo "  docs         build HTML documentation using Sphinx (incremental)"
 	@echo "  opendocs     open local HTML documentation in browser"
 	@echo "  test-upload  upload distribution to TestPyPI"
@@ -21,8 +21,8 @@ accept:
 .PHONY: build
 build:
 	rm -rf dist
-	python -m build
-	twine check dist/*
+	uv build
+	uv run twine check dist/*
 
 .PHONY: clean
 clean:
@@ -36,7 +36,7 @@ cleandocs:
 
 .PHONY: coverage
 coverage:
-	py.test --cov-report term-missing --cov=pptx --cov=tests
+	uv run pytest --cov-report term-missing --cov=pptx --cov=tests
 
 .PHONY: docs
 docs:
@@ -48,8 +48,8 @@ opendocs:
 
 .PHONY: test-upload
 test-upload: build
-	twine upload --repository testpypi dist/*
+	uv run twine upload --repository testpypi dist/*
 
 .PHONY: upload
 upload: clean build
-	twine upload dist/*
+	uv run twine upload dist/*

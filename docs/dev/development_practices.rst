@@ -12,13 +12,12 @@ Release procedure
 
 * complete release updates
 
-  + update version number in `pptx/__init__.py`
-  + update setup.py (shouldn't usually be any changes)
-  + update README.py, in particular, the release history
-  + update doc/index.rst
+  + update version number in ``src/pptx/__init__.py``
+  + update ``HISTORY.rst``
+  + update docs/index.rst
   + confirm docs compile without errors
-  + run all tests (behave, nosetests, tox)
-  + create trial distribution (make clean sdist)
+  + run all tests (``uv run pytest``, ``uv run behave --stop``, tox)
+  + create trial distribution (``make clean build``)
   + ``git commit -m 'Release v0.2.2'``
   + merge develop into master
 

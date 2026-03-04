@@ -27,12 +27,37 @@ dependencies = [
     "lxml>=3.1.0",
     "typing_extensions>=4.9.0",
 ]
+
 description = "Create, read, and update PowerPoint 2007+ (.pptx) files. Forked from github.com/scanny/python-pptx."
 dynamic = ["version"]
 keywords = ["powerpoint", "ppt", "pptx", "openxml", "office"]
 license = { text = "MIT" }
 readme = "README.rst"
 requires-python = ">=3.9"
+
+[project.optional-dependencies]
+test = [
+    "behave>=1.2.5",
+    "mock>=1.0.1",
+    "pyparsing>=3.0.0",
+    "pytest>=2.5",
+    "pytest-cov",
+    "pytest-xdist",
+    "ruff",
+    "tox",
+    "tox-uv",
+]
+dev = [
+    "build",
+    "ruff",
+    "twine",
+]
+docs = [
+    "Jinja2==2.11.3",
+    "MarkupSafe==0.23",
+    "Sphinx==1.8.6",
+    "alabaster<0.7.14",
+]
 
 [project.urls]
 Changelog = "https://github.com/semaverse-ai/semaverse-pptx/blob/master/HISTORY.rst"

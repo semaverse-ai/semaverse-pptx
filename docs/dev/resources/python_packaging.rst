@@ -5,8 +5,8 @@ Python packaging
 Process Steps
 =============
 
-1. Develop **setup.py** and other `distribution-related files`_
-#. Test distribution; should pass all `distribution tests`_
+1. Develop **pyproject.toml** and other `distribution-related files`_
+#. Build and test distribution; should pass all `distribution tests`_
 #. Register project with the Python Package Index (PyPI)
 #. Upload distribution(s) to PyPI
 
@@ -16,12 +16,12 @@ Process Steps
 Distribution tests
 ==================
 
-* ``python setup.py sdist`` does not raise an exception
-* all expected files are included in the distribution tarball
-* ``python setup.py test`` works in install environment
+* ``uv build`` does not raise an exception
+* all expected files are included in the sdist/wheel
+* ``uv run pytest`` works in install environment
 * acceptance tests pass in install environment
-* ``python setup.py install`` produces expected footprint in ``site-packages``
-* easy_install works
+* ``uv pip install .`` works
+* ``uv sync --extra test`` works
 * ``pip install semaverse-pptx`` works
 
 
@@ -29,8 +29,8 @@ Test can install with all popular methods
 -----------------------------------------
 
 * manual
-* easy_install
 * pip
+* uv
 
 
 .. _`distribution-related files`:
@@ -38,9 +38,10 @@ Test can install with all popular methods
 Distribution-related files
 ==========================
 
-* setup.py
+* pyproject.toml
 * MANIFEST.in
-* setup.cfg
+* tox.ini
+* uv.lock
 
 
 ----
@@ -99,11 +100,8 @@ Resources
 * `Writing a Package in Python`_ by Tarek Ziadé is an extract from his PACKT
   book *Expert Python Programming* and while being somewhat dated, contains
   some useful tidbits.
-* Ian Bicking's blog post `Python's Makefile`_ discusses how to write
-  extensions to setup.py, for perhaps a command like ``coverage`` that would
-  automatically run ``nosetests --with-coverage``.
 * `tox documentation`_
-* `virtualenv documentation`_
+* `uv documentation`_
 * `How To Package Your Python Code`_
 * `Python Packaging: Hate, hate, hate everywhere`_
 * `Building and Distributing Packages with setuptools`_
@@ -120,10 +118,10 @@ Resources
    http://blog.ianbicking.org/pythons-makefile.html
 
 .. _tox documentation:
-   http://tox.readthedocs.org/en/latest/
+   https://tox.wiki/
 
-.. _virtualenv documentation:
-   http://www.virtualenv.org/en/latest/
+.. _uv documentation:
+   https://docs.astral.sh/uv/
 
 .. _`Python Packaging: Hate, hate, hate everywhere`:
    http://lucumr.pocoo.org/2012/6/22/hate-hate-hate-everywhere/
@@ -139,4 +137,3 @@ Resources
 
 .. _`Python Packaging by Tarek Ziade`:
    http://www.aosabook.org/en/packaging.html
-
