@@ -8,21 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyparsing import (
-    Combine,
-    Forward,
-    Group,
-    Literal,
-    Optional,
-    Suppress,
-    Word,
-    alphanums,
-    alphas,
-    dblQuotedString,
-    delimitedList,
-    removeQuotes,
-    stringEnd,
-)
+import pyparsing as pp
 
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import _nsmap as nsmap
@@ -43,8 +29,8 @@ def element(cxel_str: str) -> BaseOxmlElement:
 
 def xml(cxel_str: str) -> str:
     """Return the XML generated from `cxel_str`."""
-    root_node.parseWithTabs()
-    root_token = root_node.parseString(cxel_str)
+    root_node.parse_with_tabs()
+    root_token = root_node.parse_string(cxel_str)
     xml = root_token.element.xml
     return xml
 
@@ -237,45 +223,47 @@ def connect_root_node_children(root_node):
 
 def grammar():
     # terminals ----------------------------------
-    colon = Literal(":")
-    equal = Suppress("=")
-    slash = Suppress("/")
-    open_paren = Suppress("(")
-    close_paren = Suppress(")")
-    open_brace = Suppress("{")
-    close_brace = Suppress("}")
+    colon = pp.Literal(":")
+    equal = pp.Suppress("=")
+    slash = pp.Suppress("/")
+    open_paren = pp.Suppress("(")
+    close_paren = pp.Suppress(")")
+    open_brace = pp.Suppress("{")
+    close_brace = pp.Suppress("}")
 
     # np:tagName ---------------------------------
-    nspfx = Word(alphas)
-    local_name = Word(alphanums)
-    tagname = Combine(nspfx + colon + local_name)
+    nspfx = pp.Word(pp.alphas)
+    local_name = pp.Word(pp.alphanums)
+    tagname = pp.Combine(nspfx + colon + local_name)
 
     # np:attr_name=attr_val ----------------------
-    attr_name = Word(alphas + ":")
-    attr_val = Word(alphanums + " %-./:_")
-    attr_def = Group(attr_name + equal + attr_val)
-    attr_list = open_brace + delimitedList(attr_def) + close_brace
+    attr_name = pp.Word(pp.alphas + ":")
+    attr_val = pp.Word(pp.alphanums + " %-./:_")
+    attr_def = pp.Group(attr_name + equal + attr_val)
+    attr_list = open_brace + pp.DelimitedList(attr_def) + close_brace
 
-    text = dblQuotedString.setParseAction(removeQuotes)
+    text = pp.dbl_quoted_string.set_parse_action(pp.remove_quotes)
 
     # w:jc{val=right} ----------------------------
     element = (
         tagname("tagname")
-        + Group(Optional(attr_list))("attr_list")
-        + Optional(text, default="")("text")
-    ).setParseAction(Element.from_token)
+        + pp.Group(pp.Optional(attr_list))("attr_list")
+        + pp.Optional(text, default="")("text")
+    ).set_parse_action(Element.from_token)
 
-    child_node_list = Forward()
+    child_node_list = pp.Forward()
 
-    node = Group(
-        element("element") + Group(Optional(slash + child_node_list))("child_node_list")
-    ).setParseAction(connect_node_children)
+    node = pp.Group(
+        element("element") + pp.Group(pp.Optional(slash + child_node_list))("child_node_list")
+    ).set_parse_action(connect_node_children)
 
-    child_node_list << (open_paren + delimitedList(node) + close_paren | node)
+    child_node_list << (open_paren + pp.DelimitedList(node) + close_paren | node)
 
     root_node = (
-        element("element") + Group(Optional(slash + child_node_list))("child_node_list") + stringEnd
-    ).setParseAction(connect_root_node_children)
+        element("element")
+        + pp.Group(pp.Optional(slash + child_node_list))("child_node_list")
+        + pp.string_end
+    ).set_parse_action(connect_root_node_children)
 
     return root_node
 

@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+1.1.0 (2026-03-04)
+++++++++++++++++++
+
+- Change support policy to Python 3.9+ and expand test matrix through 3.13.
+- Refactor CXEL parser to modern pyparsing API with namespace-style imports.
+- Require ``pyparsing>=3.0.0`` in runtime and test requirements.
+
 1.0.3 (2026-03-04)
 ++++++++++++++++++
 
