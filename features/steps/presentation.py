@@ -51,6 +51,9 @@ def given_prs_with_image_jpg_MIME_type(context):
 @given("a presentation with external relationships")
 def given_prs_with_ext_rels(context: Context):
     context.prs = Presentation(test_pptx("ext-rels"))
+    sld = context.prs.slides[0]
+    rel = sld.part._rels["rId2"]
+    context.expected_ext_rel_target = rel.target_ref
 
 
 @given("an initialized pptx environment")
@@ -189,7 +192,7 @@ def then_ext_rels_are_preserved(context: Context):
     rel = sld.part._rels["rId2"]
     assert rel.is_external
     assert rel.reltype == RT.HYPERLINK
-    assert rel.target_ref == "https://github.com/semaverse-ai/semaverse-pptx"
+    assert rel.target_ref == context.expected_ext_rel_target
 
 
 @then("the package has the expected number of .rels parts")
