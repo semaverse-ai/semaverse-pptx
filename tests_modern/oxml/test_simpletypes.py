@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext as does_not_raise
+from typing import Any
 
 import pytest
 
@@ -15,25 +16,25 @@ from pptx.oxml.simpletypes import (
 
 class ST_SimpleType(BaseSimpleType):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str) -> int:
         return int(str_value)
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: int) -> str:
         return str(value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: int) -> None:
         cls.validate_int(value)
 
 
-def test_base_simple_type_from_xml():
+def test_base_simple_type_from_xml() -> None:
     xml_value = "42"
     value = ST_SimpleType.from_xml(xml_value)
     assert value == 42
 
 
-def test_base_simple_type_to_xml():
+def test_base_simple_type_to_xml() -> None:
     value = 42
     xml_value = ST_SimpleType.to_xml(value)
     assert xml_value == "42"
@@ -50,7 +51,9 @@ def test_base_simple_type_to_xml():
         (42.42, TypeError),
     ],
 )
-def test_base_simple_type_validate_int(value, expected_exception):
+def test_base_simple_type_validate_int(
+    value: Any, expected_exception: type[Exception] | None
+) -> None:
     expectation = pytest.raises(expected_exception) if expected_exception else does_not_raise()
     with expectation:
         BaseSimpleType.validate_int(value)
@@ -68,7 +71,9 @@ def test_base_simple_type_validate_int(value, expected_exception):
         (42.42, TypeError),
     ],
 )
-def test_base_simple_type_validate_string(value, expected_exception):
+def test_base_simple_type_validate_string(
+    value: Any, expected_exception: type[Exception] | None
+) -> None:
     expectation = pytest.raises(expected_exception) if expected_exception else does_not_raise()
     with expectation:
         BaseSimpleType.validate_string(value)
@@ -87,7 +92,9 @@ def test_base_simple_type_validate_string(value, expected_exception):
         (None, None, TypeError),
     ],
 )
-def test_base_int_type_convert_from_xml(xml_value, expected_value, expected_exception):
+def test_base_int_type_convert_from_xml(
+    xml_value: str | None, expected_value: int | None, expected_exception: type[Exception] | None
+) -> None:
     expectation = pytest.raises(expected_exception) if expected_exception else does_not_raise()
     with expectation:
         value = BaseIntType.convert_from_xml(xml_value)
@@ -98,7 +105,7 @@ def test_base_int_type_convert_from_xml(xml_value, expected_value, expected_exce
     ("value", "expected_xml_value"),
     [(-42, "-42"), (0x2A, "42")],
 )
-def test_base_int_type_convert_to_xml(value, expected_xml_value):
+def test_base_int_type_convert_to_xml(value: int, expected_xml_value: str) -> None:
     xml_value = BaseIntType.convert_to_xml(value)
     assert xml_value == expected_xml_value
 
@@ -114,7 +121,7 @@ def test_base_int_type_convert_to_xml(value, expected_xml_value):
         ("0pi", 0),
     ],
 )
-def test_st_coordinate_convert_from_xml(xml_value, expected_value):
+def test_st_coordinate_convert_from_xml(xml_value: str, expected_value: int) -> None:
     value = ST_Coordinate.convert_from_xml(xml_value)
     assert value == expected_value
 
@@ -132,7 +139,9 @@ def test_st_coordinate_convert_from_xml(xml_value, expected_value):
         ("F00b", ValueError),
     ],
 )
-def test_st_hex_color_rgb_validate(xml_value, expected_exception):
+def test_st_hex_color_rgb_validate(
+    xml_value: str | int | None, expected_exception: type[Exception] | None
+) -> None:
     expectation = pytest.raises(expected_exception) if expected_exception else does_not_raise()
     with expectation:
         ST_HexColorRGB.validate(xml_value)
@@ -142,7 +151,7 @@ def test_st_hex_color_rgb_validate(xml_value, expected_exception):
     ("value", "expected_value"),
     [("deadbf", "DEADBF"), ("012345", "012345"), ("0a1b3c", "0A1B3C")],
 )
-def test_st_hex_color_rgb_convert_to_xml(value, expected_value):
+def test_st_hex_color_rgb_convert_to_xml(value: str, expected_value: str) -> None:
     xml_value = ST_HexColorRGB.convert_to_xml(value)
     assert xml_value == expected_value
 
@@ -158,7 +167,7 @@ def test_st_hex_color_rgb_convert_to_xml(value, expected_value):
         ("0%", 0.0),
     ],
 )
-def test_st_percentage_convert_from_xml(xml_value, expected_value):
+def test_st_percentage_convert_from_xml(xml_value: str, expected_value: float) -> None:
     tolerance = 0.000001
     value = ST_Percentage.convert_from_xml(xml_value)
     assert abs(value - expected_value) < tolerance

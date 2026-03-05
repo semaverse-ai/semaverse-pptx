@@ -1,0 +1,182 @@
+# serializer version: 1
+# name: test_path2d_operations
+  '''
+  <a:path xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <a:moveTo>
+      <a:pt x="10" y="20"/>
+    </a:moveTo>
+    <a:lnTo>
+      <a:pt x="30" y="40"/>
+    </a:lnTo>
+    <a:close/>
+  </a:path>
+  
+  '''
+# ---
+# name: test_prst_geom_rewrite_guides
+  '''
+  <a:prstGeom xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" prst="chevron">
+    <a:avLst>
+      <a:gd name="adj1" fmla="val 111"/>
+      <a:gd name="adj2" fmla="val 222"/>
+    </a:avLst>
+  </a:prstGeom>
+  
+  '''
+# ---
+# name: test_shape_add_path
+  '''
+  <p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:spPr>
+      <a:custGeom>
+        <a:pathLst>
+          <a:path w="100" h="200"/>
+        </a:pathLst>
+      </a:custGeom>
+    </p:spPr>
+  </p:sp>
+  
+  '''
+# ---
+# name: test_shape_get_or_add_ln
+  '''
+  <p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:spPr>
+      <a:ln/>
+    </p:spPr>
+  </p:sp>
+  
+  '''
+# ---
+# name: test_shape_new_autoshape_sp
+  '''
+  <p:sp xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+    <p:nvSpPr>
+      <p:cNvPr id="9" name="Rounded Rectangle 8"/>
+      <p:cNvSpPr/>
+      <p:nvPr/>
+    </p:nvSpPr>
+    <p:spPr>
+      <a:xfrm>
+        <a:off x="111" y="222"/>
+        <a:ext cx="333" cy="444"/>
+      </a:xfrm>
+      <a:prstGeom prst="roundRect">
+        <a:avLst/>
+      </a:prstGeom>
+    </p:spPr>
+    <p:style>
+      <a:lnRef idx="1">
+        <a:schemeClr val="accent1"/>
+      </a:lnRef>
+      <a:fillRef idx="3">
+        <a:schemeClr val="accent1"/>
+      </a:fillRef>
+      <a:effectRef idx="2">
+        <a:schemeClr val="accent1"/>
+      </a:effectRef>
+      <a:fontRef idx="minor">
+        <a:schemeClr val="lt1"/>
+      </a:fontRef>
+    </p:style>
+    <p:txBody>
+      <a:bodyPr rtlCol="0" anchor="ctr"/>
+      <a:lstStyle/>
+      <a:p>
+        <a:pPr algn="ctr"/>
+      </a:p>
+    </p:txBody>
+  </p:sp>
+  
+  '''
+# ---
+# name: test_shape_new_placeholder_sp[2-Title 1-CENTER_TITLE (3)-horz-full-0]
+  '''
+  <p:sp xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+    <p:nvSpPr>
+      <p:cNvPr id="2" name="Title 1"/>
+      <p:cNvSpPr>
+        <a:spLocks noGrp="1"/>
+      </p:cNvSpPr>
+      <p:nvPr>
+        <p:ph type="ctrTitle"/>
+      </p:nvPr>
+    </p:nvSpPr>
+    <p:spPr/>
+    <p:txBody>
+      <a:bodyPr/>
+      <a:lstStyle/>
+      <a:p/>
+    </p:txBody>
+  </p:sp>
+  
+  '''
+# ---
+# name: test_shape_new_placeholder_sp[4-Vertical Subtitle 3-SUBTITLE (4)-vert-full-1]
+  '''
+  <p:sp xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+    <p:nvSpPr>
+      <p:cNvPr id="4" name="Vertical Subtitle 3"/>
+      <p:cNvSpPr>
+        <a:spLocks noGrp="1"/>
+      </p:cNvSpPr>
+      <p:nvPr>
+        <p:ph type="subTitle" idx="1" orient="vert"/>
+      </p:nvPr>
+    </p:nvSpPr>
+    <p:spPr/>
+    <p:txBody>
+      <a:bodyPr/>
+      <a:lstStyle/>
+      <a:p/>
+    </p:txBody>
+  </p:sp>
+  
+  '''
+# ---
+# name: test_shape_new_placeholder_sp[7-Footer Placeholder 6-FOOTER (15)-horz-quarter-11]
+  '''
+  <p:sp xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+    <p:nvSpPr>
+      <p:cNvPr id="7" name="Footer Placeholder 6"/>
+      <p:cNvSpPr>
+        <a:spLocks noGrp="1"/>
+      </p:cNvSpPr>
+      <p:nvPr>
+        <p:ph type="ftr" idx="11" sz="quarter"/>
+      </p:nvPr>
+    </p:nvSpPr>
+    <p:spPr/>
+  </p:sp>
+  
+  '''
+# ---
+# name: test_shape_new_textbox_sp
+  '''
+  <p:sp xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+    <p:nvSpPr>
+      <p:cNvPr id="9" name="TextBox 8"/>
+      <p:cNvSpPr txBox="1"/>
+      <p:nvPr/>
+    </p:nvSpPr>
+    <p:spPr>
+      <a:xfrm>
+        <a:off x="111" y="222"/>
+        <a:ext cx="333" cy="444"/>
+      </a:xfrm>
+      <a:prstGeom prst="rect">
+        <a:avLst/>
+      </a:prstGeom>
+      <a:noFill/>
+    </p:spPr>
+    <p:txBody>
+      <a:bodyPr wrap="none">
+        <a:spAutoFit/>
+      </a:bodyPr>
+      <a:lstStyle/>
+      <a:p/>
+    </p:txBody>
+  </p:sp>
+  
+  '''
+# ---
