@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_ct_slide_id_list_add_sld_id
+  '''
+  <p:sldIdLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <p:sldId r:id="rId4" id="256"/>
+    <p:sldId id="257" r:id="rId1"/>
+  </p:sldIdLst>
+  
+  '''
+# ---

@@ -6,7 +6,7 @@ Also makes available a handful of functions that wrap its typical uses.
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type, TypeAlias
 
 from lxml import etree
 
@@ -14,6 +14,8 @@ from pptx.oxml.ns import NamespacePrefixedTag
 
 if TYPE_CHECKING:
     from pptx.oxml.xmlchemy import BaseOxmlElement
+
+XmlSource: TypeAlias = str | bytes
 
 
 # -- configure etree XML parser ----------------------------
@@ -31,7 +33,7 @@ def parse_from_template(template_file_name: str):
     return parse_xml(xml)
 
 
-def parse_xml(xml: str | bytes):
+def parse_xml(xml: XmlSource) -> etree._Element:
     """Return root lxml element obtained by parsing XML character string in `xml`."""
     return etree.fromstring(xml, oxml_parser)
 
