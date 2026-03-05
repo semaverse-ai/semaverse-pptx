@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from datetime import date
 from itertools import islice
+from typing import Type, Union
 
 from pptx.chart.data import BubbleChartData, CategoryChartData, XyChartData
 from pptx.oxml import parse_xml
 
-CategoryType = type[str] | type[float] | type[date]
+CategoryType = Union[Type[str], Type[float], Type[date]]
 
 
 def chart_space(xml_body: bytes) -> object:

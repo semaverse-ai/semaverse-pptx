@@ -28,10 +28,10 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
       - name: Display Python version
-        run: uv run python -c "import sys; print(sys.version)"
+        run: uv run --python ${{ matrix.python-version }} python -c "import sys; print(sys.version)"
       - name: Install test dependencies
         run: uv sync --extra test
       - name: Test with pytest
-        run: uv run pytest --cov=pptx --cov-report term-missing tests
+        run: uv run --python ${{ matrix.python-version }} pytest --cov=pptx --cov-report term-missing tests
       - name: Acceptance tests with behave
-        run: uv run behave --stop
+        run: uv run --python ${{ matrix.python-version }} behave --stop

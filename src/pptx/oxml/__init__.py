@@ -6,16 +6,18 @@ Also makes available a handful of functions that wrap its typical uses.
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Type, TypeAlias
+from typing import TYPE_CHECKING, Type, Union
 
 from lxml import etree
 
 from pptx.oxml.ns import NamespacePrefixedTag
 
 if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
     from pptx.oxml.xmlchemy import BaseOxmlElement
 
-XmlSource: TypeAlias = str | bytes
+XmlSource: TypeAlias = Union[str, bytes]
 
 
 # -- configure etree XML parser ----------------------------
