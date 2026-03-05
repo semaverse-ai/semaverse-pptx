@@ -1,83 +1,59 @@
-"""Unit-test suite for `pptx.shared` module."""
-
 from __future__ import annotations
 
-import pytest
+from lxml import etree
 
-from pptx.opc.package import XmlPart
-from pptx.shared import ElementProxy, ParentedElementProxy
-
-from .unitutil.cxml import element
-from .unitutil.mock import instance_mock
+from pptx.shared import ElementProxy, ParentedElementProxy, PartElementProxy
 
 
-class DescribeElementProxy(object):
-    """Unit-test suite for `pptx.shared.ElementProxy` objects."""
-
-    def it_knows_when_its_equal_to_another_proxy_object(self, eq_fixture):
-        proxy, proxy_2, proxy_3, not_a_proxy = eq_fixture
-
-        assert (proxy == proxy_2) is True
-        assert (proxy == proxy_3) is False
-        assert (proxy == not_a_proxy) is False
-
-        assert (proxy != proxy_2) is False
-        assert (proxy != proxy_3) is True
-        assert (proxy != not_a_proxy) is True
-
-    def it_knows_its_element(self, element_fixture):
-        proxy, element = element_fixture
-        assert proxy.element is element
-
-    # fixture --------------------------------------------------------
-
-    @pytest.fixture
-    def element_fixture(self):
-        p = element("w:p")
-        proxy = ElementProxy(p)
-        return proxy, p
-
-    @pytest.fixture
-    def eq_fixture(self):
-        p, q = element("w:p"), element("w:p")
-        proxy = ElementProxy(p)
-        proxy_2 = ElementProxy(p)
-        proxy_3 = ElementProxy(q)
-        not_a_proxy = "Foobar"
-        return proxy, proxy_2, proxy_3, not_a_proxy
+class DummyPart:
+    pass
 
 
-class DescribeParentedElementProxy(object):
-    """Unit-test suite for `pptx.shared.ParentedElementProxy` objects."""
+class DummyParent:
+    def __init__(self, part: DummyPart | None = None) -> None:
+        self.part = part
 
-    def it_knows_its_parent(self, parent_fixture):
-        proxy, parent = parent_fixture
-        assert proxy.parent is parent
 
-    def it_knows_its_part(self, part_fixture):
-        proxy, part_ = part_fixture
-        assert proxy.part is part_
+def test_element_proxy_equality() -> None:
+    p = etree.Element("p")
+    q = etree.Element("p")
+    proxy = ElementProxy(p)
+    proxy_2 = ElementProxy(p)
+    proxy_3 = ElementProxy(q)
+    not_a_proxy = "Foobar"
 
-    # fixture --------------------------------------------------------
+    assert (proxy == proxy_2) is True
+    assert (proxy == proxy_3) is False
+    assert (proxy == not_a_proxy) is False
+    assert (proxy != proxy_2) is False
+    assert (proxy != proxy_3) is True
+    assert (proxy != not_a_proxy) is True
 
-    @pytest.fixture
-    def parent_fixture(self):
-        parent = 42
-        proxy = ParentedElementProxy(element("w:p"), parent)
-        return proxy, parent
 
-    @pytest.fixture
-    def part_fixture(self, other_proxy_, part_):
-        other_proxy_.part = part_
-        proxy = ParentedElementProxy(None, other_proxy_)
-        return proxy, part_
+def test_element_proxy_element_property() -> None:
+    element = etree.Element("p")
+    proxy = ElementProxy(element)
 
-    # fixture components ---------------------------------------------
+    assert proxy.element is element
 
-    @pytest.fixture
-    def other_proxy_(self, request):
-        return instance_mock(request, ParentedElementProxy)
 
-    @pytest.fixture
-    def part_(self, request):
-        return instance_mock(request, XmlPart)
+def test_parented_element_proxy_parent_property() -> None:
+    parent = DummyParent()
+    proxy = ParentedElementProxy(etree.Element("p"), parent)
+
+    assert proxy.parent is parent
+
+
+def test_parented_element_proxy_part_property() -> None:
+    part = DummyPart()
+    parent = DummyParent(part=part)
+    proxy = ParentedElementProxy(etree.Element("p"), parent)
+
+    assert proxy.part is part
+
+
+def test_part_element_proxy_part_property() -> None:
+    part = DummyPart()
+    proxy = PartElementProxy(etree.Element("p"), part)
+
+    assert proxy.part is part

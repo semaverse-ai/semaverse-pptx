@@ -92,7 +92,7 @@ filterwarnings = [
     "ignore:Unknown config option. looponfailroots:pytest.PytestConfigWarning",
 ]
 
-looponfailroots = ["src", "tests", "tests_modern"]
+looponfailroots = ["src", "tests"]
 norecursedirs = [
     "docs",
     "*.egg-info",

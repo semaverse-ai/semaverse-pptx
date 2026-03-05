@@ -1,427 +1,307 @@
-"""Unit test suite for pptx.shapes.connector module."""
-
 from __future__ import annotations
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from pptx.dml.line import LineFormat
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.shapes.base import BaseShape
+from pptx.oxml import parse_xml
+from pptx.shapes.autoshape import Shape
 from pptx.shapes.connector import Connector
-from pptx.util import Emu
-
-from ..unitutil.cxml import element, xml
-from ..unitutil.mock import instance_mock, method_mock
 
 
-class DescribeConnector(object):
-    """Unit-test suite for `pptx.shapes.connector.Connector`."""
-
-    def it_knows_its_begin_point_x_location(self, begin_x_get_fixture):
-        connector, expected_value = begin_x_get_fixture
-        begin_x = connector.begin_x
-        assert isinstance(begin_x, Emu)
-        assert connector.begin_x == expected_value
-
-    def it_can_change_its_begin_point_x_location(self, begin_x_set_fixture):
-        connector, new_x, expected_xml = begin_x_set_fixture
-        connector.begin_x = new_x
-        assert connector._element.xml == expected_xml
-
-    def it_knows_its_begin_point_y_location(self, begin_y_get_fixture):
-        connector, expected_value = begin_y_get_fixture
-        begin_y = connector.begin_y
-        assert isinstance(begin_y, Emu)
-        assert connector.begin_y == expected_value
-
-    def it_can_change_its_begin_point_y_location(self, begin_y_set_fixture):
-        connector, new_y, expected_xml = begin_y_set_fixture
-        connector.begin_y = new_y
-        assert connector._element.xml == expected_xml
-
-    def it_knows_its_end_point_x_location(self, end_x_get_fixture):
-        connector, expected_value = end_x_get_fixture
-        end_x = connector.end_x
-        assert isinstance(end_x, Emu)
-        assert connector.end_x == expected_value
-
-    def it_can_change_its_end_point_x_location(self, end_x_set_fixture):
-        connector, new_x, expected_xml = end_x_set_fixture
-        connector.end_x = new_x
-        assert connector._element.xml == expected_xml
-
-    def it_knows_its_end_point_y_location(self, end_y_get_fixture):
-        connector, expected_value = end_y_get_fixture
-        end_y = connector.end_y
-        assert isinstance(end_y, Emu)
-        assert connector.end_y == expected_value
-
-    def it_can_change_its_end_point_y_location(self, end_y_set_fixture):
-        connector, new_y, expected_xml = end_y_set_fixture
-        connector.end_y = new_y
-        assert connector._element.xml == expected_xml
-
-    def it_can_connect_its_begin_point_to_a_shape(self, begin_conn_fixture):
-        connector, shape, cxn_idx = begin_conn_fixture
-
-        connector.begin_connect(shape, cxn_idx)
-
-        connector._connect_begin_to.assert_called_once_with(connector, shape, cxn_idx)
-        connector._move_begin_to_cxn.assert_called_once_with(connector, shape, cxn_idx)
-
-    def it_can_connect_its_end_point_to_a_shape(self, end_conn_fixture):
-        connector, shape, cxn_idx = end_conn_fixture
-
-        connector.end_connect(shape, cxn_idx)
-
-        connector._connect_end_to.assert_called_once_with(connector, shape, cxn_idx)
-        connector._move_end_to_cxn.assert_called_once_with(connector, shape, cxn_idx)
-
-    def it_provides_access_to_its_line_format(self):
-        connector = Connector(element("p:cxnSp/p:spPr"), None)
-
-        line = connector.line
-
-        assert isinstance(line, LineFormat)
-        # exercise line to test parent interface, .ln and .get_or_add_ln()
-        line.width = 91440
-        assert line.width == 91440
-
-    def it_knows_its_shape_type(self):
-        assert Connector(None, None).shape_type == MSO_SHAPE_TYPE.LINE
-
-    def it_connects_its_begin_point_to_help(self, connect_begin_fixture):
-        connector, shape, cxn_idx, expected_xml = connect_begin_fixture
-        connector._connect_begin_to(shape, cxn_idx)
-        assert connector._element.xml == expected_xml
-
-    def it_connects_its_end_point_to_help(self, connect_end_fixture):
-        connector, shape, cxn_idx, expected_xml = connect_end_fixture
-        connector._connect_end_to(shape, cxn_idx)
-        assert connector._element.xml == expected_xml
-
-    def it_moves_its_begin_point_to_help(self, move_begin_fixture):
-        connector, shape, cxn_idx, expected_xml = move_begin_fixture
-        connector._move_begin_to_cxn(shape, cxn_idx)
-        assert connector._element.xml == expected_xml
-
-    def it_moves_its_end_point_to_help(self, move_end_fixture):
-        connector, shape, cxn_idx, expected_xml = move_end_fixture
-        connector._move_end_to_cxn(shape, cxn_idx)
-        assert connector._element.xml == expected_xml
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture
-    def begin_conn_fixture(self, _connect_begin_to_, _move_begin_to_cxn_):
-        connector = Connector(None, None)
-        shape, cxn_idx = 42, 24
-        return connector, shape, cxn_idx
-
-    @pytest.fixture(params=[(42, 24, False, 42), (24, 42, True, 66)])
-    def begin_x_get_fixture(self, request):
-        x, cx, flipH, expected_value = request.param
-        cxnSp = element(
-            "p:cxnSp/p:spPr/a:xfrm{flipH=%d}/(a:off{x=%d,y=6},a:ext{cx=%d,cy"
-            "=32})" % (flipH, x, cx)
-        )
-        connector = Connector(cxnSp, None)
-        return connector, expected_value
-
-    @pytest.fixture(
-        params=[
-            (
-                "a:xfrm/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                5,
-                "a:xfrm/(a:off{x=5,y=1},a:ext{cx=15,cy=1})",
-            ),
-            (
-                "a:xfrm/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                15,
-                "a:xfrm/(a:off{x=15,y=1},a:ext{cx=5,cy=1})",
-            ),
-            (
-                "a:xfrm/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                25,
-                "a:xfrm{flipH=1}/(a:off{x=20,y=1},a:ext{cx=5,cy=1})",
-            ),
-            (
-                "a:xfrm{flipH=1}/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                25,
-                "a:xfrm{flipH=1}/(a:off{x=10,y=1},a:ext{cx=15,cy=1})",
-            ),
-            (
-                "a:xfrm{flipH=1}/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                15,
-                "a:xfrm{flipH=1}/(a:off{x=10,y=1},a:ext{cx=5,cy=1})",
-            ),
-            (
-                "a:xfrm{flipH=1}/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                5,
-                "a:xfrm/(a:off{x=5,y=1},a:ext{cx=5,cy=1})",
-            ),
-        ]
+def _connector(
+    parent,
+    *,
+    x: int = 100,
+    y: int = 200,
+    cx: int = 300,
+    cy: int = 400,
+    flip_h: bool = False,
+    flip_v: bool = False,
+) -> Connector:
+    flip_h_attr = ' flipH="1"' if flip_h else ""
+    flip_v_attr = ' flipV="1"' if flip_v else ""
+    xml = """
+        <p:cxnSp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                 xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+          <p:nvCxnSpPr>
+            <p:cNvPr id="42" name="Connector 1"/>
+            <p:cNvCxnSpPr/>
+            <p:nvPr/>
+          </p:nvCxnSpPr>
+          <p:spPr>
+            <a:xfrm{flip_h_attr}{flip_v_attr}>
+              <a:off x="{x}" y="{y}"/>
+              <a:ext cx="{cx}" cy="{cy}"/>
+            </a:xfrm>
+          </p:spPr>
+        </p:cxnSp>
+    """.format(
+        flip_h_attr=flip_h_attr,
+        flip_v_attr=flip_v_attr,
+        x=x,
+        y=y,
+        cx=cx,
+        cy=cy,
     )
-    def begin_x_set_fixture(self, request):
-        xfrm_cxml, new_x, expected_cxml = request.param
-        tmpl = "p:cxnSp/p:spPr/%s"
-        cxnSp = element(tmpl % xfrm_cxml)
-        expected_xml = xml(tmpl % expected_cxml)
-        connector = Connector(cxnSp, None)
-        return connector, new_x, expected_xml
 
-    @pytest.fixture(params=[(40, 60, False, 40), (50, 42, True, 92)])
-    def begin_y_get_fixture(self, request):
-        y, cy, flipV, expected_value = request.param
-        cxnSp = element(
-            "p:cxnSp/p:spPr/a:xfrm{flipV=%d}/(a:off{x=6,y=%d},a:ext{cx=32,cy"
-            "=%d})" % (flipV, y, cy)
-        )
-        connector = Connector(cxnSp, None)
-        return connector, expected_value
-
-    @pytest.fixture(
-        params=[
-            (
-                "a:xfrm/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                5,
-                "a:xfrm/(a:off{x=1,y=5},a:ext{cx=1,cy=15})",
-            ),
-            (
-                "a:xfrm/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                15,
-                "a:xfrm/(a:off{x=1,y=15},a:ext{cx=1,cy=5})",
-            ),
-            (
-                "a:xfrm/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                25,
-                "a:xfrm{flipV=1}/(a:off{x=1,y=20},a:ext{cx=1,cy=5})",
-            ),
-            (
-                "a:xfrm{flipV=1}/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                30,
-                "a:xfrm{flipV=1}/(a:off{x=1,y=10},a:ext{cx=1,cy=20})",
-            ),
-            (
-                "a:xfrm{flipV=1}/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                15,
-                "a:xfrm{flipV=1}/(a:off{x=1,y=10},a:ext{cx=1,cy=5})",
-            ),
-            (
-                "a:xfrm{flipV=1}/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                5,
-                "a:xfrm/(a:off{x=1,y=5},a:ext{cx=1,cy=5})",
-            ),
-        ]
+    return Connector(
+        parse_xml(xml.encode("utf-8")),
+        parent,
     )
-    def begin_y_set_fixture(self, request):
-        xfrm_cxml, new_y, expected_cxml = request.param
-        tmpl = "p:cxnSp/p:spPr/%s"
-        cxnSp = element(tmpl % xfrm_cxml)
-        expected_xml = xml(tmpl % expected_cxml)
-        connector = Connector(cxnSp, None)
-        return connector, new_y, expected_xml
 
-    @pytest.fixture(
-        params=[
-            (
-                "p:cxnSp{a:b=c}/p:nvCxnSpPr/p:cNvCxnSpPr",
-                "p:cxnSp{a:b=c}/p:nvCxnSpPr/p:cNvCxnSpPr/a:stCxn{id=42,idx=3}",
-            ),
-            (
-                "p:cxnSp/p:nvCxnSpPr/p:cNvCxnSpPr/a:stCxn{id=66,idx=6}",
-                "p:cxnSp/p:nvCxnSpPr/p:cNvCxnSpPr/a:stCxn{id=42,idx=3}",
-            ),
-        ]
+
+def _shape_for_connection(parent) -> Shape:
+    return Shape(
+        parse_xml(
+            b"""
+            <p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:nvSpPr>
+                <p:cNvPr id="77" name="Target"/>
+                <p:cNvSpPr/>
+                <p:nvPr/>
+              </p:nvSpPr>
+              <p:spPr>
+                <a:xfrm>
+                  <a:off x="100" y="200"/>
+                  <a:ext cx="300" cy="400"/>
+                </a:xfrm>
+                <a:prstGeom prst="rect"/>
+              </p:spPr>
+              <p:txBody>
+                <a:bodyPr/>
+                <a:lstStyle/>
+                <a:p/>
+              </p:txBody>
+            </p:sp>
+            """
+        ),
+        parent,
     )
-    def connect_begin_fixture(self, request, shape_):
-        cxnSp_cxml, expected_cxml = request.param
-        cxnSp = element(cxnSp_cxml)
-        connector = Connector(cxnSp, None)
-        shape_.shape_id, cxn_idx = 42, 3
-        expected_xml = xml(expected_cxml)
-        return connector, shape_, cxn_idx, expected_xml
 
-    @pytest.fixture(
-        params=[
-            (
-                "p:cxnSp{a:b=c}/p:nvCxnSpPr/p:cNvCxnSpPr",
-                "p:cxnSp{a:b=c}/p:nvCxnSpPr/p:cNvCxnSpPr/a:endCxn{id=24,idx=2}",
-            ),
-            (
-                "p:cxnSp/p:nvCxnSpPr/p:cNvCxnSpPr/a:endCxn{id=66,idx=6}",
-                "p:cxnSp/p:nvCxnSpPr/p:cNvCxnSpPr/a:endCxn{id=24,idx=2}",
-            ),
-        ]
+
+def test_connector_point_properties(parent) -> None:
+    connector = Connector(
+        parse_xml(
+            b"""
+            <p:cxnSp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                     xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:nvCxnSpPr>
+                <p:cNvPr id="42" name="Connector 1"/>
+                <p:cNvCxnSpPr/>
+                <p:nvPr/>
+              </p:nvCxnSpPr>
+              <p:spPr>
+                <a:xfrm>
+                  <a:off x="100" y="200"/>
+                  <a:ext cx="300" cy="400"/>
+                </a:xfrm>
+              </p:spPr>
+            </p:cxnSp>
+            """
+        ),
+        parent,
     )
-    def connect_end_fixture(self, request, shape_):
-        cxnSp_cxml, expected_cxml = request.param
-        cxnSp = element(cxnSp_cxml)
-        connector = Connector(cxnSp, None)
-        shape_.shape_id, cxn_idx = 24, 2
-        expected_xml = xml(expected_cxml)
-        return connector, shape_, cxn_idx, expected_xml
 
-    @pytest.fixture
-    def end_conn_fixture(self, _connect_end_to_, _move_end_to_cxn_):
-        connector = Connector(None, None)
-        shape, cxn_idx = 42, 24
-        return connector, shape, cxn_idx
+    assert connector.begin_x == 100
+    assert connector.begin_y == 200
+    assert connector.end_x == 400
+    assert connector.end_y == 600
 
-    @pytest.fixture(params=[(21, 32, False, 53), (43, 54, True, 43)])
-    def end_x_get_fixture(self, request):
-        x, cx, flipH, expected_value = request.param
-        cxnSp = element(
-            "p:cxnSp/p:spPr/a:xfrm{flipH=%d}/(a:off{x=%d,y=6},a:ext{cx=%d,cy"
-            "=60})" % (flipH, x, cx)
-        )
-        connector = Connector(cxnSp, None)
-        return connector, expected_value
+    connector.begin_x = 150
+    connector.begin_y = 250
+    connector.end_x = 500
+    connector.end_y = 700
 
-    @pytest.fixture(
-        params=[
-            (
-                "a:xfrm/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                32,
-                "a:xfrm/(a:off{x=10,y=1},a:ext{cx=22,cy=1})",
-            ),
-            (
-                "a:xfrm/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                15,
-                "a:xfrm/(a:off{x=10,y=1},a:ext{cx=5,cy=1})",
-            ),
-            (
-                "a:xfrm/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                5,
-                "a:xfrm{flipH=1}/(a:off{x=5,y=1},a:ext{cx=5,cy=1})",
-            ),
-            (
-                "a:xfrm{flipH=1}/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                5,
-                "a:xfrm{flipH=1}/(a:off{x=5,y=1},a:ext{cx=15,cy=1})",
-            ),
-            (
-                "a:xfrm{flipH=1}/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                15,
-                "a:xfrm{flipH=1}/(a:off{x=15,y=1},a:ext{cx=5,cy=1})",
-            ),
-            (
-                "a:xfrm{flipH=1}/(a:off{x=10,y=1},a:ext{cx=10,cy=1})",
-                28,
-                "a:xfrm/(a:off{x=20,y=1},a:ext{cx=8,cy=1})",
-            ),
-        ]
+    assert connector.begin_x == 150
+    assert connector.begin_y == 250
+    assert connector.end_x == 500
+    assert connector.end_y == 700
+
+
+def test_connector_connectors_add_st_cxn_and_end_cxn(parent, snapshot: SnapshotAssertion) -> None:
+    connector = Connector(
+        parse_xml(
+            b"""
+            <p:cxnSp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                     xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:nvCxnSpPr>
+                <p:cNvPr id="42" name="Connector 1"/>
+                <p:cNvCxnSpPr/>
+                <p:nvPr/>
+              </p:nvCxnSpPr>
+              <p:spPr>
+                <a:xfrm>
+                  <a:off x="10" y="20"/>
+                  <a:ext cx="30" cy="40"/>
+                </a:xfrm>
+              </p:spPr>
+            </p:cxnSp>
+            """
+        ),
+        parent,
     )
-    def end_x_set_fixture(self, request):
-        xfrm_cxml, new_x, expected_cxml = request.param
-        tmpl = "p:cxnSp/p:spPr/%s"
-        cxnSp = element(tmpl % xfrm_cxml)
-        expected_xml = xml(tmpl % expected_cxml)
-        connector = Connector(cxnSp, None)
-        return connector, new_x, expected_xml
+    shape = _shape_for_connection(parent)
 
-    @pytest.fixture(params=[(31, 42, False, 73), (53, 14, True, 53)])
-    def end_y_get_fixture(self, request):
-        y, cy, flipV, expected_value = request.param
-        cxnSp = element(
-            "p:cxnSp/p:spPr/a:xfrm{flipV=%d}/(a:off{x=6,y=%d},a:ext{cx=32,cy"
-            "=%d})" % (flipV, y, cy)
-        )
-        connector = Connector(cxnSp, None)
-        return connector, expected_value
+    connector.begin_connect(shape, 0)
+    connector.end_connect(shape, 2)
 
-    @pytest.fixture(
-        params=[
-            (
-                "a:xfrm/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                28,
-                "a:xfrm/(a:off{x=1,y=10},a:ext{cx=1,cy=18})",
-            ),
-            (
-                "a:xfrm/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                13,
-                "a:xfrm/(a:off{x=1,y=10},a:ext{cx=1,cy=3})",
-            ),
-            (
-                "a:xfrm/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                4,
-                "a:xfrm{flipV=1}/(a:off{x=1,y=4},a:ext{cx=1,cy=6})",
-            ),
-            (
-                "a:xfrm{flipV=1}/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                6,
-                "a:xfrm{flipV=1}/(a:off{x=1,y=6},a:ext{cx=1,cy=14})",
-            ),
-            (
-                "a:xfrm{flipV=1}/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                12,
-                "a:xfrm{flipV=1}/(a:off{x=1,y=12},a:ext{cx=1,cy=8})",
-            ),
-            (
-                "a:xfrm{flipV=1}/(a:off{x=1,y=10},a:ext{cx=1,cy=10})",
-                27,
-                "a:xfrm/(a:off{x=1,y=20},a:ext{cx=1,cy=7})",
-            ),
-        ]
+    assert connector.begin_x == 250
+    assert connector.begin_y == 200
+    assert connector.end_x == 250
+    assert connector.end_y == 600
+    assert snapshot == connector._element.xml
+
+
+def test_connector_line_and_shape_type(parent) -> None:
+    connector = Connector(
+        parse_xml(
+            b"""
+            <p:cxnSp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                     xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:nvCxnSpPr>
+                <p:cNvPr id="42" name="Connector 1"/>
+                <p:cNvCxnSpPr/>
+                <p:nvPr/>
+              </p:nvCxnSpPr>
+              <p:spPr>
+                <a:xfrm>
+                  <a:off x="100" y="200"/>
+                  <a:ext cx="300" cy="400"/>
+                </a:xfrm>
+              </p:spPr>
+            </p:cxnSp>
+            """
+        ),
+        parent,
     )
-    def end_y_set_fixture(self, request):
-        xfrm_cxml, new_y, expected_cxml = request.param
-        tmpl = "p:cxnSp/p:spPr/%s"
-        cxnSp = element(tmpl % xfrm_cxml)
-        expected_xml = xml(tmpl % expected_cxml)
-        connector = Connector(cxnSp, None)
-        return connector, new_y, expected_xml
 
-    @pytest.fixture(
-        params=[
-            (0, "p:cxnSp/p:spPr/a:xfrm/(a:off{x=25,y=15},a:ext{cx=74,cy=123})"),
-            (1, "p:cxnSp/p:spPr/a:xfrm/(a:off{x=10,y=33},a:ext{cx=89,cy=105})"),
-            (2, "p:cxnSp/p:spPr/a:xfrm/(a:off{x=25,y=51},a:ext{cx=74,cy=87})"),
-            (3, "p:cxnSp/p:spPr/a:xfrm/(a:off{x=40,y=33},a:ext{cx=59,cy=105})"),
-        ]
-    )
-    def move_begin_fixture(self, request, shape_):
-        cxn_idx, expected_cxml = request.param
-        cxnSp = element("p:cxnSp/p:spPr/a:xfrm/(a:off{x=66,y=99},a:ext{cx=33,cy=39})")
-        connector = Connector(cxnSp, None)
-        shape_.left, shape_.top, shape_.width, shape_.height = 10, 15, 30, 36
-        expected_xml = xml(expected_cxml)
-        return connector, shape_, cxn_idx, expected_xml
+    connector.line.width = 12700
 
-    @pytest.fixture(
-        params=[
-            (0, "p:cxnSp/p:spPr/a:xfrm/(a:off{x=10,y=15},a:ext{cx=50,cy=10})"),
-            (1, "p:cxnSp/p:spPr/a:xfrm/(a:off{x=10,y=15},a:ext{cx=40,cy=19})"),
-            (2, "p:cxnSp/p:spPr/a:xfrm/(a:off{x=10,y=15},a:ext{cx=50,cy=28})"),
-            (3, "p:cxnSp/p:spPr/a:xfrm/(a:off{x=10,y=15},a:ext{cx=60,cy=19})"),
-        ]
-    )
-    def move_end_fixture(self, request, shape_):
-        cxn_idx, expected_cxml = request.param
-        cxnSp = element("p:cxnSp/p:spPr/a:xfrm/(a:off{x=10,y=15},a:ext{cx=10,cy=5})")
-        connector = Connector(cxnSp, None)
-        shape_.left, shape_.top, shape_.width, shape_.height = 50, 25, 20, 18
-        expected_xml = xml(expected_cxml)
-        return connector, shape_, cxn_idx, expected_xml
+    assert connector.shape_type == MSO_SHAPE_TYPE.LINE
+    assert connector.line.width == 12700
 
-    # fixture components ---------------------------------------------
 
-    @pytest.fixture
-    def _connect_begin_to_(self, request):
-        return method_mock(request, Connector, "_connect_begin_to", autospec=True)
+@pytest.mark.parametrize(
+    ("flip_h", "new_x", "expected_x", "expected_cx", "expected_flip_h"),
+    [
+        (True, 450, 100, 350, True),
+        (True, 150, 100, 50, True),
+        (True, 50, 50, 50, False),
+        (False, 50, 50, 350, False),
+        (False, 200, 200, 200, False),
+        (False, 450, 400, 50, True),
+    ],
+)
+def test_connector_begin_x_setter_all_branches(
+    parent,
+    flip_h: bool,
+    new_x: int,
+    expected_x: int,
+    expected_cx: int,
+    expected_flip_h: bool,
+) -> None:
+    # Arrange
+    connector = _connector(parent, flip_h=flip_h)
 
-    @pytest.fixture
-    def _connect_end_to_(self, request):
-        return method_mock(request, Connector, "_connect_end_to", autospec=True)
+    # Act
+    connector.begin_x = new_x
 
-    @pytest.fixture
-    def _move_begin_to_cxn_(self, request):
-        return method_mock(request, Connector, "_move_begin_to_cxn", autospec=True)
+    # Assert
+    assert int(connector._element.x) == expected_x
+    assert int(connector._element.cx) == expected_cx
+    assert bool(connector._element.flipH) is expected_flip_h
 
-    @pytest.fixture
-    def _move_end_to_cxn_(self, request):
-        return method_mock(request, Connector, "_move_end_to_cxn", autospec=True)
 
-    @pytest.fixture
-    def shape_(self, request):
-        return instance_mock(request, BaseShape)
+@pytest.mark.parametrize(
+    ("flip_v", "new_y", "expected_y", "expected_cy", "expected_flip_v"),
+    [
+        (True, 650, 200, 450, True),
+        (True, 350, 200, 150, True),
+        (True, 50, 50, 150, False),
+        (False, 50, 50, 550, False),
+        (False, 350, 350, 250, False),
+        (False, 700, 600, 100, True),
+    ],
+)
+def test_connector_begin_y_setter_all_branches(
+    parent,
+    flip_v: bool,
+    new_y: int,
+    expected_y: int,
+    expected_cy: int,
+    expected_flip_v: bool,
+) -> None:
+    # Arrange
+    connector = _connector(parent, flip_v=flip_v)
+
+    # Act
+    connector.begin_y = new_y
+
+    # Assert
+    assert int(connector._element.y) == expected_y
+    assert int(connector._element.cy) == expected_cy
+    assert bool(connector._element.flipV) is expected_flip_v
+
+
+@pytest.mark.parametrize(
+    ("flip_h", "new_x", "expected_x", "expected_cx", "expected_flip_h"),
+    [
+        (True, 50, 50, 350, True),
+        (True, 250, 250, 150, True),
+        (True, 500, 400, 100, False),
+        (False, 500, 100, 400, False),
+        (False, 250, 100, 150, False),
+        (False, 50, 50, 50, True),
+    ],
+)
+def test_connector_end_x_setter_all_branches(
+    parent,
+    flip_h: bool,
+    new_x: int,
+    expected_x: int,
+    expected_cx: int,
+    expected_flip_h: bool,
+) -> None:
+    # Arrange
+    connector = _connector(parent, flip_h=flip_h)
+
+    # Act
+    connector.end_x = new_x
+
+    # Assert
+    assert int(connector._element.x) == expected_x
+    assert int(connector._element.cx) == expected_cx
+    assert bool(connector._element.flipH) is expected_flip_h
+
+
+@pytest.mark.parametrize(
+    ("flip_v", "new_y", "expected_y", "expected_cy", "expected_flip_v"),
+    [
+        (True, 150, 150, 450, True),
+        (True, 350, 350, 250, True),
+        (True, 700, 600, 100, False),
+        (False, 700, 200, 500, False),
+        (False, 450, 200, 250, False),
+        (False, 50, 50, 150, True),
+    ],
+)
+def test_connector_end_y_setter_all_branches(
+    parent,
+    flip_v: bool,
+    new_y: int,
+    expected_y: int,
+    expected_cy: int,
+    expected_flip_v: bool,
+) -> None:
+    # Arrange
+    connector = _connector(parent, flip_v=flip_v)
+
+    # Act
+    connector.end_y = new_y
+
+    # Assert
+    assert int(connector._element.y) == expected_y
+    assert int(connector._element.cy) == expected_cy
+    assert bool(connector._element.flipV) is expected_flip_v

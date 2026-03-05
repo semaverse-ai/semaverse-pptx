@@ -1,33 +1,26 @@
-"""Unit test suite for `pptx.parts.media` module."""
-
 from __future__ import annotations
+
+import hashlib
 
 from pptx.media import Video
 from pptx.package import Package
 from pptx.parts.media import MediaPart
 
-from ..unitutil.mock import initializer_mock, instance_mock
+
+def test_media_part_new() -> None:
+    pkg = Package(None)
+    blob = b"dummy video bytes"
+    video = Video.from_blob(blob, "video/mp4", "dummy.mp4")
+
+    part = MediaPart.new(pkg, video)
+
+    assert isinstance(part, MediaPart)
+    assert part.blob == blob
+    assert part.content_type == "video/mp4"
+    assert part.partname.startswith("/ppt/media/media")
 
 
-class DescribeMediaPart(object):
-    """Unit-test suite for `pptx.parts.media.MediaPart` objects."""
+def test_media_part_sha1() -> None:
+    part = MediaPart(None, None, None, b"blobish-bytes")
 
-    def it_can_construct_from_a_media_object(self, request):
-        media_ = instance_mock(request, Video)
-        _init_ = initializer_mock(request, MediaPart)
-        package_ = instance_mock(request, Package)
-        package_.next_media_partname.return_value = "media42.mp4"
-        media_.blob, media_.content_type = b"blob-bytes", "video/mp4"
-
-        media_part = MediaPart.new(package_, media_)
-
-        package_.next_media_partname.assert_called_once_with(media_.ext)
-        _init_.assert_called_once_with(
-            media_part, "media42.mp4", media_.content_type, package_, media_.blob
-        )
-        assert isinstance(media_part, MediaPart)
-
-    def it_knows_the_sha1_hash_of_the_media(self):
-        assert MediaPart(None, None, None, b"blobish-bytes").sha1 == (
-            "61efc464c21e54cfc1382fb5b6ef7512e141ceae"
-        )
+    assert part.sha1 == hashlib.sha1(b"blobish-bytes").hexdigest()

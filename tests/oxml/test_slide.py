@@ -1,23 +1,17 @@
-"""Unit-test suite for `pptx.oxml.slide` module."""
-
 from __future__ import annotations
+
+from syrupy.assertion import SnapshotAssertion
 
 from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide
 
-from ..unitutil.file import snippet_text
+
+def test_ct_notes_master_new_default(snapshot: SnapshotAssertion) -> None:
+    notes_master = CT_NotesMaster.new_default()
+
+    assert str(notes_master.xml) == snapshot
 
 
-class DescribeCT_NotesMaster(object):
-    """Unit-test suite for `pptx.oxml.slide.CT_NotesMaster` objects."""
+def test_ct_notes_slide_new(snapshot: SnapshotAssertion) -> None:
+    notes = CT_NotesSlide.new()
 
-    def it_can_create_a_default_notesMaster_element(self):
-        notesMaster = CT_NotesMaster.new_default()
-        assert notesMaster.xml == snippet_text("default-notesMaster")
-
-
-class DescribeCT_NotesSlide(object):
-    """Unit-test suite for `pptx.oxml.slide.CT_NotesSlide` objects."""
-
-    def it_can_create_a_new_notes_element(self):
-        notes = CT_NotesSlide.new()
-        assert notes.xml == snippet_text("default-notes")
+    assert str(notes.xml) == snapshot

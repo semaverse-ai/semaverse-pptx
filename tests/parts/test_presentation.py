@@ -1,225 +1,266 @@
-"""Unit-test suite for `pptx.parts.presentation` module."""
-
 from __future__ import annotations
 
 import pytest
 
+from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.packuri import PackURI
+from pptx.oxml import parse_xml
 from pptx.package import Package
-from pptx.parts.coreprops import CorePropertiesPart
 from pptx.parts.presentation import PresentationPart
-from pptx.parts.slide import NotesMasterPart, SlideMasterPart, SlidePart
-from pptx.presentation import Presentation
-from pptx.slide import NotesMaster, Slide, SlideLayout, SlideMaster
+from pptx.parts.slide import SlideLayoutPart, SlidePart
+from pptx.slide import SlideLayout
+from tests.stubs import (
+    CorePropertiesPackageStub,
+    NotesMasterPartProxy,
+    SaveCallPackageStub,
+    SlideMasterPartProxy,
+    SlidePartProxy,
+)
 
-from ..unitutil.cxml import element
-from ..unitutil.mock import call, class_mock, instance_mock, method_mock, property_mock
+P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 
 
-class DescribePresentationPart(object):
-    """Unit-test suite for `pptx.parts.presentation.PresentationPart` objects."""
+def _presentation_xml(with_sld_id_list: bool = False) -> bytes:
+    sld_id_list_xml = "<p:sldIdLst/>" if with_sld_id_list else ""
+    xml = f'<p:presentation xmlns:p="{P_NS}">{sld_id_list_xml}</p:presentation>'
+    return xml.encode("utf-8")
 
-    def it_provides_access_to_its_presentation(self, request):
-        prs_ = instance_mock(request, Presentation)
-        Presentation_ = class_mock(
-            request, "pptx.parts.presentation.Presentation", return_value=prs_
+
+def _slide_xml() -> bytes:
+    return f'<p:sld xmlns:p="{P_NS}"/>'.encode("utf-8")
+
+
+def _slide_layout_xml() -> bytes:
+    xml = f'<p:sldLayout xmlns:p="{P_NS}"><p:cSld><p:spTree/></p:cSld></p:sldLayout>'
+    return xml.encode("utf-8")
+
+
+def test_presentation_part_access_presentation() -> None:
+    part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        None,
+        parse_xml(_presentation_xml()),
+    )
+
+    assert part.presentation is not None
+
+
+def test_presentation_part_rename_slide_parts() -> None:
+    pkg = Package(None)
+    prs_part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        pkg,
+        parse_xml(_presentation_xml()),
+    )
+
+    slide_parts = [
+        SlidePart(PackURI("/ppt/slides/slide99.xml"), CT.PML_SLIDE, pkg, parse_xml(_slide_xml()))
+        for _ in range(3)
+    ]
+    r_ids: list[str] = []
+    for slide_part in slide_parts:
+        r_ids.append(
+            prs_part.relate_to(
+                slide_part,
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
+            )
         )
-        prs_elm = element("p:presentation")
-        prs_part = PresentationPart(None, None, None, prs_elm)
 
-        prs = prs_part.presentation
+    prs_part.rename_slide_parts(r_ids)
 
-        Presentation_.assert_called_once_with(prs_elm, prs_part)
-        assert prs is prs_
+    assert slide_parts[0].partname == "/ppt/slides/slide1.xml"
+    assert slide_parts[1].partname == "/ppt/slides/slide2.xml"
+    assert slide_parts[2].partname == "/ppt/slides/slide3.xml"
 
-    def it_provides_access_to_its_core_properties(self, request, package_):
-        core_properties_ = instance_mock(request, CorePropertiesPart)
-        package_.core_properties = core_properties_
-        prs_part = PresentationPart(None, None, package_, None)
 
-        assert prs_part.core_properties is core_properties_
+def test_presentation_part_add_slide() -> None:
+    pkg = Package(None)
+    prs_part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        pkg,
+        parse_xml(_presentation_xml(with_sld_id_list=True)),
+    )
 
-    def it_provides_access_to_an_existing_notes_master_part(
-        self, notes_master_part_, part_related_by_
-    ):
-        """This is the first of a two-part test to cover the existing notes master case.
+    layout_part = SlideLayoutPart(
+        PackURI("/ppt/slideLayouts/slideLayout1.xml"),
+        CT.PML_SLIDE_LAYOUT,
+        pkg,
+        parse_xml(_slide_layout_xml()),
+    )
+    layout = SlideLayout(layout_part._element, layout_part)
 
-        The notes master not-present case follows.
-        """
-        prs_part = PresentationPart(None, None, None, None)
-        part_related_by_.return_value = notes_master_part_
+    rId, slide = prs_part.add_slide(layout)
 
-        notes_master_part = prs_part.notes_master_part
+    assert slide.slide_layout == layout
+    assert rId in prs_part.rels
 
-        prs_part.part_related_by.assert_called_once_with(prs_part, RT.NOTES_MASTER)
-        assert notes_master_part is notes_master_part_
 
-    def but_it_adds_a_notes_master_part_when_needed(
-        self, request, package_, notes_master_part_, part_related_by_, relate_to_
-    ):
-        """This is the second of a two-part test to cover notes-master-not-present case.
+def test_presentation_part_core_properties_delegates_to_package() -> None:
+    # Arrange
+    expected_core_props = object()
 
-        The notes master present case is just above.
-        """
-        NotesMasterPart_ = class_mock(request, "pptx.parts.presentation.NotesMasterPart")
-        NotesMasterPart_.create_default.return_value = notes_master_part_
-        part_related_by_.side_effect = KeyError
-        prs_part = PresentationPart(None, None, package_, None)
+    part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        CorePropertiesPackageStub(expected_core_props),
+        parse_xml(_presentation_xml()),
+    )
 
-        notes_master_part = prs_part.notes_master_part
+    # Act / Assert
+    assert part.core_properties is expected_core_props
 
-        NotesMasterPart_.create_default.assert_called_once_with(package_)
-        relate_to_.assert_called_once_with(prs_part, notes_master_part_, RT.NOTES_MASTER)
-        assert notes_master_part is notes_master_part_
 
-    def it_provides_access_to_its_notes_master(self, request, notes_master_part_):
-        notes_master_ = instance_mock(request, NotesMaster)
-        property_mock(
-            request,
-            PresentationPart,
-            "notes_master_part",
-            return_value=notes_master_part_,
-        )
-        notes_master_part_.notes_master = notes_master_
-        prs_part = PresentationPart(None, None, None, None)
+def test_presentation_part_get_slide_returns_slide_or_none() -> None:
+    # Arrange
+    part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        None,
+        parse_xml(
+            b"""
+            <p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+              <p:sldIdLst>
+                <p:sldId id="256" r:id="rId1"/>
+              </p:sldIdLst>
+            </p:presentation>
+            """
+        ),
+    )
+    expected_slide = object()
+    part.related_part = lambda rid: SlidePartProxy(expected_slide)  # type: ignore[method-assign]
 
-        assert prs_part.notes_master is notes_master_
+    # Act / Assert
+    assert part.get_slide(256) is expected_slide
+    assert part.get_slide(999) is None
 
-    def it_provides_access_to_a_related_slide(self, request, slide_, related_part_):
-        slide_part_ = instance_mock(request, SlidePart, slide=slide_)
-        related_part_.return_value = slide_part_
-        prs_part = PresentationPart(None, None, None, None)
 
-        slide = prs_part.related_slide("rId42")
+def test_presentation_part_notes_master_part_existing_relation_path() -> None:
+    # Arrange
+    expected = object()
+    part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        None,
+        parse_xml(_presentation_xml()),
+    )
+    part.part_related_by = lambda reltype: expected  # type: ignore[method-assign]
 
-        related_part_.assert_called_once_with(prs_part, "rId42")
-        assert slide is slide_
+    # Act / Assert
+    assert part.notes_master_part is expected
 
-    def it_provides_access_to_a_related_master(self, request, slide_master_, related_part_):
-        slide_master_part_ = instance_mock(request, SlideMasterPart, slide_master=slide_master_)
-        related_part_.return_value = slide_master_part_
-        prs_part = PresentationPart(None, None, None, None)
 
-        slide_master = prs_part.related_slide_master("rId42")
+def test_presentation_part_notes_master_part_create_default_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Arrange
+    created = object()
+    relate_calls: list[tuple[object, str]] = []
+    package = Package(None)
+    part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        package,
+        parse_xml(_presentation_xml()),
+    )
 
-        related_part_.assert_called_once_with(prs_part, "rId42")
-        assert slide_master is slide_master_
+    def _part_related_by(_reltype: str):
+        raise KeyError
 
-    def it_can_rename_related_slide_parts(self, request, related_part_):
-        rIds = tuple("rId%d" % n for n in range(5, 0, -1))
-        slide_parts = tuple(instance_mock(request, SlidePart) for _ in range(5))
-        related_part_.side_effect = iter(slide_parts)
-        prs_part = PresentationPart(None, None, None, None)
+    def _relate_to(target: object, reltype: str) -> None:
+        relate_calls.append((target, reltype))
 
-        prs_part.rename_slide_parts(rIds)
+    part.part_related_by = _part_related_by  # type: ignore[method-assign]
+    part.relate_to = _relate_to  # type: ignore[method-assign]
+    monkeypatch.setattr(
+        "pptx.parts.presentation.NotesMasterPart.create_default", lambda pkg: created
+    )
 
-        assert related_part_.call_args_list == [call(prs_part, rId) for rId in rIds]
-        assert [s.partname for s in slide_parts] == [
-            PackURI("/ppt/slides/slide%d.xml" % (i + 1)) for i in range(len(rIds))
-        ]
+    # Act
+    notes_master_part = part.notes_master_part
 
-    def it_can_save_the_package_to_a_file(self, package_):
-        PresentationPart(None, None, package_, None).save("prs.pptx")
-        package_.save.assert_called_once_with("prs.pptx")
+    # Assert
+    assert notes_master_part is created
+    assert relate_calls == [(created, RT.NOTES_MASTER)]
 
-    def it_can_add_a_new_slide(self, request, package_, slide_part_, slide_, relate_to_):
-        slide_layout_ = instance_mock(request, SlideLayout)
-        partname = PackURI("/ppt/slides/slide9.xml")
-        property_mock(request, PresentationPart, "_next_slide_partname", return_value=partname)
-        SlidePart_ = class_mock(request, "pptx.parts.presentation.SlidePart")
-        SlidePart_.new.return_value = slide_part_
-        relate_to_.return_value = "rId42"
-        slide_layout_part_ = slide_layout_.part
-        slide_part_.slide = slide_
-        prs_part = PresentationPart(None, None, package_, None)
 
-        rId, slide = prs_part.add_slide(slide_layout_)
+def test_presentation_part_notes_master_related_slide_and_related_master() -> None:
+    # Arrange
+    notes_master = object()
+    slide = object()
+    slide_master = object()
+    part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        None,
+        parse_xml(_presentation_xml()),
+    )
 
-        SlidePart_.new.assert_called_once_with(partname, package_, slide_layout_part_)
-        prs_part.relate_to.assert_called_once_with(prs_part, slide_part_, RT.SLIDE)
-        assert rId == "rId42"
-        assert slide is slide_
+    def _related_part(rid: str):
+        mapping = {
+            "notes": NotesMasterPartProxy(notes_master),
+            "slide": SlidePartProxy(slide),
+            "master": SlideMasterPartProxy(slide_master),
+        }
+        return mapping[rid]
 
-    def it_finds_the_slide_id_of_a_slide_part(self, slide_part_, related_part_):
-        prs_elm = element(
-            "p:presentation/p:sldIdLst/(p:sldId{r:id=a,id=256},p:sldId{r:id="
-            "b,id=257},p:sldId{r:id=c,id=258})"
-        )
-        related_part_.side_effect = iter((None, slide_part_, None))
-        prs_part = PresentationPart(None, None, None, prs_elm)
+    part.part_related_by = lambda reltype: _related_part("notes")  # type: ignore[method-assign]
+    part.related_part = _related_part  # type: ignore[method-assign]
 
-        _slide_id = prs_part.slide_id(slide_part_)
+    # Act / Assert
+    assert part.notes_master is notes_master
+    assert part.related_slide("slide") is slide
+    assert part.related_slide_master("master") is slide_master
 
-        assert related_part_.call_args_list == [
-            call(prs_part, "a"),
-            call(prs_part, "b"),
-        ]
-        assert _slide_id == 257
 
-    def it_raises_on_slide_id_not_found(self, slide_part_, related_part_):
-        prs_elm = element(
-            "p:presentation/p:sldIdLst/(p:sldId{r:id=a,id=256},p:sldId{r:id="
-            "b,id=257},p:sldId{r:id=c,id=258})"
-        )
-        related_part_.return_value = "not the slide you're looking for"
-        prs_part = PresentationPart(None, None, None, prs_elm)
+def test_presentation_part_save_delegates_to_package() -> None:
+    # Arrange
+    package = SaveCallPackageStub()
 
-        with pytest.raises(ValueError):
-            prs_part.slide_id(slide_part_)
+    part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        package,
+        parse_xml(_presentation_xml()),
+    )
 
-    @pytest.mark.parametrize("is_present", (True, False))
-    def it_finds_a_slide_by_slide_id(self, is_present, slide_, slide_part_, related_part_):
-        prs_elm = element(
-            "p:presentation/p:sldIdLst/(p:sldId{r:id=a,id=256},p:sldId{r:id="
-            "b,id=257},p:sldId{r:id=c,id=258})"
-        )
-        slide_id = 257 if is_present else 666
-        expected_value = slide_ if is_present else None
-        related_part_.return_value = slide_part_
-        slide_part_.slide = slide_
-        prs_part = PresentationPart(None, None, None, prs_elm)
+    # Act
+    part.save("out.pptx")
 
-        slide = prs_part.get_slide(slide_id)
+    # Assert
+    assert package.saved_paths == ["out.pptx"]
 
-        assert slide == expected_value
 
-    def it_knows_the_next_slide_partname_to_help(self):
-        prs_elm = element("p:presentation/p:sldIdLst/(p:sldId,p:sldId)")
-        prs_part = PresentationPart(None, None, None, prs_elm)
+def test_presentation_part_slide_id_returns_match_and_raises_when_missing() -> None:
+    # Arrange
+    target_part = object()
+    non_target = object()
+    part = PresentationPart(
+        PackURI("/ppt/presentation.xml"),
+        CT.PML_PRESENTATION_MAIN,
+        None,
+        parse_xml(
+            b"""
+            <p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+              <p:sldIdLst>
+                <p:sldId id="256" r:id="rId1"/>
+                <p:sldId id="257" r:id="rId2"/>
+              </p:sldIdLst>
+            </p:presentation>
+            """
+        ),
+    )
+    part.related_part = (  # type: ignore[method-assign]
+        lambda rid: target_part if rid == "rId2" else non_target
+    )
 
-        assert prs_part._next_slide_partname == PackURI("/ppt/slides/slide3.xml")
+    # Act / Assert
+    assert part.slide_id(target_part) == 257
 
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def notes_master_part_(self, request):
-        return instance_mock(request, NotesMasterPart)
-
-    @pytest.fixture
-    def package_(self, request):
-        return instance_mock(request, Package)
-
-    @pytest.fixture
-    def part_related_by_(self, request):
-        return method_mock(request, PresentationPart, "part_related_by")
-
-    @pytest.fixture
-    def relate_to_(self, request):
-        return method_mock(request, PresentationPart, "relate_to")
-
-    @pytest.fixture
-    def related_part_(self, request):
-        return method_mock(request, PresentationPart, "related_part")
-
-    @pytest.fixture
-    def slide_(self, request):
-        return instance_mock(request, Slide)
-
-    @pytest.fixture
-    def slide_master_(self, request):
-        return instance_mock(request, SlideMaster)
-
-    @pytest.fixture
-    def slide_part_(self, request):
-        return instance_mock(request, SlidePart)
+    with pytest.raises(ValueError, match="matching slide_part not found"):
+        part.slide_id(object())

@@ -32,6 +32,6 @@ jobs:
       - name: Install test dependencies
         run: uv sync --extra test
       - name: Test with pytest
-        run: uv run pytest --cov=pptx --cov-report term-missing tests tests_modern
+        run: uv run pytest --cov=pptx --cov-report term-missing tests
       - name: Acceptance tests with behave
         run: uv run behave --stop

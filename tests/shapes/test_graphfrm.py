@@ -1,168 +1,147 @@
-"""Unit-test suite for pptx.shapes.graphfrm module."""
-
 from __future__ import annotations
+
+import io
 
 import pytest
 
-from pptx.chart.chart import Chart
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.parts.chart import ChartPart
-from pptx.parts.embeddedpackage import EmbeddedPackagePart
-from pptx.parts.slide import SlidePart
-from pptx.shapes.graphfrm import GraphicFrame, _OleFormat
-from pptx.shapes.shapetree import SlideShapes
-from pptx.spec import (
-    GRAPHIC_DATA_URI_CHART,
-    GRAPHIC_DATA_URI_OLEOBJ,
-    GRAPHIC_DATA_URI_TABLE,
-)
-
-from ..unitutil.cxml import element
-from ..unitutil.mock import class_mock, instance_mock, property_mock
+from pptx.oxml import parse_xml
+from pptx.shapes.graphfrm import GraphicFrame
 
 
-class DescribeGraphicFrame(object):
-    """Unit-test suite for `pptx.shapes.graphfrm.GraphicFrame` object."""
+def test_graphic_frame_chart_access(parent) -> None:
+    chart_data = CategoryChartData()
+    chart_data.categories = ("A", "B")
+    chart_data.add_series("Series 1", (1, 2))
+    chart_rid = parent.part.add_chart_part(XL_CHART_TYPE.BAR_CLUSTERED, chart_data)
+    chart_xml = (
+        b'<p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        b'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+        b'xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" '
+        b'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        b'<p:nvGraphicFramePr><p:cNvPr id="42" name="Chart"/></p:nvGraphicFramePr>'
+        b'<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">'
+        b'<c:chart r:id="%b"/>'
+        b"</a:graphicData></a:graphic>"
+        b"</p:graphicFrame>"
+    ) % chart_rid.encode("utf-8")
 
-    def it_provides_access_to_the_chart_it_contains(
-        self, request, has_chart_prop_, chart_part_, chart_
-    ):
-        has_chart_prop_.return_value = True
-        property_mock(request, GraphicFrame, "chart_part", return_value=chart_part_)
-        chart_part_.chart = chart_
-
-        assert GraphicFrame(None, None).chart is chart_
-
-    def but_it_raises_on_chart_if_there_isnt_one(self, has_chart_prop_):
-        has_chart_prop_.return_value = False
-
-        with pytest.raises(ValueError) as e:
-            GraphicFrame(None, None).chart
-        assert str(e.value) == "shape does not contain a chart"
-
-    def it_provides_access_to_its_chart_part(self, request, chart_part_):
-        slide_part_ = instance_mock(request, SlidePart)
-        slide_part_.related_part.return_value = chart_part_
-        property_mock(request, GraphicFrame, "part", return_value=slide_part_)
-        graphic_frame = GraphicFrame(
-            element("p:graphicFrame/a:graphic/a:graphicData/c:chart{r:id=rId42}"), None
-        )
-
-        chart_part = graphic_frame.chart_part
-
-        slide_part_.related_part.assert_called_once_with("rId42")
-        assert chart_part is chart_part_
-
-    @pytest.mark.parametrize(
-        "graphicData_uri, expected_value",
-        (
-            (GRAPHIC_DATA_URI_CHART, True),
-            (GRAPHIC_DATA_URI_OLEOBJ, False),
-            (GRAPHIC_DATA_URI_TABLE, False),
-        ),
+    graphic_frame = GraphicFrame(
+        parse_xml(chart_xml),
+        parent,
     )
-    def it_knows_whether_it_contains_a_chart(self, graphicData_uri, expected_value):
-        graphicFrame = element("p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % graphicData_uri)
-        assert GraphicFrame(graphicFrame, None).has_chart is expected_value
 
-    @pytest.mark.parametrize(
-        "graphicData_uri, expected_value",
-        (
-            (GRAPHIC_DATA_URI_CHART, False),
-            (GRAPHIC_DATA_URI_OLEOBJ, False),
-            (GRAPHIC_DATA_URI_TABLE, True),
+    assert graphic_frame.has_chart is True
+    assert graphic_frame.has_table is False
+    assert graphic_frame.shape_type == MSO_SHAPE_TYPE.CHART
+    assert graphic_frame.chart is not None
+    assert graphic_frame.chart_part is parent.part.related_part(chart_rid)
+
+
+def test_graphic_frame_chart_raises_when_missing(parent) -> None:
+    graphic_frame = GraphicFrame(
+        parse_xml(
+            b"""
+            <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:nvGraphicFramePr><p:cNvPr id="42" name="Not Chart"/></p:nvGraphicFramePr>
+              <a:graphic>
+                <a:graphicData uri="http://schemas.openxmlformats.org/presentationml/2006/ole">
+                  <p:oleObj xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"/>
+                </a:graphicData>
+              </a:graphic>
+            </p:graphicFrame>
+            """
         ),
+        parent,
     )
-    def it_knows_whether_it_contains_a_table(self, graphicData_uri, expected_value):
-        graphicFrame = element("p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % graphicData_uri)
-        assert GraphicFrame(graphicFrame, None).has_table is expected_value
 
-    def it_provides_access_to_the_OleFormat_object(self, request):
-        ole_format_ = instance_mock(request, _OleFormat)
-        _OleFormat_ = class_mock(
-            request, "pptx.shapes.graphfrm._OleFormat", return_value=ole_format_
-        )
-        graphicFrame = element(
-            "p:graphicFrame/a:graphic/a:graphicData{uri=http://schemas.openxmlformats"
-            ".org/presentationml/2006/ole}"
-        )
-        parent_ = instance_mock(request, SlideShapes)
-        graphic_frame = GraphicFrame(graphicFrame, parent_)
+    with pytest.raises(ValueError, match="shape does not contain a chart"):
+        _ = graphic_frame.chart
 
-        ole_format = graphic_frame.ole_format
 
-        _OleFormat_.assert_called_once_with(graphicFrame.graphicData, parent_)
-        assert ole_format is ole_format_
-
-    def but_it_raises_on_ole_format_when_this_is_not_an_OLE_object(self):
-        graphic_frame = GraphicFrame(
-            element(
-                "p:graphicFrame/a:graphic/a:graphicData{uri=http://schemas.openxmlfor"
-                "mats.org/drawingml/2006/table}"
-            ),
-            None,
-        )
-        with pytest.raises(ValueError) as e:
-            graphic_frame.ole_format
-        assert str(e.value) == "not an OLE-object shape"
-
-    def it_raises_on_shadow(self):
-        graphic_frame = GraphicFrame(None, None)
-        with pytest.raises(NotImplementedError):
-            graphic_frame.shadow
-
-    @pytest.mark.parametrize(
-        "uri, oleObj_child, expected_value",
-        (
-            (GRAPHIC_DATA_URI_CHART, None, MSO_SHAPE_TYPE.CHART),
-            (GRAPHIC_DATA_URI_OLEOBJ, "embed", MSO_SHAPE_TYPE.EMBEDDED_OLE_OBJECT),
-            (GRAPHIC_DATA_URI_OLEOBJ, "link", MSO_SHAPE_TYPE.LINKED_OLE_OBJECT),
-            (GRAPHIC_DATA_URI_TABLE, None, MSO_SHAPE_TYPE.TABLE),
-            ("foobar", None, None),
+def test_graphic_frame_table_shape_type(parent) -> None:
+    graphic_frame = GraphicFrame(
+        parse_xml(
+            b"""
+            <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:nvGraphicFramePr><p:cNvPr id="42" name="Table"/></p:nvGraphicFramePr>
+              <a:graphic>
+                <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"/>
+              </a:graphic>
+            </p:graphicFrame>
+            """
         ),
+        parent,
     )
-    def it_knows_its_shape_type(self, uri, oleObj_child, expected_value):
-        graphicFrame = element(
-            ("p:graphicFrame/a:graphic/a:graphicData{uri=%s}/p:oleObj/p:%s" % (uri, oleObj_child))
-            if oleObj_child
-            else "p:graphicFrame/a:graphic/a:graphicData{uri=%s}" % uri
-        )
-        assert GraphicFrame(graphicFrame, None).shape_type is expected_value
 
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def chart_(self, request):
-        return instance_mock(request, Chart)
-
-    @pytest.fixture
-    def chart_part_(self, request, chart_):
-        return instance_mock(request, ChartPart, chart=chart_)
-
-    @pytest.fixture
-    def has_chart_prop_(self, request):
-        return property_mock(request, GraphicFrame, "has_chart")
+    assert graphic_frame.has_table is True
+    assert graphic_frame.shape_type == MSO_SHAPE_TYPE.TABLE
 
 
-class Describe_OleFormat(object):
-    """Unit-test suite for `pptx.shapes.graphfrm._OleFormat` object."""
+def test_graphic_frame_ole_format(parent) -> None:
+    ole_rid = parent.part.add_embedded_ole_object_part("Excel.Sheet.12", io.BytesIO(b"xlsx"))
+    ole_xml = (
+        b'<p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        b'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+        b'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        b'<p:nvGraphicFramePr><p:cNvPr id="42" name="OLE"/></p:nvGraphicFramePr>'
+        b'<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/presentationml/2006/ole">'
+        b'<p:oleObj r:id="%b" progId="Excel.Sheet.12" showAsIcon="1"><p:embed/></p:oleObj>'
+        b"</a:graphicData></a:graphic>"
+        b"</p:graphicFrame>"
+    ) % ole_rid.encode("utf-8")
 
-    def it_provides_access_to_the_OLE_object_blob(self, request):
-        ole_obj_part_ = instance_mock(request, EmbeddedPackagePart, blob=b"0123456789")
-        slide_part_ = instance_mock(request, SlidePart)
-        slide_part_.related_part.return_value = ole_obj_part_
-        property_mock(request, _OleFormat, "part", return_value=slide_part_)
-        ole_format = _OleFormat(element("a:graphicData/p:oleObj{r:id=rId7}"), None)
+    graphic_frame = GraphicFrame(
+        parse_xml(ole_xml),
+        parent,
+    )
 
-        blob = ole_format.blob
+    assert graphic_frame.shape_type == MSO_SHAPE_TYPE.EMBEDDED_OLE_OBJECT
+    ole_format = graphic_frame.ole_format
+    assert ole_format.blob == b"xlsx"
+    assert ole_format.prog_id == "Excel.Sheet.12"
+    assert ole_format.show_as_icon is True
 
-        slide_part_.related_part.assert_called_once_with("rId7")
-        assert blob == b"0123456789"
 
-    def it_knows_the_OLE_object_prog_id(self):
-        graphicData = element("a:graphicData/p:oleObj{progId=Excel.Sheet.12}")
-        assert _OleFormat(graphicData, None).prog_id == "Excel.Sheet.12"
+def test_graphic_frame_ole_format_raises_on_non_ole(parent) -> None:
+    graphic_frame = GraphicFrame(
+        parse_xml(
+            b"""
+            <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:nvGraphicFramePr><p:cNvPr id="42" name="Chart"/></p:nvGraphicFramePr>
+              <a:graphic>
+                <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"/>
+              </a:graphic>
+            </p:graphicFrame>
+            """
+        ),
+        parent,
+    )
 
-    def it_knows_whether_to_show_the_OLE_object_as_an_icon(self):
-        graphicData = element("a:graphicData/p:oleObj{showAsIcon=1}")
-        assert _OleFormat(graphicData, None).show_as_icon is True
+    with pytest.raises(ValueError, match="not an OLE-object shape"):
+        _ = graphic_frame.ole_format
+
+
+def test_graphic_frame_shadow_raises(parent) -> None:
+    graphic_frame = GraphicFrame(
+        parse_xml(
+            b"""
+            <p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                            xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:nvGraphicFramePr><p:cNvPr id="42" name="Chart"/></p:nvGraphicFramePr>
+              <a:graphic>
+                <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"/>
+              </a:graphic>
+            </p:graphicFrame>
+            """
+        ),
+        parent,
+    )
+
+    with pytest.raises(NotImplementedError, match="shadow property on GraphicFrame"):
+        _ = graphic_frame.shadow

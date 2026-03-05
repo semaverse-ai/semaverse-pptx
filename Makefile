@@ -40,7 +40,7 @@ coverage:
 
 .PHONY: coverage_modern
 coverage_modern:
-	uv run pytest --cov-report term-missing --cov=pptx tests_modern
+	uv run pytest --cov-report term-missing --cov=pptx tests
 
 .PHONY: docs
 docs:
