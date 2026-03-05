@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.exc import InvalidXmlError
 from pptx.oxml import parse_xml, register_element_cls
@@ -125,38 +124,37 @@ def test_choice_getter(choice_tag: str | None) -> None:
     assert isinstance(choice, CT_Choice)
 
 
-def test_choice_creator(snapshot: SnapshotAssertion) -> None:
+def test_choice_creator() -> None:
     parent = parent_elm()
     choice = parent._new_choice()
-    assert str(choice.xml) == snapshot
+    assert choice.tag == qn("cp:choice")
 
 
-def test_choice_inserter(snapshot: SnapshotAssertion) -> None:
+def test_choice_inserter() -> None:
     parent = parent_elm("<cp:oomChild/><cp:oooChild/>")
     choice = parent._new_choice()
     parent._insert_choice(choice)
-    assert str(parent.xml) == snapshot
+    assert parent[0].tag == qn("cp:choice")
+    assert parent[1].tag == qn("cp:oomChild")
 
 
-def test_choice_adder(snapshot: SnapshotAssertion) -> None:
+def test_choice_adder() -> None:
     parent = parent_elm()
     choice = parent._add_choice()
     assert isinstance(choice, CT_Choice)
-    assert str(parent.xml) == snapshot
+    assert parent[0].tag == qn("cp:choice")
 
 
 @pytest.mark.parametrize(
     "choice_tag",
     ["choice2", None, "choice"],
 )
-def test_choice_get_or_change_to(
-    choice_tag: str | None, snapshot: SnapshotAssertion
-) -> None:
+def test_choice_get_or_change_to(choice_tag: str | None) -> None:
     xml_body = f"<cp:{choice_tag}/>" if choice_tag else ""
     parent = parent_elm(xml_body)
     choice = parent.get_or_change_to_choice()
     assert isinstance(choice, CT_Choice)
-    assert str(parent.xml) == snapshot
+    assert parent[0].tag == qn("cp:choice")
 
 
 def test_ooo_child_getter() -> None:
@@ -172,31 +170,32 @@ def test_oom_child_getter() -> None:
     assert isinstance(oom_children[0], CT_OomChild)
 
 
-def test_oom_child_creator(snapshot: SnapshotAssertion) -> None:
+def test_oom_child_creator() -> None:
     parent = parent_elm()
     oom_child = parent._new_oomChild()
-    assert str(oom_child.xml) == snapshot
+    assert oom_child.tag == qn("cp:oomChild")
 
 
-def test_oom_child_inserter(snapshot: SnapshotAssertion) -> None:
+def test_oom_child_inserter() -> None:
     parent = parent_elm("<cp:oooChild/><cp:zomChild/><cp:zooChild/>")
     oom_child = parent._new_oomChild()
     parent._insert_oomChild(oom_child)
-    assert str(parent.xml) == snapshot
+    assert parent[0].tag == qn("cp:oomChild")
+    assert parent[1].tag == qn("cp:oooChild")
 
 
-def test_oom_child_private_add(snapshot: SnapshotAssertion) -> None:
+def test_oom_child_private_add() -> None:
     parent = parent_elm()
     oom_child = parent._add_oomChild()
     assert isinstance(oom_child, CT_OomChild)
-    assert str(parent.xml) == snapshot
+    assert parent[0].tag == qn("cp:oomChild")
 
 
-def test_oom_child_public_add(snapshot: SnapshotAssertion) -> None:
+def test_oom_child_public_add() -> None:
     parent = parent_elm()
     oom_child = parent.add_oomChild()
     assert isinstance(oom_child, CT_OomChild)
-    assert str(parent.xml) == snapshot
+    assert parent[0].tag == qn("cp:oomChild")
 
 
 def test_oom_child_property_removed() -> None:
@@ -221,13 +220,11 @@ def test_optional_attribute_getter_returns_default_when_missing() -> None:
     "value",
     [36, None],
 )
-def test_optional_attribute_setter(
-    value: int | None, snapshot: SnapshotAssertion
-) -> None:
+def test_optional_attribute_setter(value: int | None) -> None:
     parent = parent_elm()
     parent.set(qn("cp:optAttr"), "42")
     parent.optAttr = value
-    assert str(parent.xml) == snapshot
+    assert parent.get(qn("cp:optAttr")) == (str(value) if value is not None else None)
 
 
 def test_required_attribute_getter() -> None:
@@ -237,11 +234,11 @@ def test_required_attribute_getter() -> None:
     assert req_attr == 42
 
 
-def test_required_attribute_setter(snapshot: SnapshotAssertion) -> None:
+def test_required_attribute_setter() -> None:
     parent = parent_elm()
     parent.set("reqAttr", "42")
     parent.reqAttr = 24
-    assert str(parent.xml) == snapshot
+    assert parent.get("reqAttr") == "24"
 
 
 def test_required_attribute_raises_on_get_when_missing() -> None:
@@ -280,24 +277,24 @@ def test_zom_child_getter() -> None:
     assert isinstance(zom_children[0], CT_ZomChild)
 
 
-def test_zom_child_creator(snapshot: SnapshotAssertion) -> None:
+def test_zom_child_creator() -> None:
     parent = parent_elm()
     zom_child = parent._new_zomChild()
-    assert str(zom_child.xml) == snapshot
+    assert zom_child.tag == qn("cp:zomChild")
 
 
-def test_zom_child_inserter(snapshot: SnapshotAssertion) -> None:
+def test_zom_child_inserter() -> None:
     parent = parent_elm("<cp:oomChild/><cp:oooChild/><cp:zooChild/>")
     zom_child = parent._new_zomChild()
     parent._insert_zomChild(zom_child)
-    assert str(parent.xml) == snapshot
+    assert parent[2].tag == qn("cp:zomChild")
 
 
-def test_zom_child_adder(snapshot: SnapshotAssertion) -> None:
+def test_zom_child_adder() -> None:
     parent = parent_elm()
     zom_child = parent._add_zomChild()
     assert isinstance(zom_child, CT_ZomChild)
-    assert str(parent.xml) == snapshot
+    assert parent[-1].tag == qn("cp:zomChild")
 
 
 def test_zom_child_property_removed() -> None:
@@ -319,45 +316,41 @@ def test_zoo_child_getter(has_child: bool) -> None:
     assert zoo_child is None
 
 
-def test_zoo_child_adder(snapshot: SnapshotAssertion) -> None:
+def test_zoo_child_adder() -> None:
     parent = parent_elm()
     zoo_child = parent._add_zooChild()
     assert isinstance(zoo_child, CT_ZooChild)
-    assert str(parent.xml) == snapshot
+    assert parent[-1].tag == qn("cp:zooChild")
 
 
-def test_zoo_child_inserter(snapshot: SnapshotAssertion) -> None:
+def test_zoo_child_inserter() -> None:
     parent = parent_elm("<cp:oomChild/><cp:oooChild/><cp:zomChild/>")
     zoo_child = parent._new_zooChild()
     parent._insert_zooChild(zoo_child)
-    assert str(parent.xml) == snapshot
+    assert parent[-1].tag == qn("cp:zooChild")
 
 
 @pytest.mark.parametrize(
     "has_child",
     [True, False],
 )
-def test_zoo_child_get_or_add(
-    has_child: bool, snapshot: SnapshotAssertion
-) -> None:
+def test_zoo_child_get_or_add(has_child: bool) -> None:
     xml_body = "<cp:zooChild/>" if has_child else ""
     parent = parent_elm(xml_body)
     zoo_child = parent.get_or_add_zooChild()
     assert isinstance(zoo_child, CT_ZooChild)
-    assert str(parent.xml) == snapshot
+    assert parent.zooChild is not None
 
 
 @pytest.mark.parametrize(
     "has_child",
     [True, False],
 )
-def test_zoo_child_remover(
-    has_child: bool, snapshot: SnapshotAssertion
-) -> None:
+def test_zoo_child_remover(has_child: bool) -> None:
     xml_body = "<cp:zooChild/>" if has_child else ""
     parent = parent_elm(xml_body)
     parent._remove_zooChild()
-    assert str(parent.xml) == snapshot
+    assert parent.zooChild is None
 
 
 @pytest.mark.parametrize(

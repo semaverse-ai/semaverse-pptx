@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING, cast
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
 from pptx.chart.legend import Legend
@@ -13,6 +14,9 @@ from pptx.dml.chtfmt import ChartFormat
 from pptx.shared import ElementProxy, PartElementProxy
 from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
+
+if TYPE_CHECKING:
+    from pptx.parts.chart import ChartPart
 
 
 class Chart(PartElementProxy):
@@ -74,7 +78,7 @@ class Chart(PartElementProxy):
         present. Use :attr:`has_title` to test for presence of a chart title
         non-destructively.
         """
-        return ChartTitle(self._element.get_or_add_title())
+        return ChartTitle(self._chartSpace.chart.get_or_add_title())
 
     @property
     def chart_type(self):
@@ -196,7 +200,7 @@ class Chart(PartElementProxy):
         The |ChartWorkbook| object providing access to the Excel source data
         for this chart.
         """
-        return self.part.chart_workbook
+        return cast("ChartPart", self.part).chart_workbook
 
 
 class ChartTitle(ElementProxy):
@@ -210,6 +214,11 @@ class ChartTitle(ElementProxy):
     def __init__(self, title):
         super(ChartTitle, self).__init__(title)
         self._title = title
+
+    @property
+    def part(self):
+        """The package part containing this object."""
+        return self._title.part
 
     @lazyproperty
     def format(self):
@@ -254,7 +263,7 @@ class ChartTitle(ElementProxy):
         return TextFrame(rich, self)
 
 
-class _Plots(Sequence):
+class _Plots(Sequence[object]):
     """
     The sequence of plots in a chart, such as a bar plot or a line plot. Most
     charts have only a single plot. The concept is necessary when two chart
@@ -267,7 +276,7 @@ class _Plots(Sequence):
         self._plotArea = plotArea
         self._chart = chart
 
-    def __getitem__(self, index):
+    def __getitem__(self, index):  # pyright: ignore[reportIncompatibleMethodOverride]
         xCharts = self._plotArea.xCharts
         if isinstance(index, slice):
             plots = [PlotFactory(xChart, self._chart) for xChart in xCharts]

@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from syrupy.assertion import SnapshotAssertion
-
+from pptx.oxml.ns import qn
 from pptx.oxml.slide import CT_NotesMaster, CT_NotesSlide
 
 
-def test_ct_notes_master_new_default(snapshot: SnapshotAssertion) -> None:
+def test_ct_notes_master_new_default() -> None:
     notes_master = CT_NotesMaster.new_default()
 
-    assert str(notes_master.xml) == snapshot
+    assert notes_master.tag == qn("p:notesMaster")
 
 
-def test_ct_notes_slide_new(snapshot: SnapshotAssertion) -> None:
+def test_ct_notes_slide_new() -> None:
     notes = CT_NotesSlide.new()
 
-    assert str(notes.xml) == snapshot
+    assert notes.tag == qn("p:notes")

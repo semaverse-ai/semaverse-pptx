@@ -127,6 +127,8 @@ class GraphicFrame(BaseShape):
         if not self.has_table:
             raise ValueError("shape does not contain a table")
         tbl = self._graphicFrame.graphic.graphicData.tbl
+        if tbl is None:
+            raise ValueError("shape table XML is missing <a:tbl>")
         return Table(tbl, self)
 
 

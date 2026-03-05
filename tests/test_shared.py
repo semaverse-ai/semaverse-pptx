@@ -3,15 +3,7 @@ from __future__ import annotations
 from lxml import etree
 
 from pptx.shared import ElementProxy, ParentedElementProxy, PartElementProxy
-
-
-class DummyPart:
-    pass
-
-
-class DummyParent:
-    def __init__(self, part: DummyPart | None = None) -> None:
-        self.part = part
+from tests.stubs import PartProviderStub
 
 
 def test_element_proxy_equality() -> None:
@@ -38,22 +30,22 @@ def test_element_proxy_element_property() -> None:
 
 
 def test_parented_element_proxy_parent_property() -> None:
-    parent = DummyParent()
+    parent = PartProviderStub(part=object())
     proxy = ParentedElementProxy(etree.Element("p"), parent)
 
     assert proxy.parent is parent
 
 
 def test_parented_element_proxy_part_property() -> None:
-    part = DummyPart()
-    parent = DummyParent(part=part)
+    part = object()
+    parent = PartProviderStub(part=part)
     proxy = ParentedElementProxy(etree.Element("p"), parent)
 
     assert proxy.part is part
 
 
 def test_part_element_proxy_part_property() -> None:
-    part = DummyPart()
+    part = object()
     proxy = PartElementProxy(etree.Element("p"), part)
 
     assert proxy.part is part

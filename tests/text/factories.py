@@ -27,9 +27,7 @@ def paragraph(xml_body: bytes = b"") -> object:
 
 def run(xml_body: bytes = b"") -> object:
     return parse_xml(
-        b'<a:r xmlns:a="' + DML_NS + b'" xmlns:r="' + REL_NS + b'">'
-        + xml_body
-        + b"</a:r>"
+        b'<a:r xmlns:a="' + DML_NS + b'" xmlns:r="' + REL_NS + b'">' + xml_body + b"</a:r>"
     )
 
 

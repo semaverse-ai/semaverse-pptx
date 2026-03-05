@@ -15,6 +15,7 @@ from pptx.chart.axis import (
 from pptx.dml.chtfmt import ChartFormat
 from pptx.enum.chart import XL_AXIS_CROSSES, XL_CATEGORY_TYPE, XL_TICK_LABEL_POSITION, XL_TICK_MARK
 from pptx.oxml import parse_xml
+from tests.stubs import PartProviderStub
 
 
 def _cat_ax(xml_body: bytes = b"") -> object:
@@ -53,6 +54,15 @@ def test_base_axis_title_and_format() -> None:
     assert axis.has_title is True
     assert isinstance(axis.axis_title, AxisTitle)
     assert isinstance(axis.format, ChartFormat)
+
+
+def test_axis_title_exposes_part_from_underlying_element() -> None:
+    part = object()
+    axis_title = AxisTitle(PartProviderStub(part=part))
+
+    resolved_part = axis_title.part
+
+    assert resolved_part is part
 
 
 def test_base_axis_gridlines_and_ticks() -> None:

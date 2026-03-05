@@ -41,7 +41,7 @@ features |pp| does not support.
 New features/releases
 ---------------------
 
-If there's a new feature you need for your use case, feel free to reach out at 
+If there's a new feature you need for your use case, feel free to reach out at
 semaverse-pptx@semaverse.ai.
 
 

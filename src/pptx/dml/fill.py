@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pptx.dml.color import ColorFormat
 from pptx.enum.dml import MSO_FILL
@@ -53,6 +53,9 @@ class FillFormat(object):
 
         This property is only applicable to pattern fills and lines.
         """
+        if not isinstance(self._fill, _PattFill):
+            tmpl = "fill type %s has no background color, call .patterned() first"
+            raise TypeError(tmpl % self._fill.__class__.__name__)
         return self._fill.back_color
 
     def background(self):
@@ -68,6 +71,9 @@ class FillFormat(object):
         Return a |ColorFormat| instance representing the foreground color of
         this fill.
         """
+        if not isinstance(self._fill, (_PattFill, _SolidFill)):
+            tmpl = "fill type %s has no foreground color, call .solid() or .patterned() first"
+            raise TypeError(tmpl % self._fill.__class__.__name__)
         return self._fill.fore_color
 
     def gradient(self):
@@ -97,11 +103,15 @@ class FillFormat(object):
         """
         if self.type != MSO_FILL.GRADIENT:
             raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+        if not isinstance(self._fill, _GradFill):
+            raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         return self._fill.gradient_angle
 
     @gradient_angle.setter
     def gradient_angle(self, value):
         if self.type != MSO_FILL.GRADIENT:
+            raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+        if not isinstance(self._fill, _GradFill):
             raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         self._fill.gradient_angle = value
 
@@ -114,6 +124,8 @@ class FillFormat(object):
         smoothly transitions.
         """
         if self.type != MSO_FILL.GRADIENT:
+            raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
+        if not isinstance(self._fill, _GradFill):
             raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         return self._fill.gradient_stops
 
@@ -128,10 +140,16 @@ class FillFormat(object):
         relying on the default behavior is discouraged and may produce
         rendering differences across client applications.
         """
+        if not isinstance(self._fill, _PattFill):
+            tmpl = "fill type %s has no pattern, call .patterned() first"
+            raise TypeError(tmpl % self._fill.__class__.__name__)
         return self._fill.pattern
 
     @pattern.setter
     def pattern(self, pattern_type):
+        if not isinstance(self._fill, _PattFill):
+            tmpl = "fill type %s has no pattern, call .patterned() first"
+            raise TypeError(tmpl % self._fill.__class__.__name__)
         self._fill.pattern = pattern_type
 
     def patterned(self):
@@ -156,7 +174,7 @@ class FillFormat(object):
         self._fill = _SolidFill(solidFill)
 
     @property
-    def type(self) -> MSO_FILL_TYPE:
+    def type(self) -> MSO_FILL_TYPE | None:
         """The type of this fill, e.g. `MSO_FILL_TYPE.SOLID`."""
         return self._fill.type
 
@@ -185,28 +203,10 @@ class _Fill(object):
             fill_cls = _SolidFill
         else:
             fill_cls = _Fill
-        return super(_Fill, cls).__new__(fill_cls)
+        return super(_Fill, cls).__new__(cast(type[_Fill], fill_cls))  # pyright: ignore[reportArgumentType]
 
     @property
-    def back_color(self):
-        """Raise TypeError for types that do not override this property."""
-        tmpl = "fill type %s has no background color, call .patterned() first"
-        raise TypeError(tmpl % self.__class__.__name__)
-
-    @property
-    def fore_color(self):
-        """Raise TypeError for types that do not override this property."""
-        tmpl = "fill type %s has no foreground color, call .solid() or .pattern" "ed() first"
-        raise TypeError(tmpl % self.__class__.__name__)
-
-    @property
-    def pattern(self):
-        """Raise TypeError for fills that do not override this property."""
-        tmpl = "fill type %s has no pattern, call .patterned() first"
-        raise TypeError(tmpl % self.__class__.__name__)
-
-    @property
-    def type(self) -> MSO_FILL_TYPE:  # pragma: no cover
+    def type(self) -> MSO_FILL_TYPE | None:  # pragma: no cover
         raise NotImplementedError(
             f".type property must be implemented on {self.__class__.__name__}"
         )
@@ -221,8 +221,8 @@ class _BlipFill(_Fill):
 class _GradFill(_Fill):
     """Proxies an `a:gradFill` element."""
 
-    def __init__(self, gradFill):
-        self._element = self._gradFill = gradFill
+    def __init__(self, xFill):
+        self._element = self._gradFill = xFill
 
     @property
     def gradient_angle(self):
@@ -296,9 +296,9 @@ class _NoneFill(_Fill):
 class _PattFill(_Fill):
     """Provides access to patterned fill properties."""
 
-    def __init__(self, pattFill):
+    def __init__(self, xFill):
         super(_PattFill, self).__init__()
-        self._element = self._pattFill = pattFill
+        self._element = self._pattFill = xFill
 
     @lazyproperty
     def back_color(self):
@@ -334,9 +334,9 @@ class _PattFill(_Fill):
 class _SolidFill(_Fill):
     """Provides access to fill properties such as color for solid fills."""
 
-    def __init__(self, solidFill):
+    def __init__(self, xFill):
         super(_SolidFill, self).__init__()
-        self._solidFill = solidFill
+        self._solidFill = xFill
 
     @lazyproperty
     def fore_color(self):
@@ -348,7 +348,7 @@ class _SolidFill(_Fill):
         return MSO_FILL.SOLID
 
 
-class _GradientStops(Sequence):
+class _GradientStops(Sequence["_GradientStop"]):
     """Collection of |GradientStop| objects defining gradient colors.
 
     A gradient must have a minimum of two stops, but can have as many more
@@ -360,7 +360,7 @@ class _GradientStops(Sequence):
     def __init__(self, gsLst):
         self._gsLst = gsLst
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx):  # pyright: ignore[reportIncompatibleMethodOverride]
         return _GradientStop(self._gsLst[idx])
 
     def __len__(self):

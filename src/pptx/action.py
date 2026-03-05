@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from pptx.oxml.shapes.shared import CT_NonVisualDrawingProps
     from pptx.oxml.text import CT_TextCharacterProperties
     from pptx.parts.slide import SlidePart
-    from pptx.shapes.base import BaseShape
     from pptx.slide import Slide, Slides
+    from pptx.types import ProvidesPart
 
 
 class ActionSetting(Subshape):
@@ -27,7 +27,7 @@ class ActionSetting(Subshape):
     def __init__(
         self,
         xPr: CT_NonVisualDrawingProps | CT_TextCharacterProperties,
-        parent: BaseShape,
+        parent: ProvidesPart,
         hover: bool = False,
     ):
         super(ActionSetting, self).__init__(parent)
@@ -171,7 +171,7 @@ class ActionSetting(Subshape):
         """
         Reference to the slide containing the shape having this click action.
         """
-        return self.part.slide
+        return cast("SlidePart", self.part).slide
 
     @lazyproperty
     def _slide_index(self):
@@ -195,7 +195,7 @@ class Hyperlink(Subshape):
     def __init__(
         self,
         xPr: CT_NonVisualDrawingProps | CT_TextCharacterProperties,
-        parent: BaseShape,
+        parent: ProvidesPart,
         hover: bool = False,
     ):
         super(Hyperlink, self).__init__(parent)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.dml.fill import FillFormat
 from pptx.enum.text import MSO_ANCHOR
@@ -9,7 +8,6 @@ from pptx.table import Table, _Cell
 from pptx.util import Inches
 from tests.stubs import GraphicFrameProxy
 from tests.text.factories import table
-from tests.xml_utils import serialize_xml
 
 
 def _table(xml_body: bytes) -> object:
@@ -97,10 +95,7 @@ def test_table_boolean_properties(prop_name: str, xml_attr: bytes) -> None:
 
 
 def test_cell_equality() -> None:
-    tbl = _table(
-        b"<a:tblGrid><a:gridCol w='100'/></a:tblGrid>"
-        b"<a:tr h='100'><a:tc/><a:tc/></a:tr>"
-    )
+    tbl = _table(b"<a:tblGrid><a:gridCol w='100'/></a:tblGrid><a:tr h='100'><a:tc/><a:tc/></a:tr>")
     table_obj = Table(tbl, GraphicFrameProxy())
     cell = table_obj.cell(0, 0)
     cell_same_tc = _Cell(cell._tc, table_obj)
@@ -113,8 +108,7 @@ def test_cell_equality() -> None:
 
 def test_cell_fill() -> None:
     tbl = _table(
-        b"<a:tblGrid><a:gridCol w='100'/></a:tblGrid>"
-        b"<a:tr h='100'><a:tc><a:tcPr/></a:tc></a:tr>"
+        b"<a:tblGrid><a:gridCol w='100'/></a:tblGrid><a:tr h='100'><a:tc><a:tcPr/></a:tc></a:tr>"
     )
     table_obj = Table(tbl, GraphicFrameProxy())
 
@@ -150,10 +144,7 @@ def test_cell_margin_and_vertical_anchor() -> None:
 
 
 def test_cell_margin_raises_on_invalid_type() -> None:
-    tbl = _table(
-        b"<a:tblGrid><a:gridCol w='100'/></a:tblGrid>"
-        b"<a:tr h='100'><a:tc/></a:tr>"
-    )
+    tbl = _table(b"<a:tblGrid><a:gridCol w='100'/></a:tblGrid><a:tr h='100'><a:tc/></a:tr>")
     cell = Table(tbl, GraphicFrameProxy()).cell(0, 0)
 
     with pytest.raises(TypeError):
@@ -176,7 +167,7 @@ def test_cell_text_property_round_trip() -> None:
     assert cell.text == "World"
 
 
-def test_cell_merge_and_split(snapshot: SnapshotAssertion) -> None:
+def test_cell_merge_and_split() -> None:
     tbl = _table(
         b"<a:tblGrid><a:gridCol w='100'/><a:gridCol w='100'/></a:tblGrid>"
         b"<a:tr h='100'>"
@@ -197,18 +188,24 @@ def test_cell_merge_and_split(snapshot: SnapshotAssertion) -> None:
     assert origin.is_merge_origin is True
     assert origin.span_height == 2
     assert origin.span_width == 2
+    assert origin._tc.rowSpan == 2
+    assert origin._tc.gridSpan == 2
     assert table_obj.cell(0, 1).is_spanned is True
+    assert table_obj.cell(0, 1)._tc.hMerge is True
     assert table_obj.cell(1, 0).is_spanned is True
+    assert table_obj.cell(1, 0)._tc.vMerge is True
     assert table_obj.cell(1, 1).is_spanned is True
-    assert serialize_xml(tbl) == snapshot(name="merged")
+    assert table_obj.cell(1, 1)._tc.vMerge is True
 
     origin.split()
 
     assert origin.is_merge_origin is False
     assert origin.span_height == 1
     assert origin.span_width == 1
+    assert origin._tc.rowSpan == 1
+    assert origin._tc.gridSpan == 1
     assert table_obj.cell(1, 1).is_spanned is False
-    assert serialize_xml(tbl) == snapshot(name="split")
+    assert table_obj.cell(1, 1)._tc.vMerge is False
 
 
 def test_cell_merge_raises_on_other_table() -> None:
@@ -240,10 +237,7 @@ def test_cell_merge_raises_on_existing_merge() -> None:
 
 
 def test_cell_split_raises_on_non_merge_origin() -> None:
-    tbl = _table(
-        b"<a:tblGrid><a:gridCol w='1'/></a:tblGrid>"
-        b"<a:tr h='1'><a:tc/></a:tr>"
-    )
+    tbl = _table(b"<a:tblGrid><a:gridCol w='1'/></a:tblGrid><a:tr h='1'><a:tc/></a:tr>")
     table_obj = Table(tbl, GraphicFrameProxy())
 
     with pytest.raises(ValueError, match="not a merge-origin"):
@@ -266,10 +260,7 @@ def test_cell_collection_index_and_iter() -> None:
 
 
 def test_column_collection_index_error() -> None:
-    tbl = _table(
-        b"<a:tblGrid><a:gridCol w='1'/></a:tblGrid>"
-        b"<a:tr h='1'><a:tc/></a:tr>"
-    )
+    tbl = _table(b"<a:tblGrid><a:gridCol w='1'/></a:tblGrid><a:tr h='1'><a:tc/></a:tr>")
     cols = Table(tbl, GraphicFrameProxy()).columns
 
     with pytest.raises(IndexError, match="column index"):
@@ -277,10 +268,7 @@ def test_column_collection_index_error() -> None:
 
 
 def test_row_collection_index_error() -> None:
-    tbl = _table(
-        b"<a:tblGrid><a:gridCol w='1'/></a:tblGrid>"
-        b"<a:tr h='1'><a:tc/></a:tr>"
-    )
+    tbl = _table(b"<a:tblGrid><a:gridCol w='1'/></a:tblGrid><a:tr h='1'><a:tc/></a:tr>")
     rows = Table(tbl, GraphicFrameProxy()).rows
 
     with pytest.raises(IndexError, match="row index"):

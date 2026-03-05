@@ -32,19 +32,15 @@ def _sp_pr(fill_xml: bytes = b""):
 
 def _a(tag: str, children: bytes = b""):
     return parse_xml(
-        f'<a:{tag} xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'.encode(
-            "utf-8"
-        )
+        f'<a:{tag} xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'.encode("utf-8")
         + children
         + f"</a:{tag}>".encode("utf-8")
     )
 
 
 def test_fill_format_type_transitions() -> None:
-    # Arrange
     fill = FillFormat.from_fill_parent(_sp_pr())
 
-    # Act
     fill.background()
     background_type = fill.type
     fill.gradient()
@@ -54,7 +50,6 @@ def test_fill_format_type_transitions() -> None:
     fill.solid()
     solid_type = fill.type
 
-    # Assert
     assert background_type == MSO_FILL.BACKGROUND
     assert gradient_type == MSO_FILL.GRADIENT
     assert patterned_type == MSO_FILL.PATTERNED
@@ -62,33 +57,26 @@ def test_fill_format_type_transitions() -> None:
 
 
 def test_fill_format_fore_and_back_color_access() -> None:
-    # Arrange
     fill = FillFormat.from_fill_parent(_sp_pr())
     fill.patterned()
 
-    # Act
     fore_color = fill.fore_color
     back_color = fill.back_color
 
-    # Assert
     assert isinstance(fore_color, ColorFormat)
     assert isinstance(back_color, ColorFormat)
 
 
 def test_fill_format_pattern_getter_and_setter() -> None:
-    # Arrange
     fill = FillFormat.from_fill_parent(_sp_pr())
     fill.patterned()
 
-    # Act
     fill.pattern = MSO_PATTERN.WAVE
 
-    # Assert
     assert fill.pattern == MSO_PATTERN.WAVE
 
 
 def test_fill_format_gradient_access_raises_on_non_gradient_fill() -> None:
-    # Arrange
     fill = FillFormat.from_fill_parent(_sp_pr(b"<a:noFill/>"))
 
     # Act / Assert
@@ -101,17 +89,12 @@ def test_fill_format_gradient_access_raises_on_non_gradient_fill() -> None:
 
 
 def test_fill_format_gradient_angle_and_stops_on_gradient_fill() -> None:
-    # Arrange
-    fill = FillFormat.from_fill_parent(
-        _sp_pr(b'<a:gradFill><a:lin ang="0"/></a:gradFill>')
-    )
+    fill = FillFormat.from_fill_parent(_sp_pr(b'<a:gradFill><a:lin ang="0"/></a:gradFill>'))
 
-    # Act
     fill.gradient_angle = 42.0
     angle = fill.gradient_angle
     stops = fill.gradient_stops
 
-    # Assert
     assert angle == pytest.approx(42.0)
     assert isinstance(stops, _GradientStops)
 
@@ -128,17 +111,13 @@ def test_fill_factory_returns_correct_fill_type_class() -> None:
     assert isinstance(_Fill(_a("foo")), _Fill)
 
 
-def test_fill_base_class_raises_on_unimplemented_properties() -> None:
-    # Arrange
+def test_fill_base_class_exposes_only_common_interface() -> None:
     fill = _Fill("unknown")
 
     # Act / Assert
-    with pytest.raises(TypeError):
-        _ = fill.back_color
-    with pytest.raises(TypeError):
-        _ = fill.fore_color
-    with pytest.raises(TypeError):
-        _ = fill.pattern
+    assert not hasattr(fill, "back_color")
+    assert not hasattr(fill, "fore_color")
+    assert not hasattr(fill, "pattern")
     with pytest.raises(NotImplementedError):
         _ = fill.type
 
@@ -155,7 +134,6 @@ def test_concrete_fill_classes_report_type() -> None:
 
 
 def test_grad_fill_gradient_angle_behaviors() -> None:
-    # Arrange
     grad_fill = _GradFill(_a("gradFill", b'<a:lin ang="0"/>'))
     non_linear_grad_fill = _GradFill(_a("gradFill", b"<a:path/>"))
     inherited_grad_fill = _GradFill(_a("gradFill"))
@@ -174,43 +152,34 @@ def test_grad_fill_gradient_angle_behaviors() -> None:
 
 
 def test_patt_fill_properties() -> None:
-    # Arrange
     patt_fill = _PattFill(_a("pattFill"))
 
-    # Act
     patt_fill.pattern = MSO_PATTERN.DIVOT
     fore_color = patt_fill.fore_color
     back_color = patt_fill.back_color
 
-    # Assert
     assert patt_fill.pattern == MSO_PATTERN.DIVOT
     assert isinstance(fore_color, ColorFormat)
     assert isinstance(back_color, ColorFormat)
 
 
 def test_solid_fill_fore_color() -> None:
-    # Arrange
     solid_fill = _SolidFill(_a("solidFill"))
 
-    # Act
     fore_color = solid_fill.fore_color
 
-    # Assert
     assert isinstance(fore_color, ColorFormat)
 
 
 def test_gradient_stops_collection_and_gradient_stop_accessors() -> None:
-    # Arrange
     gs_lst = CT_GradientStopList.new_gsLst()
     stops = _GradientStops(gs_lst)
 
-    # Act
     stop = stops[0]
     color = stop.color
     position = stop.position
     stop.position = 0.2
 
-    # Assert
     assert len(stops) == 2
     assert isinstance(stop, _GradientStop)
     assert isinstance(color, ColorFormat)

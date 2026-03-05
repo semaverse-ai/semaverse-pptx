@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# pyright: reportArgumentType=false, reportReturnType=false, reportOptionalMemberAccess=false
 from typing import TYPE_CHECKING, Callable, Iterator
 
 from pptx.enum.shapes import MSO_CONNECTOR_TYPE

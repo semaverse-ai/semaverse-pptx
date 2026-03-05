@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pptx.dml.effect import ShadowFormat
 from pptx.enum.shapes import MSO_SHAPE_TYPE
@@ -66,4 +66,4 @@ class GroupShape(BaseShape):
         """
         from pptx.shapes.shapetree import GroupShapes
 
-        return GroupShapes(self._element, self)
+        return GroupShapes(cast("CT_GroupShape", self._element), self)

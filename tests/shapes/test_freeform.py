@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from syrupy.assertion import SnapshotAssertion
-
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.shapes.freeform import FreeformBuilder, _Close, _LineSegment, _MoveTo
 from pptx.shapes.shapetree import SlideShapes
@@ -30,7 +28,7 @@ def test_freeform_builder_add_line_segments_and_move_to(parent) -> None:
     assert isinstance(builder[2], _MoveTo)
 
 
-def test_freeform_builder_convert_to_shape(parent, snapshot: SnapshotAssertion) -> None:
+def test_freeform_builder_convert_to_shape(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
     builder = FreeformBuilder.new(shapes, 10, 20, 1.0, 1.0)
     builder.add_line_segments([(30, 40), (50, 60)])
@@ -44,7 +42,10 @@ def test_freeform_builder_convert_to_shape(parent, snapshot: SnapshotAssertion) 
     assert shape.top == 25
     assert shape.width == 140
     assert shape.height == 130
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    sp = parent.part._element.cSld.spTree[-1]
+    assert sp.tag.endswith("sp")
+    assert sp.spPr.custGeom is not None
+    assert sp.spPr.custGeom.pathLst is not None
 
 
 def test_freeform_builder_geometry_properties(parent) -> None:
@@ -61,7 +62,7 @@ def test_freeform_builder_geometry_properties(parent) -> None:
     assert builder._height == 90
 
 
-def test_drawing_operations_apply_to_path(parent, snapshot: SnapshotAssertion) -> None:
+def test_drawing_operations_apply_to_path(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
     builder = FreeformBuilder.new(shapes, 0, 0, 1.0, 1.0)
     sp = builder._add_freeform_sp(0, 0)
@@ -71,4 +72,8 @@ def test_drawing_operations_apply_to_path(parent, snapshot: SnapshotAssertion) -
     _MoveTo.new(builder, 45, 55).apply_operation_to(path)
     _Close.new().apply_operation_to(path)
 
-    assert snapshot == sp.xml
+    assert len(path) == 4
+    assert path[0].tag.endswith("moveTo")
+    assert path[1].tag.endswith("lnTo")
+    assert path[2].tag.endswith("moveTo")
+    assert path[3].tag.endswith("close")

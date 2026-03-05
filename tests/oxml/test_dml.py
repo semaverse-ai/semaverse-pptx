@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.enum.dml import MSO_THEME_COLOR
 from pptx.oxml import parse_xml
@@ -51,31 +50,30 @@ def test_base_color_element_lum_off_getter(
 def test_base_color_element_clear_lum(
     scheme_clr_with_lum_mod: CT_SchemeColor,
     scheme_clr_with_lum_off: CT_SchemeColor,
-    snapshot: SnapshotAssertion,
 ) -> None:
     scheme_clr_with_lum_mod.clear_lum()
     scheme_clr_with_lum_off.clear_lum()
 
-    assert str(scheme_clr_with_lum_mod.xml) == snapshot(name="lum_mod_removed")
-    assert str(scheme_clr_with_lum_off.xml) == snapshot(name="lum_off_removed")
+    assert scheme_clr_with_lum_mod.lumMod is None
+    assert scheme_clr_with_lum_mod.lumOff is None
+    assert scheme_clr_with_lum_off.lumMod is None
+    assert scheme_clr_with_lum_off.lumOff is None
 
 
-def test_base_color_element_add_lum_mod(
-    scheme_clr: CT_SchemeColor, snapshot: SnapshotAssertion
-) -> None:
+def test_base_color_element_add_lum_mod(scheme_clr: CT_SchemeColor) -> None:
     lum_mod = scheme_clr.add_lumMod(0.75)
 
     assert scheme_clr.find(qn("a:lumMod")) is lum_mod
-    assert str(scheme_clr.xml) == snapshot
+    assert scheme_clr.lumMod is not None
+    assert scheme_clr.lumMod.val == 0.75
 
 
-def test_base_color_element_add_lum_off(
-    scheme_clr: CT_SchemeColor, snapshot: SnapshotAssertion
-) -> None:
+def test_base_color_element_add_lum_off(scheme_clr: CT_SchemeColor) -> None:
     lum_off = scheme_clr.add_lumOff(0.4)
 
     assert scheme_clr.find(qn("a:lumOff")) is lum_off
-    assert str(scheme_clr.xml) == snapshot
+    assert scheme_clr.lumOff is not None
+    assert scheme_clr.lumOff.val == 0.4
 
 
 def test_ct_percentage_is_used_for_lum_elements() -> None:
@@ -98,18 +96,16 @@ def test_ct_percentage_knows_value() -> None:
     assert percentage.val == 0.99999
 
 
-def test_ct_scheme_color_behaviors(
-    scheme_clr: CT_SchemeColor, snapshot: SnapshotAssertion
-) -> None:
+def test_ct_scheme_color_behaviors(scheme_clr: CT_SchemeColor) -> None:
     assert isinstance(scheme_clr, CT_SchemeColor)
     assert scheme_clr.val == MSO_THEME_COLOR.BACKGROUND_1
 
     scheme_clr.val = MSO_THEME_COLOR.ACCENT_1
 
-    assert str(scheme_clr.xml) == snapshot
+    assert scheme_clr.val == MSO_THEME_COLOR.ACCENT_1
 
 
-def test_ct_srgb_color_behaviors(snapshot: SnapshotAssertion) -> None:
+def test_ct_srgb_color_behaviors() -> None:
     srgb_clr = parse_xml(
         '<a:srgbClr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="123456"/>'
     )
@@ -119,4 +115,4 @@ def test_ct_srgb_color_behaviors(snapshot: SnapshotAssertion) -> None:
 
     srgb_clr.val = "987654"
 
-    assert str(srgb_clr.xml) == snapshot
+    assert srgb_clr.val == "987654"

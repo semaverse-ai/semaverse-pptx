@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 
-class Categories(Sequence):
+class Categories(Sequence["Category"]):
     """
     A sequence of |category.Category| objects, each representing a category
     label on the chart. Provides properties for dealing with hierarchical
@@ -22,7 +22,11 @@ class Categories(Sequence):
         super(Categories, self).__init__()
         self._xChart = xChart
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx):  # pyright: ignore[reportIncompatibleMethodOverride]
+        if isinstance(idx, slice):
+            cat_pts = self._xChart.cat_pts[idx]
+            start = 0 if idx.start is None else idx.start
+            return [Category(pt, start + offset) for offset, pt in enumerate(cat_pts)]
         pt = self._xChart.cat_pts[idx]
         return Category(pt, idx)
 
@@ -149,7 +153,7 @@ class Category(str):
     category.
     """
 
-    def __new__(cls, pt, *args):
+    def __new__(cls, pt, idx=None):
         category_label = "" if pt is None else pt.v.text
         return str.__new__(cls, category_label)
 
@@ -182,7 +186,7 @@ class Category(str):
         return str(self)
 
 
-class CategoryLevel(Sequence):
+class CategoryLevel(Sequence[Category]):
     """
     A sequence of |category.Category| objects representing a single level in
     a hierarchical category collection. This object is only used when the
@@ -193,7 +197,9 @@ class CategoryLevel(Sequence):
     def __init__(self, lvl):
         self._element = self._lvl = lvl
 
-    def __getitem__(self, offset):
+    def __getitem__(self, offset):  # pyright: ignore[reportIncompatibleMethodOverride]
+        if isinstance(offset, slice):
+            return [Category(pt) for pt in self._lvl.pt_lst[offset]]
         return Category(self._lvl.pt_lst[offset])
 
     def __len__(self):

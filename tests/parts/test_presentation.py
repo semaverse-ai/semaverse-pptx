@@ -100,7 +100,6 @@ def test_presentation_part_add_slide() -> None:
 
 
 def test_presentation_part_core_properties_delegates_to_package() -> None:
-    # Arrange
     expected_core_props = object()
 
     part = PresentationPart(
@@ -115,7 +114,6 @@ def test_presentation_part_core_properties_delegates_to_package() -> None:
 
 
 def test_presentation_part_get_slide_returns_slide_or_none() -> None:
-    # Arrange
     part = PresentationPart(
         PackURI("/ppt/presentation.xml"),
         CT.PML_PRESENTATION_MAIN,
@@ -140,7 +138,6 @@ def test_presentation_part_get_slide_returns_slide_or_none() -> None:
 
 
 def test_presentation_part_notes_master_part_existing_relation_path() -> None:
-    # Arrange
     expected = object()
     part = PresentationPart(
         PackURI("/ppt/presentation.xml"),
@@ -157,7 +154,6 @@ def test_presentation_part_notes_master_part_existing_relation_path() -> None:
 def test_presentation_part_notes_master_part_create_default_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Arrange
     created = object()
     relate_calls: list[tuple[object, str]] = []
     package = Package(None)
@@ -180,16 +176,13 @@ def test_presentation_part_notes_master_part_create_default_path(
         "pptx.parts.presentation.NotesMasterPart.create_default", lambda pkg: created
     )
 
-    # Act
     notes_master_part = part.notes_master_part
 
-    # Assert
     assert notes_master_part is created
     assert relate_calls == [(created, RT.NOTES_MASTER)]
 
 
 def test_presentation_part_notes_master_related_slide_and_related_master() -> None:
-    # Arrange
     notes_master = object()
     slide = object()
     slide_master = object()
@@ -218,7 +211,6 @@ def test_presentation_part_notes_master_related_slide_and_related_master() -> No
 
 
 def test_presentation_part_save_delegates_to_package() -> None:
-    # Arrange
     package = SaveCallPackageStub()
 
     part = PresentationPart(
@@ -228,15 +220,12 @@ def test_presentation_part_save_delegates_to_package() -> None:
         parse_xml(_presentation_xml()),
     )
 
-    # Act
     part.save("out.pptx")
 
-    # Assert
     assert package.saved_paths == ["out.pptx"]
 
 
 def test_presentation_part_slide_id_returns_match_and_raises_when_missing() -> None:
-    # Arrange
     target_part = object()
     non_target = object()
     part = PresentationPart(

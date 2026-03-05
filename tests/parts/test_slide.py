@@ -7,7 +7,13 @@ from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.packuri import PackURI
 from pptx.oxml import parse_xml
 from pptx.package import Package
-from pptx.parts.slide import NotesMasterPart, NotesSlidePart, SlideLayoutPart, SlideMasterPart, SlidePart
+from pptx.parts.slide import (
+    NotesMasterPart,
+    NotesSlidePart,
+    SlideLayoutPart,
+    SlideMasterPart,
+    SlidePart,
+)
 from pptx.slide import NotesSlide
 from tests.stubs import (
     NotesMasterPartProxy,
@@ -48,7 +54,9 @@ def test_slide_part_new() -> None:
         PackURI("/ppt/slideLayouts/slideLayout1.xml"),
         CT.PML_SLIDE_LAYOUT,
         pkg,
-        parse_xml(b'<p:sldLayout xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"/>'),
+        parse_xml(
+            b'<p:sldLayout xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"/>'
+        ),
     )
 
     part = SlidePart.new(PackURI("/ppt/slides/slide1.xml"), pkg, layout_part)

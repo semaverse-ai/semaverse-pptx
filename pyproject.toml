@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "semaverse-pptx"
@@ -48,11 +48,7 @@ test = [
     "tox",
     "tox-uv",
 ]
-dev = [
-    "build",
-    "ruff",
-    "twine",
-]
+dev = ["build", "lxml-stubs>=0.5,<0.6", "pre-commit", "ruff", "twine"]
 docs = [
     "Jinja2==2.11.3",
     "MarkupSafe==0.23",
@@ -71,11 +67,25 @@ line-length = 100
 
 [tool.pyright]
 exclude = ["**/__pycache__", "**/.*"]
+venvPath = "."
+venv = ".venv"
 include = ["src/pptx", "tests/"]
 ignore = []
 pythonPlatform = "All"
-pythonVersion = "3.9"
+pythonVersion = "3.13"
 reportImportCycles = false
+# fixme: typing >>
+# 1. re-enable one by-one and fix typing issues incrementally.
+# 2. remove the many `# pyright:` and fix them properly.
+# 3. Replace cast() with proper typing where possible.
+# 4. Add `tests/` to the type-checked files and fix typing issues there as well.
+# << fixme: Do not delete comment until all re-enabled and fixed
+reportMissingParameterType = "none"
+reportAttributeAccessIssue = "none"
+reportUnknownArgumentType = "none"
+reportUnknownMemberType = "none"
+reportUnknownParameterType = "none"
+reportUnknownVariableType = "none"
 reportUnnecessaryCast = true
 reportUnnecessaryTypeIgnoreComment = true
 stubPath = "./typings"
@@ -122,15 +132,13 @@ exclude = [
 
 [tool.ruff.lint]
 select = [
-    "C4",      # -- flake8-comprehensions --
     "COM",     # -- flake8-commas --
     "E",       # -- pycodestyle errors --
     "F",       # -- pyflakes --
     "I",       # -- isort (imports) --
     "PLR0402", # -- Name compared with itself like `foo == foo` --
     "PT",      # -- flake8-pytest-style --
-    "SIM",     # -- flake8-simplify --
-    "TCH001",  # -- detect typing-only imports not under `if TYPE_CHECKING` --
+    "TC001",   # -- detect typing-only imports not under `if TYPE_CHECKING` --
     "UP015",   # -- redundant `open()` mode parameter (like "r" is default) --
     "UP018",   # -- Unnecessary {literal_type} call like `str("abc")`. (rewrite as a literal) --
     "UP032",   # -- Use f-string instead of `.format()` call --
@@ -140,14 +148,18 @@ select = [
 ignore = [
     "COM812", # -- over aggressively insists on trailing commas where not desireable --
     "PT001",  # -- wants empty parens on @pytest.fixture where not used (essentially always) --
-    "PT005",  # -- flags mock fixtures with names intentionally matching private method name --
     "PT011",  # -- pytest.raises({exc}) too broad, use match param or more specific exception --
     "PT012",  # -- pytest.raises() block should contain a single simple statement --
-    "SIM117", # -- merge `with` statements for context managers that have same scope --
 ]
 
 [tool.ruff.lint.isort]
 known-first-party = ["pptx"]
 
-[tool.setuptools.dynamic]
-version = { attr = "pptx.__version__" }
+[tool.hatch.version]
+path = "src/pptx/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pptx"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["/src", "/pyproject.toml", "/README.rst", "/LICENSE"]

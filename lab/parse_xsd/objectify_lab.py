@@ -130,16 +130,14 @@ print etree.tostring(graphicFrame, pretty_print = True)
 # def tagname(tag):
 #     tag_parts = tag.split('}')
 #     return tag_parts[1]
-# 
+#
 # def print_subtree(elm, indent=0):
 #     indent_spaces = indent * ' '
 #     print '%s%s' % (indent_spaces, tagname(elm.tag))
 #     for child in elm.iterchildren():
 #         print_subtree(child, indent+2)
-# 
+#
 # tree = objectify.parse('slide1.xml')
 # sld = tree.getroot()
 # # print_subtree(sld)
 # # print tagname(sld.cSld.spTree.tag)
-
-

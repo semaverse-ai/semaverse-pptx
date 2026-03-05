@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 from collections.abc import Sequence
 from numbers import Number
+from typing import Protocol, runtime_checkable
 
 from pptx.chart.xlsx import (
     BubbleWorkbookWriter,
@@ -15,7 +16,38 @@ from pptx.chart.xmlwriter import ChartXmlWriter
 from pptx.util import lazyproperty
 
 
-class _BaseChartData(Sequence):
+@runtime_checkable
+class _WorkbookWriter(Protocol):
+    @property
+    def xlsx_blob(self) -> bytes: ...
+
+
+@runtime_checkable
+class _SeriesNameWorkbookWriter(_WorkbookWriter, Protocol):
+    def series_name_ref(self, series: "_BaseSeriesData") -> str: ...
+
+
+@runtime_checkable
+class _XyWorkbookWriter(_SeriesNameWorkbookWriter, Protocol):
+    def x_values_ref(self, series: "_BaseSeriesData") -> str: ...
+
+    def y_values_ref(self, series: "_BaseSeriesData") -> str: ...
+
+
+@runtime_checkable
+class _CategoryWorkbookWriter(_SeriesNameWorkbookWriter, Protocol):
+    @property
+    def categories_ref(self) -> str: ...
+
+    def values_ref(self, series: "_BaseSeriesData") -> str: ...
+
+
+@runtime_checkable
+class _BubbleWorkbookWriter(_XyWorkbookWriter, Protocol):
+    def bubble_sizes_ref(self, series: "_BaseSeriesData") -> str: ...
+
+
+class _BaseChartData(Sequence["_BaseSeriesData"]):
     """Base class providing common members for chart data objects.
 
     A chart data object serves as a proxy for the chart data table that will be written to an
@@ -76,14 +108,20 @@ class _BaseChartData(Sequence):
         Return the Excel worksheet reference to the cell containing the name
         for *series*.
         """
-        return self._workbook_writer.series_name_ref(series)
+        workbook_writer = self._workbook_writer
+        if not isinstance(workbook_writer, _SeriesNameWorkbookWriter):
+            raise TypeError("chart data does not support series name references")
+        return workbook_writer.series_name_ref(series)
 
     def x_values_ref(self, series):
         """
         The Excel worksheet reference to the X values for *series* (not
         including the column label).
         """
-        return self._workbook_writer.x_values_ref(series)
+        workbook_writer = self._workbook_writer
+        if not isinstance(workbook_writer, _XyWorkbookWriter):
+            raise TypeError("chart data does not support X-value references")
+        return workbook_writer.x_values_ref(series)
 
     @property
     def xlsx_blob(self):
@@ -106,10 +144,13 @@ class _BaseChartData(Sequence):
         The Excel worksheet reference to the Y values for *series* (not
         including the column label).
         """
-        return self._workbook_writer.y_values_ref(series)
+        workbook_writer = self._workbook_writer
+        if not isinstance(workbook_writer, _XyWorkbookWriter):
+            raise TypeError("chart data does not support Y-value references")
+        return workbook_writer.y_values_ref(series)
 
     @property
-    def _workbook_writer(self):
+    def _workbook_writer(self) -> _WorkbookWriter:
         """
         The worksheet writer object to which layout and writing of the Excel
         worksheet for this chart will be delegated.
@@ -126,7 +167,7 @@ class _BaseChartData(Sequence):
         return ChartXmlWriter(chart_type, self).xml
 
 
-class _BaseSeriesData(Sequence):
+class _BaseSeriesData(Sequence["_BaseDataPoint"]):
     """
     Base class providing common members for series data objects. A series
     data object serves as proxy for a series data column in the Excel
@@ -158,7 +199,7 @@ class _BaseSeriesData(Sequence):
         return self._chart_data.data_point_offset(self)
 
     @property
-    def index(self):
+    def index(self):  # pyright: ignore[reportIncompatibleMethodOverride]
         """
         Zero-based integer indicating the sequence position of this series in
         its chart. For example, the second of three series would return `1`.
@@ -321,17 +362,23 @@ class CategoryChartData(_BaseChartData):
         The Excel worksheet reference to the categories for this chart (not
         including the column heading).
         """
-        return self._workbook_writer.categories_ref
+        workbook_writer = self._workbook_writer
+        if not isinstance(workbook_writer, _CategoryWorkbookWriter):
+            raise TypeError("chart data does not support category references")
+        return workbook_writer.categories_ref
 
     def values_ref(self, series):
         """
         The Excel worksheet reference to the values for *series* (not
         including the column heading).
         """
-        return self._workbook_writer.values_ref(series)
+        workbook_writer = self._workbook_writer
+        if not isinstance(workbook_writer, _CategoryWorkbookWriter):
+            raise TypeError("chart data does not support category value references")
+        return workbook_writer.values_ref(series)
 
     @lazyproperty
-    def _workbook_writer(self):
+    def _workbook_writer(self) -> _WorkbookWriter:  # pyright: ignore[reportIncompatibleMethodOverride]
         """
         The worksheet writer object to which layout and writing of the Excel
         worksheet for this chart will be delegated.
@@ -339,7 +386,7 @@ class CategoryChartData(_BaseChartData):
         return CategoryWorkbookWriter(self)
 
 
-class Categories(Sequence):
+class Categories(Sequence["Category"]):
     """
     A sequence of |data.Category| objects, also having certain hierarchical
     graph behaviors for support of multi-level (nested) categories.
@@ -433,15 +480,19 @@ class Categories(Sequence):
                 raise ValueError("category depth not uniform")
         return first_depth
 
-    def index(self, category):
+    def index(self, value, start: int = 0, stop: int | None = None):
         """
-        The offset of *category* in the overall sequence of leaf categories.
+        The offset of *value* in the overall sequence of leaf categories.
         A non-leaf category gets the index of its first sub-category.
         """
+        category = value
+        start_idx, stop_idx, _ = slice(start, stop).indices(self.leaf_count)
         index = 0
         for this_category in self._categories:
             if category is this_category:
-                return index
+                if start_idx <= index < stop_idx:
+                    return index
+                break
             index += this_category.leaf_count
         raise ValueError("category not in top-level categories")
 
@@ -699,7 +750,7 @@ class XyChartData(_BaseChartData):
         return series_data
 
     @lazyproperty
-    def _workbook_writer(self):
+    def _workbook_writer(self) -> _WorkbookWriter:  # pyright: ignore[reportIncompatibleMethodOverride]
         """
         The worksheet writer object to which layout and writing of the Excel
         worksheet for this chart will be delegated.
@@ -729,10 +780,13 @@ class BubbleChartData(XyChartData):
         The Excel worksheet reference for the range containing the bubble
         sizes for *series*.
         """
-        return self._workbook_writer.bubble_sizes_ref(series)
+        workbook_writer = self._workbook_writer
+        if not isinstance(workbook_writer, _BubbleWorkbookWriter):
+            raise TypeError("chart data does not support bubble size references")
+        return workbook_writer.bubble_sizes_ref(series)
 
     @lazyproperty
-    def _workbook_writer(self):
+    def _workbook_writer(self) -> _WorkbookWriter:
         """
         The worksheet writer object to which layout and writing of the Excel
         worksheet for this chart will be delegated.
@@ -774,7 +828,9 @@ class BubbleSeriesData(XySeriesData):
     identifier and can only be retrieved by index.
     """
 
-    def add_data_point(self, x, y, size, number_format=None):
+    def add_data_point(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self, x, y, size, number_format=None
+    ):
         """
         Append a new BubbleDataPoint object having the values *x*, *y*, and
         *size*. The optional *number_format* is used to format the Y value.

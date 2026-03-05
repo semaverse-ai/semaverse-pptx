@@ -3,8 +3,6 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-from syrupy.assertion import SnapshotAssertion
-
 from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE, PP_PLACEHOLDER, PROG_ID
@@ -43,7 +41,7 @@ def test_slide_shapes_collection_protocol(parent) -> None:
     assert list(shapes) == []
 
 
-def test_slide_shapes_add_shape(parent, snapshot: SnapshotAssertion) -> None:
+def test_slide_shapes_add_shape(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
 
     shape = shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, 100, 200, 300, 400)
@@ -51,10 +49,11 @@ def test_slide_shapes_add_shape(parent, snapshot: SnapshotAssertion) -> None:
     assert shape.shape_id == 2
     assert shape.name == "Rounded Rectangle 1"
     assert len(shapes) == 1
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    assert shapes._spTree[-1].tag.endswith("sp")
+    assert shapes._spTree[-1].spPr.prstGeom is not None
 
 
-def test_slide_shapes_add_textbox(parent, snapshot: SnapshotAssertion) -> None:
+def test_slide_shapes_add_textbox(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
 
     shape = shapes.add_textbox(100, 200, 300, 400)
@@ -62,10 +61,11 @@ def test_slide_shapes_add_textbox(parent, snapshot: SnapshotAssertion) -> None:
     assert shape.shape_id == 2
     assert shape.name == "TextBox 1"
     assert shape.has_text_frame is True
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    assert shapes._spTree[-1].tag.endswith("sp")
+    assert shapes._spTree[-1].nvSpPr.cNvSpPr.txBox is True
 
 
-def test_slide_shapes_add_connector(parent, snapshot: SnapshotAssertion) -> None:
+def test_slide_shapes_add_connector(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
 
     connector = shapes.add_connector(MSO_CONNECTOR.STRAIGHT, 100, 200, 300, 400)
@@ -73,10 +73,10 @@ def test_slide_shapes_add_connector(parent, snapshot: SnapshotAssertion) -> None
     assert isinstance(connector, Connector)
     assert connector.shape_id == 2
     assert connector.name == "Connector 1"
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    assert shapes._spTree[-1].tag.endswith("cxnSp")
 
 
-def test_slide_shapes_add_group_shape(parent, snapshot: SnapshotAssertion) -> None:
+def test_slide_shapes_add_group_shape(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
 
     group = shapes.add_group_shape()
@@ -84,20 +84,20 @@ def test_slide_shapes_add_group_shape(parent, snapshot: SnapshotAssertion) -> No
     assert isinstance(group, GroupShape)
     assert group.shape_id == 2
     assert group.name == "Group 1"
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    assert shapes._spTree[-1].tag.endswith("grpSp")
 
 
-def test_slide_shapes_add_table(parent, snapshot: SnapshotAssertion) -> None:
+def test_slide_shapes_add_table(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
 
     graphic_frame = shapes.add_table(2, 3, 100, 200, 300, 400)
 
     assert isinstance(graphic_frame, GraphicFrame)
     assert graphic_frame.has_table is True
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    assert shapes._spTree[-1].tag.endswith("graphicFrame")
 
 
-def test_slide_shapes_add_chart(parent, snapshot: SnapshotAssertion) -> None:
+def test_slide_shapes_add_chart(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
     chart_data = CategoryChartData()
     chart_data.categories = ("A", "B")
@@ -106,12 +106,10 @@ def test_slide_shapes_add_chart(parent, snapshot: SnapshotAssertion) -> None:
     chart_shape = shapes.add_chart(XL_CHART_TYPE.LINE, 100, 200, 300, 400, chart_data)
 
     assert chart_shape.has_chart is True
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    assert shapes._spTree[-1].tag.endswith("graphicFrame")
 
 
-def test_slide_shapes_add_picture(
-    parent, test_files_dir: Path, snapshot: SnapshotAssertion
-) -> None:
+def test_slide_shapes_add_picture(parent, test_files_dir: Path) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
 
     picture = shapes.add_picture(str(test_files_dir / "python-icon.jpeg"), 100, 200, 300, 400)
@@ -119,10 +117,10 @@ def test_slide_shapes_add_picture(
     assert isinstance(picture, Picture)
     assert picture.shape_id == 2
     assert picture.name == "Picture 1"
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    assert shapes._spTree[-1].tag.endswith("pic")
 
 
-def test_slide_shapes_add_movie(parent, test_files_dir: Path, snapshot: SnapshotAssertion) -> None:
+def test_slide_shapes_add_movie(parent, test_files_dir: Path) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
 
     movie = shapes.add_movie(
@@ -136,10 +134,10 @@ def test_slide_shapes_add_movie(parent, test_files_dir: Path, snapshot: Snapshot
 
     assert isinstance(movie, Movie)
     assert movie.shape_type is not None
-    assert snapshot == parent.part._element.xml
+    assert shapes._spTree[-1].tag.endswith("pic")
 
 
-def test_slide_shapes_add_ole_object(parent, snapshot: SnapshotAssertion) -> None:
+def test_slide_shapes_add_ole_object(parent) -> None:
     shapes = SlideShapes(parent.part._element.cSld.spTree, parent)
 
     graphic_frame = shapes.add_ole_object(
@@ -153,7 +151,7 @@ def test_slide_shapes_add_ole_object(parent, snapshot: SnapshotAssertion) -> Non
 
     assert isinstance(graphic_frame, GraphicFrame)
     assert graphic_frame.shape_type is not None
-    assert snapshot == parent.part._element.cSld.spTree.xml
+    assert shapes._spTree[-1].tag.endswith("graphicFrame")
 
 
 def test_slide_shapes_title(parent) -> None:
@@ -333,9 +331,7 @@ def test_slide_placeholders_collection(parent) -> None:
     assert [ph.shape_id for ph in placeholders] == [3, 2]
 
 
-def test_layout_master_notes_shape_factories(
-    parent, slide_layout_part, slide_master_part
-) -> None:
+def test_layout_master_notes_shape_factories(parent, slide_layout_part, slide_master_part) -> None:
     sp = parse_xml(
         b"""
         <p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"

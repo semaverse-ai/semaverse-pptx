@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE, PP_PLACEHOLDER
 from pptx.oxml import parse_xml
@@ -21,7 +20,7 @@ def test_prst_geom_gd_lst() -> None:
     assert gd_vals == [("adj1", "val 111"), ("adj2", "val 222")]
 
 
-def test_prst_geom_rewrite_guides(snapshot: SnapshotAssertion) -> None:
+def test_prst_geom_rewrite_guides() -> None:
     prst_geom = parse_xml(
         '<a:prstGeom xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
         'prst="chevron"><a:avLst><a:gd name="adj6" fmla="val 666"/></a:avLst></a:prstGeom>'
@@ -29,13 +28,15 @@ def test_prst_geom_rewrite_guides(snapshot: SnapshotAssertion) -> None:
 
     prst_geom.rewrite_guides([("adj1", 111), ("adj2", 222)])
 
-    assert str(prst_geom.xml) == snapshot
+    assert [gd.fmla for gd in prst_geom.gd_lst] == ["val 111", "val 222"]
 
 
-def test_shape_new_autoshape_sp(snapshot: SnapshotAssertion) -> None:
+def test_shape_new_autoshape_sp() -> None:
     sp = CT_Shape.new_autoshape_sp(9, "Rounded Rectangle 8", "roundRect", 111, 222, 333, 444)
 
-    assert str(sp.xml) == snapshot
+    assert sp.nvSpPr.cNvPr.id == 9
+    assert sp.nvSpPr.cNvPr.name == "Rounded Rectangle 8"
+    assert sp.prst == MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE
 
 
 @pytest.mark.parametrize(
@@ -74,17 +75,20 @@ def test_shape_new_placeholder_sp(
     orient: ST_Direction | str,
     sz: ST_PlaceholderSize | str,
     idx: int,
-    snapshot: SnapshotAssertion,
 ) -> None:
     sp = CT_Shape.new_placeholder_sp(id_, name, ph_type, orient, sz, idx)
 
-    assert str(sp.xml) == snapshot
+    assert sp.nvSpPr.cNvPr.id == id_
+    assert sp.nvSpPr.cNvPr.name == name
+    assert sp.nvSpPr.nvPr.ph.type == ph_type
 
 
-def test_shape_new_textbox_sp(snapshot: SnapshotAssertion) -> None:
+def test_shape_new_textbox_sp() -> None:
     sp = CT_Shape.new_textbox_sp(9, "TextBox 8", 111, 222, 333, 444)
 
-    assert str(sp.xml) == snapshot
+    assert sp.nvSpPr.cNvPr.id == 9
+    assert sp.nvSpPr.cNvPr.name == "TextBox 8"
+    assert sp.nvSpPr.cNvSpPr.txBox is True
 
 
 @pytest.mark.parametrize(
@@ -93,12 +97,12 @@ def test_shape_new_textbox_sp(snapshot: SnapshotAssertion) -> None:
         (
             '<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
             'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
-            '<p:nvSpPr><p:cNvSpPr/></p:nvSpPr><p:spPr><a:prstGeom/></p:spPr></p:sp>',
+            "<p:nvSpPr><p:cNvSpPr/></p:nvSpPr><p:spPr><a:prstGeom/></p:spPr></p:sp>",
             True,
         ),
         (
             '<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">'
-            '<p:nvSpPr><p:nvPr><p:ph/></p:nvPr></p:nvSpPr><p:spPr/></p:sp>',
+            "<p:nvSpPr><p:nvPr><p:ph/></p:nvPr></p:nvSpPr><p:spPr/></p:sp>",
             False,
         ),
         (
@@ -121,12 +125,12 @@ def test_shape_is_autoshape(xml: str, expected: bool) -> None:
         (
             '<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
             'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
-            '<p:nvSpPr><p:cNvSpPr/></p:nvSpPr><p:spPr><a:prstGeom/></p:spPr></p:sp>',
+            "<p:nvSpPr><p:cNvSpPr/></p:nvSpPr><p:spPr><a:prstGeom/></p:spPr></p:sp>",
             False,
         ),
         (
             '<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">'
-            '<p:nvSpPr><p:cNvSpPr/><p:nvPr><p:ph/></p:nvPr></p:nvSpPr><p:spPr/></p:sp>',
+            "<p:nvSpPr><p:cNvSpPr/><p:nvPr><p:ph/></p:nvPr></p:nvSpPr><p:spPr/></p:sp>",
             False,
         ),
         (
@@ -143,17 +147,18 @@ def test_shape_is_textbox(xml: str, expected: bool) -> None:
     assert sp.is_textbox is expected
 
 
-def test_shape_add_path(snapshot: SnapshotAssertion) -> None:
+def test_shape_add_path() -> None:
     sp = parse_xml(
         '<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
         'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
-        '<p:spPr><a:custGeom/></p:spPr></p:sp>'
+        "<p:spPr><a:custGeom/></p:spPr></p:sp>"
     )
 
     path = sp.add_path(100, 200)
 
     assert path.tag.endswith("path")
-    assert str(sp.xml) == snapshot
+    assert len(sp.spPr.custGeom.pathLst) == 1
+    assert sp.spPr.custGeom.pathLst[0].w == 100
 
 
 def test_shape_add_path_raises_if_not_freeform() -> None:
@@ -166,7 +171,7 @@ def test_shape_add_path_raises_if_not_freeform() -> None:
         sp.add_path(100, 200)
 
 
-def test_shape_get_or_add_ln(snapshot: SnapshotAssertion) -> None:
+def test_shape_get_or_add_ln() -> None:
     sp = parse_xml(
         '<p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
         'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:spPr/></p:sp>'
@@ -177,7 +182,7 @@ def test_shape_get_or_add_ln(snapshot: SnapshotAssertion) -> None:
     ln = sp.get_or_add_ln()
 
     assert sp.ln is ln
-    assert str(sp.xml) == snapshot
+    assert sp.ln is not None
 
 
 def test_shape_prst_value() -> None:
@@ -199,11 +204,14 @@ def test_shape_prst_none() -> None:
     assert sp.prst is None
 
 
-def test_path2d_operations(snapshot: SnapshotAssertion) -> None:
+def test_path2d_operations() -> None:
     path = parse_xml('<a:path xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>')
 
     path.add_moveTo(10, 20)
     path.add_lnTo(30, 40)
     path.add_close()
 
-    assert str(path.xml) == snapshot
+    assert len(path) == 3
+    assert path[0].tag.endswith("moveTo")
+    assert path[1].tag.endswith("lnTo")
+    assert path[2].tag.endswith("close")

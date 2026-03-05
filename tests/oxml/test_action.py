@@ -37,13 +37,10 @@ def _hlink(action: str | None = None, r_id: str | None = None) -> CT_Hyperlink:
     ],
 )
 def test_ct_hyperlink_action_fields(action: str | None, expected_fields: dict[str, str]) -> None:
-    # Arrange
     hlink = _hlink(action=action)
 
-    # Act
     fields = hlink.action_fields
 
-    # Assert
     assert fields == expected_fields
 
 
@@ -56,25 +53,19 @@ def test_ct_hyperlink_action_fields(action: str | None, expected_fields: dict[st
     ],
 )
 def test_ct_hyperlink_action_verb(action: str | None, expected_verb: str | None) -> None:
-    # Arrange
     hlink = _hlink(action=action)
 
-    # Act
     verb = hlink.action_verb
 
-    # Assert
     assert verb == expected_verb
 
 
 def test_ct_hyperlink_optional_attributes_round_trip() -> None:
-    # Arrange
     hlink = _hlink()
 
-    # Act
     hlink.rId = "rId42"
     hlink.action = "ppaction://program"
     hlink.action = None
 
-    # Assert
     assert hlink.rId == "rId42"
     assert hlink.action is None

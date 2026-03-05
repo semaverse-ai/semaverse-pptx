@@ -409,5 +409,3 @@ print sp
 print sp.id
 print len(sp)
 print etree.tostring(sp)
-
-

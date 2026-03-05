@@ -106,7 +106,7 @@ def test_font_files_iter_font_files_in_filters_extensions(
 
 
 def test_stream_read_and_read_fields() -> None:
-    stream = _Stream(io.BytesIO(b"foob\x00\x2A\x00\x15xxxx"))
+    stream = _Stream(io.BytesIO(b"foob\x00\x2a\x00\x15xxxx"))
 
     assert stream.read(0, 4) == b"foob"
     assert stream.read_fields(">4sHH", 0) == (b"foob", 42, 21)

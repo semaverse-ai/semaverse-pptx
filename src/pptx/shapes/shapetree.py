@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# pyright: reportPrivateUsage=false
 import io
 import os
 from typing import IO, TYPE_CHECKING, Callable, Iterable, Iterator, cast
@@ -287,7 +288,8 @@ class _BaseGroupShapes(_BaseShapes):
         grpSp = self._element.add_grpSp()
         for shape in shapes:
             grpSp.insert_element_before(
-                shape._element, "p:extLst"  # pyright: ignore[reportPrivateUsage]
+                shape._element,
+                "p:extLst",
             )
         if shapes:
             grpSp.recalculate_extents()

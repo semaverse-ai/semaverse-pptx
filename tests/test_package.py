@@ -37,20 +37,16 @@ class _NoShaPartStub:
 def test_package_core_properties_returns_existing_related_part(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Arrange
     package = Package(None)
     expected = object()
     monkeypatch.setattr(package, "part_related_by", lambda reltype: expected)
 
-    # Act
     core_props = package.core_properties
 
-    # Assert
     assert core_props is expected
 
 
 def test_package_core_properties_creates_part_when_missing(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Arrange
     package = Package(None)
     created = object()
     calls: list[tuple[object, str]] = []
@@ -65,10 +61,8 @@ def test_package_core_properties_creates_part_when_missing(monkeypatch: pytest.M
     monkeypatch.setattr(package, "relate_to", fake_relate_to)
     monkeypatch.setattr("pptx.package.CorePropertiesPart.default", lambda pkg: created)
 
-    # Act
     core_props = package.core_properties
 
-    # Assert
     assert core_props is created
     assert calls == [(created, RT.CORE_PROPERTIES)]
 
@@ -81,15 +75,12 @@ def test_package_core_properties_creates_part_when_missing(monkeypatch: pytest.M
     ],
 )
 def test_package_next_image_partname(existing_partnames: list[str], expected: str) -> None:
-    # Arrange
     package = Package(None)
     parts = [_ShaPartStub(PackURI(name)) for name in existing_partnames]
     package.iter_parts = lambda: iter(parts)  # type: ignore[method-assign]
 
-    # Act
     partname = package.next_image_partname("png")
 
-    # Assert
     assert partname == expected
 
 
@@ -101,35 +92,28 @@ def test_package_next_image_partname(existing_partnames: list[str], expected: st
     ],
 )
 def test_package_next_media_partname(existing_partnames: list[str], expected: str) -> None:
-    # Arrange
     package = Package(None)
     parts = [_ShaPartStub(PackURI(name)) for name in existing_partnames]
     package.iter_parts = lambda: iter(parts)  # type: ignore[method-assign]
 
-    # Act
     partname = package.next_media_partname("mp4")
 
-    # Assert
     assert partname == expected
 
 
 def test_package_presentation_part_delegates_to_main_document_part(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Arrange
     package = Package(None)
     expected = object()
     monkeypatch.setattr(package, "part_related_by", lambda reltype: expected)
 
-    # Act
     presentation_part = package.presentation_part
 
-    # Assert
     assert presentation_part is expected
 
 
 def test_image_parts_iteration_filters_external_non_image_and_duplicates() -> None:
-    # Arrange
     package = Package(None)
     image_part = _ShaPartStub(PackURI("/ppt/media/image1.png"), sha1="abc")
     rels = [
@@ -140,15 +124,12 @@ def test_image_parts_iteration_filters_external_non_image_and_duplicates() -> No
     ]
     package.iter_rels = lambda: iter(rels)  # type: ignore[method-assign]
 
-    # Act
     image_parts = list(_ImageParts(package))
 
-    # Assert
     assert image_parts == [image_part]
 
 
 def test_image_parts_get_or_add_reuses_existing(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Arrange
     package = Package(None)
     image_parts = _ImageParts(package)
     image = _MediaStub("abc")
@@ -156,15 +137,12 @@ def test_image_parts_get_or_add_reuses_existing(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setattr(Image, "from_file", lambda _: image)
     monkeypatch.setattr(image_parts, "_find_by_sha1", lambda _: existing)
 
-    # Act
     image_part = image_parts.get_or_add_image_part("image.png")
 
-    # Assert
     assert image_part is existing
 
 
 def test_image_parts_get_or_add_creates_new_when_missing(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Arrange
     package = Package(None)
     image_parts = _ImageParts(package)
     image = _MediaStub("abc")
@@ -173,15 +151,12 @@ def test_image_parts_get_or_add_creates_new_when_missing(monkeypatch: pytest.Mon
     monkeypatch.setattr(image_parts, "_find_by_sha1", lambda _: None)
     monkeypatch.setattr(ImagePart, "new", lambda pkg, img: created)
 
-    # Act
     image_part = image_parts.get_or_add_image_part("image.png")
 
-    # Assert
     assert image_part is created
 
 
 def test_image_parts_find_by_sha1_skips_parts_without_sha1() -> None:
-    # Arrange
     image_part = _ShaPartStub(PackURI("/ppt/media/image1.png"), sha1="target")
     no_sha_part = _NoShaPartStub(PackURI("/ppt/media/image2.svg"))
     rels = [
@@ -198,15 +173,12 @@ def test_image_parts_find_by_sha1_skips_parts_without_sha1() -> None:
 
     image_parts = _ImageParts(_PackageIterRelsStub(rels))
 
-    # Act
     found = image_parts._find_by_sha1("target")
 
-    # Assert
     assert found is image_part
 
 
 def test_media_parts_iteration_filters_and_dedupes() -> None:
-    # Arrange
     package = Package(None)
     media_part = _ShaPartStub(PackURI("/ppt/media/media1.mp4"), sha1="abc")
     rels = [
@@ -217,15 +189,12 @@ def test_media_parts_iteration_filters_and_dedupes() -> None:
     ]
     package.iter_rels = lambda: iter(rels)  # type: ignore[method-assign]
 
-    # Act
     media_parts = list(_MediaParts(package))
 
-    # Assert
     assert media_parts == [media_part]
 
 
 def test_media_parts_get_or_add_branches(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Arrange
     package = Package(None)
     media_parts = _MediaParts(package)
     media = _MediaStub("abc")
@@ -233,25 +202,19 @@ def test_media_parts_get_or_add_branches(monkeypatch: pytest.MonkeyPatch) -> Non
     created = object()
     monkeypatch.setattr(media_parts, "_find_by_sha1", lambda _: existing)
 
-    # Act
     reused = media_parts.get_or_add_media_part(media)
 
-    # Assert
     assert reused is existing
 
-    # Arrange
     monkeypatch.setattr(media_parts, "_find_by_sha1", lambda _: None)
     monkeypatch.setattr(MediaPart, "new", lambda pkg, m: created)
 
-    # Act
     new = media_parts.get_or_add_media_part(media)
 
-    # Assert
     assert new is created
 
 
 def test_media_parts_find_by_sha1_returns_match_or_none(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Arrange
     package = Package(None)
     media_parts = _MediaParts(package)
     target = _ShaPartStub(PackURI("/ppt/media/media1.mp4"), sha1="target")

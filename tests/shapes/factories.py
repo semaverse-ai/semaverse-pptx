@@ -11,12 +11,7 @@ _DML = "http://schemas.openxmlformats.org/drawingml/2006/main"
 
 def _xfrm_xml(x: int, y: int, cx: int, cy: int, rot: int | None) -> str:
     rot_attr = f' rot="{rot}"' if rot is not None else ""
-    return (
-        f"<a:xfrm{rot_attr}>"
-        f'<a:off x="{x}" y="{y}"/>'
-        f'<a:ext cx="{cx}" cy="{cy}"/>'
-        "</a:xfrm>"
-    )
+    return f'<a:xfrm{rot_attr}><a:off x="{x}" y="{y}"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
 
 
 def make_sp(

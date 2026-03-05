@@ -203,3 +203,8 @@ class SlideIdPresentationPartProxy:
 @dataclass
 class PackageWithPresentationPartProxy:
     presentation_part: SlideIdPresentationPartProxy
+
+
+@dataclass
+class PartProviderStub:
+    part: object = "part"

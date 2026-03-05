@@ -17,6 +17,3 @@ Python Metaclasses
 
 .. _`Python metaclasses by example`:
    http://eli.thegreenplace.net/2011/08/14/python-metaclasses-by-example/
-
-
-

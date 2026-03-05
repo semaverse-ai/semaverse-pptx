@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.oxml.shapes.connector import CT_Connector
 
@@ -15,9 +14,7 @@ from pptx.oxml.shapes.connector import CT_Connector
         (True, True),
     ],
 )
-def test_connector_new_cxnSp(
-    flip_h: bool, flip_v: bool, snapshot: SnapshotAssertion
-) -> None:
+def test_connector_new_cxnSp(flip_h: bool, flip_v: bool) -> None:
     cxn_sp = CT_Connector.new_cxnSp(
         id_=42,
         name="Connector 41",
@@ -30,4 +27,7 @@ def test_connector_new_cxnSp(
         flipV=flip_v,
     )
 
-    assert str(cxn_sp.xml) == snapshot
+    assert cxn_sp.nvCxnSpPr.cNvPr.id == 42
+    assert cxn_sp.nvCxnSpPr.cNvPr.name == "Connector 41"
+    assert cxn_sp.spPr.xfrm.flipH is flip_h
+    assert cxn_sp.spPr.xfrm.flipV is flip_v

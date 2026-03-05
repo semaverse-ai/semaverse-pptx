@@ -249,6 +249,11 @@ class AxisTitle(ElementProxy):
         super(AxisTitle, self).__init__(title)
         self._title = title
 
+    @property
+    def part(self):
+        """The package part containing this object."""
+        return self._title.part
+
     @lazyproperty
     def format(self):
         """|ChartFormat| object providing access to shape formatting.

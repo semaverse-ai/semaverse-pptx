@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
 
-class CaseInsensitiveDict(dict):
+
+class CaseInsensitiveDict(dict[str, Any]):
     """Mapping type like dict except it matches key without respect to case.
 
     For example, D['A'] == D['a']. Note this is not general-purpose, just complete

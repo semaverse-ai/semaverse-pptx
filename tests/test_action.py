@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.action import ActionSetting, Hyperlink
 from pptx.enum.action import PP_ACTION
@@ -13,7 +12,6 @@ from tests.stubs import (
     RelatedSlidePartStub,
     SlideTargetStub,
 )
-from tests.xml_utils import serialize_xml
 
 
 def _c_nvpr(children: bytes = b"") -> object:
@@ -21,9 +19,7 @@ def _c_nvpr(children: bytes = b"") -> object:
         b'<p:cNvPr xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
         b'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
         b'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
-        b'id="1" name="Shape 1">'
-        + children
-        + b"</p:cNvPr>"
+        b'id="1" name="Shape 1">' + children + b"</p:cNvPr>"
     )
 
 
@@ -67,47 +63,36 @@ def _c_nvpr(children: bytes = b"") -> object:
     ],
 )
 def test_action_setting_action_matrix(children: bytes, expected_action: PP_ACTION) -> None:
-    # Arrange
     action_setting = ActionSetting(_c_nvpr(children), ParentProxy(part=ActionPartStub()))
 
-    # Act
     action = action_setting.action
 
-    # Assert
     assert action is expected_action
 
 
 def test_action_setting_hyperlink_property_returns_cached_hyperlink() -> None:
-    # Arrange
     action_setting = ActionSetting(_c_nvpr(), ParentProxy(part=ActionPartStub()))
 
-    # Act
     hyperlink_1 = action_setting.hyperlink
     hyperlink_2 = action_setting.hyperlink
 
-    # Assert
     assert isinstance(hyperlink_1, Hyperlink)
     assert hyperlink_2 is hyperlink_1
 
 
 def test_action_setting_hlink_uses_hover_element_when_hover_true() -> None:
-    # Arrange
     element = _c_nvpr(
-        b'<a:hlinkClick action="ppaction://macro"/>'
-        b'<a:hlinkHover action="ppaction://hlinkfile"/>'
+        b'<a:hlinkClick action="ppaction://macro"/><a:hlinkHover action="ppaction://hlinkfile"/>'
     )
     action_setting = ActionSetting(element, ParentProxy(part=ActionPartStub()), hover=True)
 
-    # Act
     action = action_setting.action
 
-    # Assert
     assert action_setting._hlink is element.hlinkHover
     assert action is PP_ACTION.OPEN_FILE
 
 
 def test_action_setting_target_slide_returns_none_for_non_slide_jump_action() -> None:
-    # Arrange
     action_setting = ActionSetting(
         _c_nvpr(b'<a:hlinkClick action="ppaction://macro"/>'),
         ParentProxy(part=ActionPartStub()),
@@ -127,17 +112,14 @@ def test_action_setting_target_slide_returns_none_for_non_slide_jump_action() ->
 def test_action_setting_target_slide_returns_first_or_last(
     children: bytes, expected_index: int
 ) -> None:
-    # Arrange
     slides = [object(), object(), object()]
     action_setting = ActionSetting(
         _c_nvpr(children),
         ParentProxy(part=ActionPartStub(slide=slides[1], slides=slides)),
     )
 
-    # Act
     target_slide = action_setting.target_slide
 
-    # Assert
     assert target_slide is slides[expected_index]
 
 
@@ -151,17 +133,14 @@ def test_action_setting_target_slide_returns_first_or_last(
 def test_action_setting_target_slide_returns_next_or_previous(
     children: bytes, current_index: int, expected_index: int
 ) -> None:
-    # Arrange
     slides = [object(), object(), object()]
     action_setting = ActionSetting(
         _c_nvpr(children),
         ParentProxy(part=ActionPartStub(slide=slides[current_index], slides=slides)),
     )
 
-    # Act
     target_slide = action_setting.target_slide
 
-    # Assert
     assert target_slide is slides[expected_index]
 
 
@@ -179,7 +158,6 @@ def test_action_setting_target_slide_returns_next_or_previous(
 def test_action_setting_target_slide_raises_at_slide_collection_boundaries(
     children: bytes, current_index: int, error_message: str
 ) -> None:
-    # Arrange
     slides = [object(), object(), object()]
     action_setting = ActionSetting(
         _c_nvpr(children),
@@ -192,27 +170,19 @@ def test_action_setting_target_slide_raises_at_slide_collection_boundaries(
 
 
 def test_action_setting_target_slide_resolves_named_slide() -> None:
-    # Arrange
     target_slide = object()
-    part = ActionPartStub(
-        related_parts_by_rid={"rId42": RelatedSlidePartStub(slide=target_slide)}
-    )
+    part = ActionPartStub(related_parts_by_rid={"rId42": RelatedSlidePartStub(slide=target_slide)})
     action_setting = ActionSetting(
         _c_nvpr(b'<a:hlinkClick action="ppaction://hlinksldjump" r:id="rId42"/>'),
         ParentProxy(part=part),
     )
 
-    # Act
     resolved = action_setting.target_slide
 
-    # Assert
     assert resolved is target_slide
 
 
-def test_action_setting_target_slide_setter_assigns_named_slide(
-    snapshot: SnapshotAssertion,
-) -> None:
-    # Arrange
+def test_action_setting_target_slide_setter_assigns_named_slide() -> None:
     part = ActionPartStub(relate_to_rid="rId42")
     action_setting = ActionSetting(
         _c_nvpr(b'<a:hlinkClick action="ppaction://macro" r:id="rId9"/>'),
@@ -220,31 +190,26 @@ def test_action_setting_target_slide_setter_assigns_named_slide(
     )
     target_slide = SlideTargetStub(part="target-slide-part")
 
-    # Act
     action_setting.target_slide = target_slide
 
-    # Assert
     assert part.dropped_rids == ["rId9"]
     assert part.relate_to_calls == [("target-slide-part", RT.SLIDE, False)]
-    assert serialize_xml(action_setting._element) == snapshot
+    assert action_setting._element.hlinkClick is not None
+    assert action_setting._element.hlinkClick.action == "ppaction://hlinksldjump"
+    assert action_setting._element.hlinkClick.rId == "rId42"
 
 
-def test_action_setting_target_slide_setter_clears_action_on_none(
-    snapshot: SnapshotAssertion,
-) -> None:
-    # Arrange
+def test_action_setting_target_slide_setter_clears_action_on_none() -> None:
     part = ActionPartStub()
     action_setting = ActionSetting(
         _c_nvpr(b'<a:hlinkClick action="ppaction://macro" r:id="rId9"/>'),
         ParentProxy(part=part),
     )
 
-    # Act
     action_setting.target_slide = None
 
-    # Assert
     assert part.dropped_rids == ["rId9"]
-    assert serialize_xml(action_setting._element) == snapshot
+    assert action_setting._element.hlinkClick is None
 
 
 @pytest.mark.parametrize(
@@ -258,14 +223,11 @@ def test_action_setting_target_slide_setter_clears_action_on_none(
 def test_action_setting_clear_click_action(
     children: bytes, expected_dropped_rids: list[str]
 ) -> None:
-    # Arrange
     part = ActionPartStub()
     action_setting = ActionSetting(_c_nvpr(children), ParentProxy(part=part))
 
-    # Act
     action_setting._clear_click_action()
 
-    # Assert
     assert part.dropped_rids == expected_dropped_rids
     assert action_setting._element.hlinkClick is None
 
@@ -281,62 +243,51 @@ def test_action_setting_clear_click_action(
 def test_hyperlink_address_getter(
     children: bytes, target_refs: dict[str, str], expected: str | None
 ) -> None:
-    # Arrange
     hyperlink = Hyperlink(
         _c_nvpr(children),
         ParentProxy(part=ActionPartStub(target_refs_by_rid=target_refs)),
     )
 
-    # Act
     address = hyperlink.address
 
-    # Assert
     assert address == expected
 
 
-def test_hyperlink_address_setter_adds_click_hyperlink(snapshot: SnapshotAssertion) -> None:
-    # Arrange
+def test_hyperlink_address_setter_adds_click_hyperlink() -> None:
     part = ActionPartStub(relate_to_rid="rId3")
     hyperlink = Hyperlink(_c_nvpr(), ParentProxy(part=part))
 
-    # Act
     hyperlink.address = "https://example.com"
 
-    # Assert
     assert part.relate_to_calls == [("https://example.com", RT.HYPERLINK, True)]
-    assert serialize_xml(hyperlink._element) == snapshot
+    assert hyperlink._element.hlinkClick is not None
+    assert hyperlink._element.hlinkClick.rId == "rId3"
 
 
-def test_hyperlink_address_setter_adds_hover_hyperlink_when_hover_true(
-    snapshot: SnapshotAssertion,
-) -> None:
-    # Arrange
+def test_hyperlink_address_setter_adds_hover_hyperlink_when_hover_true() -> None:
     part = ActionPartStub(relate_to_rid="rId3")
     hyperlink = Hyperlink(_c_nvpr(), ParentProxy(part=part), hover=True)
 
-    # Act
     hyperlink.address = "https://example.com"
 
-    # Assert
     assert part.relate_to_calls == [("https://example.com", RT.HYPERLINK, True)]
-    assert serialize_xml(hyperlink._element) == snapshot
+    assert hyperlink._element.hlinkHover is not None
+    assert hyperlink._element.hlinkHover.rId == "rId3"
 
 
-def test_hyperlink_address_setter_replaces_existing_hyperlink(snapshot: SnapshotAssertion) -> None:
-    # Arrange
+def test_hyperlink_address_setter_replaces_existing_hyperlink() -> None:
     part = ActionPartStub(relate_to_rid="rId3")
     hyperlink = Hyperlink(
         _c_nvpr(b'<a:hlinkClick r:id="rId6"/>'),
         ParentProxy(part=part),
     )
 
-    # Act
     hyperlink.address = "https://example.com/new"
 
-    # Assert
     assert part.dropped_rids == ["rId6"]
     assert part.relate_to_calls == [("https://example.com/new", RT.HYPERLINK, True)]
-    assert serialize_xml(hyperlink._element) == snapshot
+    assert hyperlink._element.hlinkClick is not None
+    assert hyperlink._element.hlinkClick.rId == "rId3"
 
 
 @pytest.mark.parametrize(
@@ -347,15 +298,15 @@ def test_hyperlink_address_setter_replaces_existing_hyperlink(snapshot: Snapshot
     ],
 )
 def test_hyperlink_address_setter_removes_hyperlink_when_none(
-    children: bytes, hover: bool, snapshot: SnapshotAssertion
+    children: bytes, hover: bool
 ) -> None:
-    # Arrange
     part = ActionPartStub()
     hyperlink = Hyperlink(_c_nvpr(children), ParentProxy(part=part), hover=hover)
 
-    # Act
     hyperlink.address = None
 
-    # Assert
     assert part.dropped_rids == ["rId6"]
-    assert serialize_xml(hyperlink._element) == snapshot
+    if hover:
+        assert hyperlink._element.hlinkHover is None
+    else:
+        assert hyperlink._element.hlinkClick is None

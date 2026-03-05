@@ -7,6 +7,7 @@ non-trivial class inheritance structure.
 
 from __future__ import annotations
 
+# pyright: reportIncompatibleMethodOverride=false, reportArgumentType=false, reportPrivateUsage=false
 from typing import TYPE_CHECKING
 
 from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_PLACEHOLDER
@@ -219,7 +220,7 @@ class LayoutPlaceholder(_InheritsDimensions, Shape):
     shape properties from the master placeholder having the same type, when a matching one exists.
     """
 
-    element: CT_Shape  # pyright: ignore[reportIncompatibleMethodOverride]
+    element: CT_Shape
 
     @property
     def _base_placeholder(self):
@@ -249,7 +250,7 @@ class LayoutPlaceholder(_InheritsDimensions, Shape):
 class MasterPlaceholder(BasePlaceholder):
     """Placeholder shape on a slide master."""
 
-    element: CT_Shape  # pyright: ignore[reportIncompatibleMethodOverride]
+    element: CT_Shape
 
 
 class NotesSlidePlaceholder(_InheritsDimensions, Shape):
