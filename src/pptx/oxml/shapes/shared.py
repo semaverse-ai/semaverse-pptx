@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # pyright: reportReturnType=false, reportAssignmentType=false
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from pptx.dml.fill import CT_GradientFillProperties
 from pptx.enum.shapes import PP_PLACEHOLDER
@@ -47,7 +47,7 @@ class BaseShapeElement(BaseOxmlElement):
         return self._get_xfrm_attr("cx")
 
     @cx.setter
-    def cx(self, value):
+    def cx(self, value: Length):
         self._set_xfrm_attr("cx", value)
 
     @property
@@ -55,7 +55,7 @@ class BaseShapeElement(BaseOxmlElement):
         return self._get_xfrm_attr("cy")
 
     @cy.setter
-    def cy(self, value):
+    def cy(self, value: Length):
         self._set_xfrm_attr("cy", value)
 
     @property
@@ -63,7 +63,7 @@ class BaseShapeElement(BaseOxmlElement):
         return bool(self._get_xfrm_attr("flipH"))
 
     @flipH.setter
-    def flipH(self, value):
+    def flipH(self, value: bool):
         self._set_xfrm_attr("flipH", value)
 
     @property
@@ -71,7 +71,7 @@ class BaseShapeElement(BaseOxmlElement):
         return bool(self._get_xfrm_attr("flipV"))
 
     @flipV.setter
-    def flipV(self, value):
+    def flipV(self, value: bool):
         self._set_xfrm_attr("flipV", value)
 
     def get_or_add_xfrm(self):
@@ -178,7 +178,7 @@ class BaseShapeElement(BaseOxmlElement):
         return self._get_xfrm_attr("x")
 
     @x.setter
-    def x(self, value):
+    def x(self, value: Length):
         self._set_xfrm_attr("x", value)
 
     @property
@@ -195,7 +195,7 @@ class BaseShapeElement(BaseOxmlElement):
         return self._get_xfrm_attr("y")
 
     @y.setter
-    def y(self, value):
+    def y(self, value: Length):
         self._set_xfrm_attr("y", value)
 
     @property
@@ -213,7 +213,7 @@ class BaseShapeElement(BaseOxmlElement):
             return None
         return getattr(xfrm, name)
 
-    def _set_xfrm_attr(self, name, value):
+    def _set_xfrm_attr(self, name: str, value: Any):
         xfrm = self.get_or_add_xfrm()
         setattr(xfrm, name, value)
 
@@ -287,7 +287,7 @@ class CT_LineProperties(BaseOxmlElement):
         return prstDash.val
 
     @prstDash_val.setter
-    def prstDash_val(self, val):
+    def prstDash_val(self, val: str):
         self._remove_custDash()
         prstDash = self.get_or_add_prstDash()
         prstDash.val = val
@@ -451,7 +451,7 @@ class CT_Transform2D(BaseOxmlElement):
         return off.x
 
     @x.setter
-    def x(self, value):
+    def x(self, value: Length):
         off = self.get_or_add_off()
         off.x = value
 
@@ -463,7 +463,7 @@ class CT_Transform2D(BaseOxmlElement):
         return off.y
 
     @y.setter
-    def y(self, value):
+    def y(self, value: Length):
         off = self.get_or_add_off()
         off.y = value
 
@@ -475,7 +475,7 @@ class CT_Transform2D(BaseOxmlElement):
         return ext.cx
 
     @cx.setter
-    def cx(self, value):
+    def cx(self, value: Length):
         ext = self.get_or_add_ext()
         ext.cx = value
 
@@ -487,7 +487,7 @@ class CT_Transform2D(BaseOxmlElement):
         return ext.cy
 
     @cy.setter
-    def cy(self, value):
+    def cy(self, value: Length):
         ext = self.get_or_add_ext()
         ext.cy = value
 

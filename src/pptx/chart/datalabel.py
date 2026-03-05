@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
 
@@ -15,7 +17,7 @@ class DataLabels(object):
     labels in its scope.
     """
 
-    def __init__(self, dLbls):
+    def __init__(self, dLbls: Any):
         super(DataLabels, self).__init__()
         self._element = dLbls
 
@@ -45,7 +47,7 @@ class DataLabels(object):
         return numFmt.formatCode
 
     @number_format.setter
-    def number_format(self, value):
+    def number_format(self, value: str):
         self._element.get_or_add_numFmt().formatCode = value
         self.number_format_is_linked = False
 
@@ -65,7 +67,7 @@ class DataLabels(object):
         return numFmt.sourceLinked
 
     @number_format_is_linked.setter
-    def number_format_is_linked(self, value):
+    def number_format_is_linked(self, value: bool):
         numFmt = self._element.get_or_add_numFmt()
         numFmt.sourceLinked = value
 
@@ -84,7 +86,7 @@ class DataLabels(object):
         return dLblPos.val
 
     @position.setter
-    def position(self, value):
+    def position(self, value: Any | None):
         if value is None:
             self._element._remove_dLblPos()
             return
@@ -96,7 +98,7 @@ class DataLabels(object):
         return self._element.get_or_add_showCatName().val
 
     @show_category_name.setter
-    def show_category_name(self, value):
+    def show_category_name(self, value: bool):
         self._element.get_or_add_showCatName().val = bool(value)
 
     @property
@@ -105,7 +107,7 @@ class DataLabels(object):
         return self._element.get_or_add_showLegendKey().val
 
     @show_legend_key.setter
-    def show_legend_key(self, value):
+    def show_legend_key(self, value: bool):
         self._element.get_or_add_showLegendKey().val = bool(value)
 
     @property
@@ -118,7 +120,7 @@ class DataLabels(object):
         return self._element.get_or_add_showPercent().val
 
     @show_percentage.setter
-    def show_percentage(self, value):
+    def show_percentage(self, value: bool):
         self._element.get_or_add_showPercent().val = bool(value)
 
     @property
@@ -127,7 +129,7 @@ class DataLabels(object):
         return self._element.get_or_add_showSerName().val
 
     @show_series_name.setter
-    def show_series_name(self, value):
+    def show_series_name(self, value: bool):
         self._element.get_or_add_showSerName().val = bool(value)
 
     @property
@@ -136,7 +138,7 @@ class DataLabels(object):
         return self._element.get_or_add_showVal().val
 
     @show_value.setter
-    def show_value(self, value):
+    def show_value(self, value: bool):
         self._element.get_or_add_showVal().val = bool(value)
 
 
@@ -145,7 +147,7 @@ class DataLabel(object):
     The data label associated with an individual data point.
     """
 
-    def __init__(self, ser, idx):
+    def __init__(self, ser: Any, idx: int):
         super(DataLabel, self).__init__()
         self._ser = self._element = ser
         self._idx = idx
@@ -187,7 +189,7 @@ class DataLabel(object):
         return False
 
     @has_text_frame.setter
-    def has_text_frame(self, value):
+    def has_text_frame(self, value: bool):
         if bool(value) is True:
             self._get_or_add_tx_rich()
         else:
@@ -210,7 +212,7 @@ class DataLabel(object):
         return dLblPos.val
 
     @position.setter
-    def position(self, value):
+    def position(self, value: Any | None):
         if value is None:
             dLbl = self._dLbl
             if dLbl is None:

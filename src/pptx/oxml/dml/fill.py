@@ -40,7 +40,7 @@ class CT_BlipFillProperties(BaseOxmlElement):
     srcRect = ZeroOrOne("a:srcRect", successors=_tag_seq[2:])
     del _tag_seq
 
-    def crop(self, cropping):
+    def crop(self, cropping: tuple[float, float, float, float]):
         """
         Set `a:srcRect` child to crop according to *cropping* values.
         """

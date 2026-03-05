@@ -10,6 +10,7 @@ from pptx.chart.marker import Marker
 from pptx.chart.point import BubblePoints, CategoryPoints, XyPoints
 from pptx.dml.chtfmt import ChartFormat
 from pptx.oxml.ns import qn
+from pptx.oxml.xmlchemy import BaseOxmlElement
 from pptx.util import lazyproperty
 
 
@@ -18,7 +19,7 @@ class _BaseSeries(object):
     Base class for |BarSeries| and other series classes.
     """
 
-    def __init__(self, ser):
+    def __init__(self, ser: BaseOxmlElement):
         super(_BaseSeries, self).__init__()
         self._element = ser
         self._ser = ser
@@ -129,7 +130,7 @@ class BarSeries(_BaseCategorySeries):
         return invertIfNegative.val
 
     @invert_if_negative.setter
-    def invert_if_negative(self, value):
+    def invert_if_negative(self, value: bool):
         invertIfNegative = self._element.get_or_add_invertIfNegative()
         invertIfNegative.val = value
 
@@ -153,7 +154,7 @@ class LineSeries(_BaseCategorySeries, _MarkerMixin):
         return smooth.val
 
     @smooth.setter
-    def smooth(self, value):
+    def smooth(self, value: bool):
         self._element.get_or_add_smooth().val = value
 
 
@@ -224,12 +225,12 @@ class SeriesCollection(Sequence[_BaseSeries]):
     A sequence of |Series| objects.
     """
 
-    def __init__(self, parent_elm):
+    def __init__(self, parent_elm: BaseOxmlElement):
         # *parent_elm* can be either a c:plotArea or xChart element
         super(SeriesCollection, self).__init__()
         self._element = parent_elm
 
-    def __getitem__(self, index):  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __getitem__(self, index: int | slice):  # pyright: ignore[reportIncompatibleMethodOverride]
         if isinstance(index, slice):
             return [_SeriesFactory(ser) for ser in self._element.sers[index]]
         ser = self._element.sers[index]
@@ -239,12 +240,15 @@ class SeriesCollection(Sequence[_BaseSeries]):
         return len(self._element.sers)
 
 
-def _SeriesFactory(ser):
+def _SeriesFactory(ser: BaseOxmlElement):
     """
     Return an instance of the appropriate subclass of _BaseSeries based on the
     xChart element *ser* appears in.
     """
-    xChart_tag = ser.getparent().tag
+    parent = ser.getparent()
+    if parent is None:
+        raise ValueError("series element has no parent")
+    xChart_tag = parent.tag
 
     try:
         SeriesCls = {

@@ -19,7 +19,11 @@ from pptx.shapes.picture import Picture
 from pptx.util import Emu
 
 if TYPE_CHECKING:
+    from pptx.chart.data import ChartData
+    from pptx.enum.chart import XL_CHART_TYPE
+    from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.oxml.shapes.autoshape import CT_Shape
+    from pptx.util import Length
 
 
 class _InheritsDimensions(object):
@@ -42,7 +46,7 @@ class _InheritsDimensions(object):
         return self._effective_value("height")
 
     @height.setter
-    def height(self, value):
+    def height(self, value: Length):
         self._element.cy = value
 
     @property
@@ -55,7 +59,7 @@ class _InheritsDimensions(object):
         return self._effective_value("left")
 
     @left.setter
-    def left(self, value):
+    def left(self, value: Length):
         self._element.x = value
 
     @property
@@ -77,7 +81,7 @@ class _InheritsDimensions(object):
         return self._effective_value("top")
 
     @top.setter
-    def top(self, value):
+    def top(self, value: Length):
         self._element.y = value
 
     @property
@@ -90,7 +94,7 @@ class _InheritsDimensions(object):
         return self._effective_value("width")
 
     @width.setter
-    def width(self, value):
+    def width(self, value: Length):
         self._element.cx = value
 
     @property
@@ -102,7 +106,7 @@ class _InheritsDimensions(object):
         """
         raise NotImplementedError("Must be implemented by all subclasses.")
 
-    def _effective_value(self, attr_name):
+    def _effective_value(self, attr_name: str):
         """
         The effective value of *attr_name* on this placeholder shape; its
         directly-applied value if it has one, otherwise the value on the
@@ -113,7 +117,7 @@ class _InheritsDimensions(object):
             return directly_applied_value
         return self._inherited_value(attr_name)
 
-    def _inherited_value(self, attr_name):
+    def _inherited_value(self, attr_name: str):
         """
         Return the attribute value, e.g. 'width' of the base placeholder this
         placeholder inherits from.
@@ -158,7 +162,7 @@ class _BaseSlidePlaceholder(_InheritsDimensions, Shape):
         layout, idx = self.part.slide_layout, self._element.ph_idx
         return layout.placeholders.get(idx=idx)
 
-    def _replace_placeholder_with(self, element):
+    def _replace_placeholder_with(self, element: BaseOxmlElement):
         """
         Substitute *element* for this placeholder element in the shapetree.
         This placeholder's `._element` attribute is set to |None| and its
@@ -281,7 +285,7 @@ class SlidePlaceholder(_BaseSlidePlaceholder):
 class ChartPlaceholder(_BaseSlidePlaceholder):
     """Placeholder shape that can only accept a chart."""
 
-    def insert_chart(self, chart_type, chart_data):
+    def insert_chart(self, chart_type: XL_CHART_TYPE, chart_data: ChartData):
         """
         Return a |PlaceholderGraphicFrame| object containing a new chart of
         *chart_type* depicting *chart_data* and having the same position and
@@ -300,7 +304,7 @@ class ChartPlaceholder(_BaseSlidePlaceholder):
         self._replace_placeholder_with(graphicFrame)
         return PlaceholderGraphicFrame(graphicFrame, self._parent)
 
-    def _new_chart_graphicFrame(self, rId, x, y, cx, cy):
+    def _new_chart_graphicFrame(self, rId: str, x: int, y: int, cx: int, cy: int):
         """
         Return a newly created `p:graphicFrame` element having the specified
         position and size and containing the chart identified by *rId*.
@@ -312,7 +316,7 @@ class ChartPlaceholder(_BaseSlidePlaceholder):
 class PicturePlaceholder(_BaseSlidePlaceholder):
     """Placeholder shape that can only accept a picture."""
 
-    def insert_picture(self, image_file):
+    def insert_picture(self, image_file: str):
         """Return a |PlaceholderPicture| object depicting the image in `image_file`.
 
         `image_file` may be either a path (string) or a file-like object. The image is
@@ -325,7 +329,7 @@ class PicturePlaceholder(_BaseSlidePlaceholder):
         self._replace_placeholder_with(pic)
         return PlaceholderPicture(pic, self._parent)
 
-    def _new_placeholder_pic(self, image_file):
+    def _new_placeholder_pic(self, image_file: str):
         """
         Return a new `p:pic` element depicting the image in *image_file*,
         suitable for use as a placeholder. In particular this means not
@@ -338,7 +342,7 @@ class PicturePlaceholder(_BaseSlidePlaceholder):
         pic.crop_to_fit(image_size, (self.width, self.height))
         return pic
 
-    def _get_or_add_image(self, image_file):
+    def _get_or_add_image(self, image_file: str):
         """
         Return an (rId, description, image_size) 3-tuple identifying the
         related image part containing *image_file* and describing the image.
@@ -379,7 +383,7 @@ class PlaceholderPicture(_InheritsDimensions, Picture):
 class TablePlaceholder(_BaseSlidePlaceholder):
     """Placeholder shape that can only accept a table."""
 
-    def insert_table(self, rows, cols):
+    def insert_table(self, rows: int, cols: int):
         """Return |PlaceholderGraphicFrame| object containing a `rows` by `cols` table.
 
         The position and width of the table are those of the placeholder and its height
@@ -395,7 +399,7 @@ class TablePlaceholder(_BaseSlidePlaceholder):
         self._replace_placeholder_with(graphicFrame)
         return PlaceholderGraphicFrame(graphicFrame, self._parent)
 
-    def _new_placeholder_table(self, rows, cols):
+    def _new_placeholder_table(self, rows: int, cols: int):
         """
         Return a newly added `p:graphicFrame` element containing an empty
         table with *rows* rows and *cols* columns, positioned at the location

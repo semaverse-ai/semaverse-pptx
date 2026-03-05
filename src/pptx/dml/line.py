@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pptx.dml.fill import FillFormat
-from pptx.enum.dml import MSO_FILL
+from pptx.enum.dml import MSO_FILL, MSO_LINE_DASH_STYLE
 from pptx.util import Emu, lazyproperty
 
 
@@ -14,7 +16,7 @@ class LineFormat(object):
     a shape such as |Shape| or |Picture|.
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: Any):
         super(LineFormat, self).__init__()
         self._parent = parent
 
@@ -48,7 +50,7 @@ class LineFormat(object):
         return ln.prstDash_val
 
     @dash_style.setter
-    def dash_style(self, dash_style):
+    def dash_style(self, dash_style: MSO_LINE_DASH_STYLE | None):
         if dash_style is None:
             ln = self._ln
             if ln is None:
@@ -82,7 +84,7 @@ class LineFormat(object):
         return ln.w
 
     @width.setter
-    def width(self, emu):
+    def width(self, emu: Emu | int | None):
         if emu is None:
             emu = 0
         ln = self._get_or_add_ln()

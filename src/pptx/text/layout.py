@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Iterable
 
 from PIL import ImageFont
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class TextFitter(tuple[object, int, int, str]):
     """Value object that knows how to fit text into given rectangular extents."""
 
-    def __new__(cls, line_source, extents, font_file):
+    def __new__(cls, line_source: _LineSource, extents: tuple[int, int], font_file: str):
         width, height = extents
         return tuple.__new__(cls, (line_source, width, height, font_file))
 
@@ -31,7 +31,7 @@ class TextFitter(tuple[object, int, int, str]):
         text_fitter = cls(line_source, extents, font_file)
         return text_fitter._best_fit_font_size(max_size)
 
-    def _best_fit_font_size(self, max_size):
+    def _best_fit_font_size(self, max_size: int):
         """
         Return the largest whole-number point size less than or equal to
         *max_size* that this fitter can fit.
@@ -41,7 +41,7 @@ class TextFitter(tuple[object, int, int, str]):
         best_size = sizes.find_max(predicate)
         return 1 if best_size is None else best_size
 
-    def _break_line(self, line_source, point_size):
+    def _break_line(self, line_source: _LineSource, point_size: int):
         """
         Return a (line, remainder) pair where *line* is the longest line in
         *line_source* that will fit in this fitter's width and *remainder* is
@@ -51,7 +51,7 @@ class TextFitter(tuple[object, int, int, str]):
         predicate = self._fits_in_width_predicate(point_size)
         return lines.find_max(predicate)
 
-    def _fits_in_width_predicate(self, point_size):
+    def _fits_in_width_predicate(self, point_size: int):
         """
         Return a function taking a text string value and returns |True| if
         that text fits in this fitter when rendered at *point_size*. Used as
@@ -104,7 +104,7 @@ class TextFitter(tuple[object, int, int, str]):
     def _width(self):
         return self[1]
 
-    def _wrap_lines(self, line_source, point_size):
+    def _wrap_lines(self, line_source: Any, point_size: int):
         """
         Return a sequence of str values representing the text in
         *line_source* wrapped within this fitter when rendered at
@@ -126,7 +126,7 @@ class _BinarySearchTree(object):
     nodes.
     """
 
-    def __init__(self, value):
+    def __init__(self, value: Any):
         self._value = value
         self._lesser = None
         self._greater = None
@@ -146,7 +146,7 @@ class _BinarySearchTree(object):
         return next_node.find_max(predicate, max_)
 
     @classmethod
-    def from_ordered_sequence(cls, iseq):
+    def from_ordered_sequence(cls, iseq: Iterable[Any]):
         """
         Return the root of a balanced binary search tree populated with the
         values in iterable *iseq*.
@@ -157,7 +157,7 @@ class _BinarySearchTree(object):
         bst._insert_from_ordered_sequence(seq)
         return bst
 
-    def insert(self, value):
+    def insert(self, value: Any):
         """
         Insert a new node containing *value* into this tree such that its
         structure as a binary search tree is preserved.
@@ -190,7 +190,7 @@ class _BinarySearchTree(object):
         return self._value
 
     @staticmethod
-    def _bisect(seq):
+    def _bisect(seq: list[Any]):
         """
         Return a (medial_value, greater_values, lesser_values) 3-tuple
         obtained by bisecting sequence *seq*.
@@ -203,12 +203,12 @@ class _BinarySearchTree(object):
         lesser = seq[:mid_idx]
         return mid, greater, lesser
 
-    def _insert_from_ordered_sequence(self, seq):
+    def _insert_from_ordered_sequence(self, seq: list[Any] | None):
         """
         Insert the new values contained in *seq* into this tree such that
         a balanced tree is produced.
         """
-        if len(seq) == 0:
+        if not seq:
             return
         mid, greater, lesser = self._bisect(seq)
         self.insert(mid)
@@ -225,7 +225,7 @@ class _LineSource(object):
     its text is the empty string or whitespace only.
     """
 
-    def __init__(self, text):
+    def __init__(self, text: str):
         self._text = text
 
     def __bool__(self):
@@ -269,7 +269,7 @@ class _Line(tuple[str, _LineSource]):
     is broken at this spot.
     """
 
-    def __new__(cls, text, remainder):
+    def __new__(cls, text: str, remainder: _LineSource):
         return tuple.__new__(cls, (text, remainder))
 
     def __gt__(self, other):
@@ -301,13 +301,13 @@ class _Fonts(object):
     fonts = {}
 
     @classmethod
-    def font(cls, font_path, point_size):
+    def font(cls, font_path: str, point_size: int):
         if (font_path, point_size) not in cls.fonts:
             cls.fonts[(font_path, point_size)] = ImageFont.truetype(font_path, point_size)
         return cls.fonts[(font_path, point_size)]
 
 
-def _rendered_size(text, point_size, font_file) -> tuple[int, int]:
+def _rendered_size(text: str, point_size: int, font_file: str) -> tuple[int, int]:
     """
     Return a (width, height) pair representing the size of *text* in English
     Metric Units (EMU) when rendered at *point_size* in the font defined in

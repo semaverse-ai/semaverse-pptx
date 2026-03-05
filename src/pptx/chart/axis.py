@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pptx.dml.chtfmt import ChartFormat
 from pptx.enum.chart import (
     XL_AXIS_CROSSES,
@@ -10,16 +12,19 @@ from pptx.enum.chart import (
     XL_TICK_MARK,
 )
 from pptx.oxml.ns import qn
+from pptx.oxml.xmlchemy import BaseOxmlElement
 from pptx.oxml.simpletypes import ST_Orientation
 from pptx.shared import ElementProxy
 from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
+if TYPE_CHECKING:
+    from pptx.oxml.chart.shared import CT_Title
 
 
 class _BaseAxis(object):
     """Base class for chart axis objects. All axis objects share these properties."""
 
-    def __init__(self, xAx):
+    def __init__(self, xAx: BaseOxmlElement):
         super(_BaseAxis, self).__init__()
         self._element = xAx  # axis element, c:catAx or c:valAx
         self._xAx = xAx
@@ -56,8 +61,8 @@ class _BaseAxis(object):
         return True
 
     @has_major_gridlines.setter
-    def has_major_gridlines(self, value):
-        if bool(value) is True:
+    def has_major_gridlines(self, value: bool):
+        if value:
             self._element.get_or_add_majorGridlines()
         else:
             self._element._remove_majorGridlines()
@@ -75,8 +80,8 @@ class _BaseAxis(object):
         return True
 
     @has_minor_gridlines.setter
-    def has_minor_gridlines(self, value):
-        if bool(value) is True:
+    def has_minor_gridlines(self, value: bool):
+        if value:
             self._element.get_or_add_minorGridlines()
         else:
             self._element._remove_minorGridlines()
@@ -94,8 +99,8 @@ class _BaseAxis(object):
         return True
 
     @has_title.setter
-    def has_title(self, value):
-        if bool(value) is True:
+    def has_title(self, value: bool):
+        if value:
             self._element.get_or_add_title()
         else:
             self._element._remove_title()
@@ -120,7 +125,7 @@ class _BaseAxis(object):
         return majorTickMark.val
 
     @major_tick_mark.setter
-    def major_tick_mark(self, value):
+    def major_tick_mark(self, value: XL_TICK_MARK):
         self._element._remove_majorTickMark()
         if value is XL_TICK_MARK.CROSS:
             return
@@ -138,7 +143,7 @@ class _BaseAxis(object):
         return self._element.scaling.maximum
 
     @maximum_scale.setter
-    def maximum_scale(self, value):
+    def maximum_scale(self, value: float | None):
         scaling = self._element.scaling
         scaling.maximum = value
 
@@ -154,7 +159,7 @@ class _BaseAxis(object):
         return self._element.scaling.minimum
 
     @minimum_scale.setter
-    def minimum_scale(self, value):
+    def minimum_scale(self, value: float | None):
         scaling = self._element.scaling
         scaling.minimum = value
 
@@ -170,7 +175,7 @@ class _BaseAxis(object):
         return minorTickMark.val
 
     @minor_tick_mark.setter
-    def minor_tick_mark(self, value):
+    def minor_tick_mark(self, value: XL_TICK_MARK):
         self._element._remove_minorTickMark()
         if value is XL_TICK_MARK.CROSS:
             return
@@ -192,9 +197,9 @@ class _BaseAxis(object):
         return self._element.orientation == ST_Orientation.MAX_MIN
 
     @reverse_order.setter
-    def reverse_order(self, value):
+    def reverse_order(self, value: bool):
         self._element.orientation = (
-            ST_Orientation.MAX_MIN if bool(value) is True else ST_Orientation.MIN_MAX
+            ST_Orientation.MAX_MIN if value else ST_Orientation.MIN_MAX
         )
 
     @lazyproperty
@@ -220,7 +225,7 @@ class _BaseAxis(object):
         return tickLblPos.val
 
     @tick_label_position.setter
-    def tick_label_position(self, value):
+    def tick_label_position(self, value: XL_TICK_LABEL_POSITION):
         tickLblPos = self._element.get_or_add_tickLblPos()
         tickLblPos.val = value
 
@@ -235,7 +240,7 @@ class _BaseAxis(object):
         return False if delete.val else True
 
     @visible.setter
-    def visible(self, value):
+    def visible(self, value: bool):
         if value not in (True, False):
             raise ValueError("assigned value must be True or False, got: %s" % value)
         delete = self._element.get_or_add_delete_()
@@ -245,7 +250,7 @@ class _BaseAxis(object):
 class AxisTitle(ElementProxy):
     """Provides properties for manipulating axis title."""
 
-    def __init__(self, title):
+    def __init__(self, title: CT_Title):
         super(AxisTitle, self).__init__(title)
         self._title = title
 
@@ -277,8 +282,8 @@ class AxisTitle(ElementProxy):
         return True
 
     @has_text_frame.setter
-    def has_text_frame(self, value):
-        if bool(value) is True:
+    def has_text_frame(self, value: bool):
+        if value:
             self._title.get_or_add_tx_rich()
         else:
             self._title._remove_tx()
@@ -327,7 +332,7 @@ class DateAxis(_BaseAxis):
 class MajorGridlines(ElementProxy):
     """Provides access to the properties of the major gridlines appearing on an axis."""
 
-    def __init__(self, xAx):
+    def __init__(self, xAx: BaseOxmlElement):
         super(MajorGridlines, self).__init__(xAx)
         self._xAx = xAx  # axis element, catAx or valAx
 
@@ -344,7 +349,7 @@ class MajorGridlines(ElementProxy):
 class TickLabels(object):
     """A service class providing access to formatting of axis tick mark labels."""
 
-    def __init__(self, xAx_elm):
+    def __init__(self, xAx_elm: BaseOxmlElement):
         super(TickLabels, self).__init__()
         self._element = xAx_elm
 
@@ -375,7 +380,7 @@ class TickLabels(object):
         return numFmt.formatCode
 
     @number_format.setter
-    def number_format(self, value):
+    def number_format(self, value: str):
         numFmt = self._element.get_or_add_numFmt()
         numFmt.formatCode = value
         self.number_format_is_linked = False
@@ -396,7 +401,7 @@ class TickLabels(object):
         return numFmt.sourceLinked
 
     @number_format_is_linked.setter
-    def number_format_is_linked(self, value):
+    def number_format_is_linked(self, value: bool):
         numFmt = self._element.get_or_add_numFmt()
         numFmt.sourceLinked = value
 
@@ -413,7 +418,7 @@ class TickLabels(object):
         return lblOffset.val
 
     @offset.setter
-    def offset(self, value):
+    def offset(self, value: int):
         if self._element.tag != qn("c:catAx"):
             raise ValueError("only a category axis has an offset")
         self._element._remove_lblOffset()
@@ -444,7 +449,7 @@ class ValueAxis(_BaseAxis):
         return crosses.val
 
     @crosses.setter
-    def crosses(self, value):
+    def crosses(self, value: XL_AXIS_CROSSES):
         cross_xAx = self._cross_xAx
         if value == XL_AXIS_CROSSES.CUSTOM:
             if cross_xAx.crossesAt is not None:
@@ -468,7 +473,7 @@ class ValueAxis(_BaseAxis):
         return crossesAt.val
 
     @crosses_at.setter
-    def crosses_at(self, value):
+    def crosses_at(self, value: float | None):
         cross_xAx = self._cross_xAx
         cross_xAx._remove_crosses()
         cross_xAx._remove_crossesAt()
@@ -490,7 +495,7 @@ class ValueAxis(_BaseAxis):
         return majorUnit.val
 
     @major_unit.setter
-    def major_unit(self, value):
+    def major_unit(self, value: float | None):
         self._element._remove_majorUnit()
         if value is None:
             return
@@ -510,7 +515,7 @@ class ValueAxis(_BaseAxis):
         return minorUnit.val
 
     @minor_unit.setter
-    def minor_unit(self, value):
+    def minor_unit(self, value: float | None):
         self._element._remove_minorUnit()
         if value is None:
             return

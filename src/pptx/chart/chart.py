@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pptx.chart.axis import CategoryAxis, DateAxis, ValueAxis
 from pptx.chart.legend import Legend
@@ -11,18 +11,22 @@ from pptx.chart.plot import PlotFactory, PlotTypeInspector
 from pptx.chart.series import SeriesCollection
 from pptx.chart.xmlwriter import SeriesXmlRewriterFactory
 from pptx.dml.chtfmt import ChartFormat
+from pptx.oxml.xmlchemy import BaseOxmlElement
 from pptx.shared import ElementProxy, PartElementProxy
 from pptx.text.text import Font, TextFrame
 from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
+    from pptx.chart.data import ChartData
+    from pptx.oxml.chart.chart import CT_PlotArea
+    from pptx.oxml.chart.shared import CT_Title
     from pptx.parts.chart import ChartPart
 
 
 class Chart(PartElementProxy):
     """A chart object."""
 
-    def __init__(self, chartSpace, chart_part):
+    def __init__(self, chartSpace: Any, chart_part: ChartPart):
         super(Chart, self).__init__(chartSpace, chart_part)
         self._chartSpace = chartSpace
 
@@ -63,7 +67,7 @@ class Chart(PartElementProxy):
         return style.val
 
     @chart_style.setter
-    def chart_style(self, value):
+    def chart_style(self, value: int | None):
         self._chartSpace._remove_style()
         if value is None:
             return
@@ -107,8 +111,8 @@ class Chart(PartElementProxy):
         return self._chartSpace.chart.has_legend
 
     @has_legend.setter
-    def has_legend(self, value):
-        self._chartSpace.chart.has_legend = bool(value)
+    def has_legend(self, value: bool):
+        self._chartSpace.chart.has_legend = value
 
     @property
     def has_title(self):
@@ -124,9 +128,9 @@ class Chart(PartElementProxy):
         return True
 
     @has_title.setter
-    def has_title(self, value):
+    def has_title(self, value: bool):
         chart = self._chartSpace.chart
-        if bool(value) is False:
+        if not value:
             chart._remove_title()
             autoTitleDeleted = chart.get_or_add_autoTitleDeleted()
             autoTitleDeleted.val = True
@@ -160,7 +164,7 @@ class Chart(PartElementProxy):
         plotArea = self._chartSpace.chart.plotArea
         return _Plots(plotArea, self)
 
-    def replace_data(self, chart_data):
+    def replace_data(self, chart_data: ChartData):
         """
         Use the categories and series values in the |ChartData| object
         *chart_data* to replace those in the XML and Excel worksheet for this
@@ -211,7 +215,7 @@ class ChartTitle(ElementProxy):
     # actually differ in certain fuller behaviors, but at present they're
     # essentially identical.
 
-    def __init__(self, title):
+    def __init__(self, title: CT_Title):
         super(ChartTitle, self).__init__(title)
         self._title = title
 
@@ -243,8 +247,8 @@ class ChartTitle(ElementProxy):
         return True
 
     @has_text_frame.setter
-    def has_text_frame(self, value):
-        if bool(value) is False:
+    def has_text_frame(self, value: bool):
+        if not value:
             self._title._remove_tx()
             return
         self._title.get_or_add_tx_rich()
@@ -271,7 +275,7 @@ class _Plots(Sequence[object]):
     a superimposed line plot.
     """
 
-    def __init__(self, plotArea, chart):
+    def __init__(self, plotArea: CT_PlotArea, chart: Chart):
         super(_Plots, self).__init__()
         self._plotArea = plotArea
         self._chart = chart
@@ -279,10 +283,10 @@ class _Plots(Sequence[object]):
     def __getitem__(self, index):  # pyright: ignore[reportIncompatibleMethodOverride]
         xCharts = self._plotArea.xCharts
         if isinstance(index, slice):
-            plots = [PlotFactory(xChart, self._chart) for xChart in xCharts]
+            plots = [PlotFactory(cast(BaseOxmlElement, xChart), self._chart) for xChart in xCharts]
             return plots[index]
         else:
-            xChart = xCharts[index]
+            xChart = cast(BaseOxmlElement, xCharts[index])
             return PlotFactory(xChart, self._chart)
 
     def __len__(self):

@@ -65,55 +65,55 @@ class BaseSimpleType:
 
 class BaseFloatType(BaseSimpleType):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         return float(str_value)
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         return str(float(value))
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         if not isinstance(value, (int, float)):
             raise TypeError("value must be a number, got %s" % type(value))
 
 
 class BaseIntType(BaseSimpleType):
     @classmethod
-    def convert_from_percent_literal(cls, str_value):
+    def convert_from_percent_literal(cls, str_value: str):
         int_str = str_value.replace("%", "")
         return int(int_str)
 
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         return int(str_value)
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         return str(value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int(value)
 
 
 class BaseStringType(BaseSimpleType):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         return str_value
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         return value
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_string(value)
 
 
 class BaseStringEnumerationType(BaseStringType):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_string(value)
         if value not in cls._members:
             raise ValueError("must be one of %s, got '%s'" % (cls._members, value))
@@ -129,7 +129,7 @@ class XsdAnyUri(BaseStringType):
 
 class XsdBoolean(BaseSimpleType):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if str_value not in ("1", "0", "true", "false"):
             raise InvalidXmlError(
                 "value must be one of '1', '0', 'true' or 'false', got '%s'" % str_value
@@ -137,11 +137,11 @@ class XsdBoolean(BaseSimpleType):
         return str_value in ("1", "true")
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         return {True: "1", False: "0"}[value]
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         if value not in (True, False):
             raise TypeError(
                 "only True or False (and possibly None) may be assigned, got '%s'" % value
@@ -161,13 +161,13 @@ class XsdId(BaseStringType):
 
 class XsdInt(BaseIntType):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, -2147483648, 2147483647)
 
 
 class XsdLong(BaseIntType):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, -9223372036854775808, 9223372036854775807)
 
 
@@ -197,19 +197,19 @@ class XsdTokenEnumeration(BaseStringEnumerationType):
 
 class XsdUnsignedByte(BaseIntType):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 255)
 
 
 class XsdUnsignedInt(BaseIntType):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 4294967295)
 
 
 class XsdUnsignedShort(BaseIntType):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 65535)
 
 
@@ -228,7 +228,7 @@ class ST_Angle(XsdInt):
         return float(rot) / cls.DEGREE_INCREMENTS
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         """
         Convert signed angle float like -42.42 to int 60000 per degree,
         normalized to positive value.
@@ -238,7 +238,7 @@ class ST_Angle(XsdInt):
         return str(rot)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         BaseFloatType.validate(value)
 
 
@@ -248,7 +248,7 @@ class ST_AxisUnit(XsdDouble):
     """
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         super(ST_AxisUnit, cls).validate(value)
         if value <= 0.0:
             raise ValueError("must be positive numeric value, got %s" % value)
@@ -272,13 +272,13 @@ class ST_BubbleScale(BaseIntType):
     """
 
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if "%" in str_value:
             return cls.convert_from_percent_literal(str_value)
         return super(ST_BubbleScale, cls).convert_from_xml(str_value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 300)
 
 
@@ -294,17 +294,17 @@ class ST_ContentType(XsdString):
 
 class ST_Coordinate(BaseSimpleType):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if "i" in str_value or "m" in str_value or "p" in str_value:
             return ST_UniversalMeasure.convert_from_xml(str_value)
         return Emu(int(str_value))
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         return str(value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         ST_CoordinateUnqualified.validate(value)
 
 
@@ -314,29 +314,29 @@ class ST_Coordinate32(BaseSimpleType):
     """
 
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if "i" in str_value or "m" in str_value or "p" in str_value:
             return ST_UniversalMeasure.convert_from_xml(str_value)
         return ST_Coordinate32Unqualified.convert_from_xml(str_value)
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         return ST_Coordinate32Unqualified.convert_to_xml(value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         ST_Coordinate32Unqualified.validate(value)
 
 
 class ST_Coordinate32Unqualified(XsdInt):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         return Emu(int(str_value))
 
 
 class ST_CoordinateUnqualified(XsdLong):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, -27273042329600, 27273042316900)
 
 
@@ -370,13 +370,13 @@ class ST_GapAmount(BaseIntType):
     """
 
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if "%" in str_value:
             return cls.convert_from_percent_literal(str_value)
         return super(ST_GapAmount, cls).convert_from_xml(str_value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 500)
 
 
@@ -396,14 +396,14 @@ class ST_Grouping(XsdStringEnumeration):
 
 class ST_HexColorRGB(BaseStringType):
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         """
         Keep alpha characters all uppercase just for consistency.
         """
         return value.upper()
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         # must be string ---------------
         str_value = cls.validate_string(value)
 
@@ -437,23 +437,23 @@ class ST_LblOffset(XsdUnsignedShort):
     """
 
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if str_value.endswith("%"):
             return cls.convert_from_percent_literal(str_value)
         return int(str_value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 1000)
 
 
 class ST_LineWidth(XsdInt):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         return Emu(int(str_value))
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         super(ST_LineWidth, cls).validate(value)
         if value < 0 or value > 20116800:
             raise ValueError(
@@ -463,7 +463,7 @@ class ST_LineWidth(XsdInt):
 
 class ST_MarkerSize(XsdUnsignedByte):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 2, 72)
 
 
@@ -483,13 +483,13 @@ class ST_Overlap(BaseIntType):
     """
 
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if "%" in str_value:
             return cls.convert_from_percent_literal(str_value)
         return super(ST_Overlap, cls).convert_from_xml(str_value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, -100, 100)
 
 
@@ -502,21 +502,21 @@ class ST_Percentage(BaseIntType):
     """
 
     @classmethod
-    def convert_from_xml(cls, str_value):  # pyright: ignore[reportIncompatibleMethodOverride]
+    def convert_from_xml(cls, str_value: str):  # pyright: ignore[reportIncompatibleMethodOverride]
         if "%" in str_value:
             return cls._convert_from_percent_literal(str_value)
         return int(str_value) / 100000.0
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         return str(int(round(value * 100000.0)))
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_float_in_range(value, -21474.83648, 21474.83647)
 
     @classmethod
-    def _convert_from_percent_literal(cls, str_value):
+    def _convert_from_percent_literal(cls, str_value: str):
         float_part = str_value[:-1]  # trim off '%' character
         return float(float_part) / 100.0
 
@@ -535,12 +535,12 @@ class ST_PlaceholderSize(XsdTokenEnumeration):
 
 class ST_PositiveCoordinate(XsdLong):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         int_value = super(ST_PositiveCoordinate, cls).convert_from_xml(str_value)
         return Emu(int_value)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 27273042316900)
 
 
@@ -552,7 +552,7 @@ class ST_PositiveFixedAngle(ST_Angle):
     """
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         """Convert signed angle float like -427.42 to int 60000 per degree.
 
         Value is normalized to a positive value less than 360 degrees.
@@ -577,7 +577,7 @@ class ST_PositiveFixedPercentage(ST_Percentage):
     """
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_float_in_range(value, 0.0, 1.0)
 
 
@@ -587,17 +587,17 @@ class ST_RelationshipId(XsdString):
 
 class ST_SlideId(XsdUnsignedInt):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 256, 2147483647)
 
 
 class ST_SlideSizeCoordinate(BaseIntType):
     @classmethod
-    def convert_from_xml(cls, str_value):
-        return Emu(str_value)
+    def convert_from_xml(cls, str_value: str):
+        return Emu(int(str_value))
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int(value)
         if value < 914400 or value > 51206400:
             raise ValueError(
@@ -607,7 +607,7 @@ class ST_SlideSizeCoordinate(BaseIntType):
 
 class ST_Style(XsdUnsignedByte):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 1, 48)
 
 
@@ -618,7 +618,7 @@ class ST_TargetMode(XsdString):
     """
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_string(value)
         if value not in ("External", "Internal"):
             raise ValueError("must be one of 'Internal' or 'External', got '%s'" % value)
@@ -631,17 +631,17 @@ class ST_TextFontScalePercentOrPercentString(BaseFloatType):
     """
 
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if str_value.endswith("%"):
             return float(str_value[:-1])  # trim off '%' character
         return int(str_value) / 1000.0
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         return str(int(value * 1000.0))
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         BaseFloatType.validate(value)
         if value < 1.0 or value > 100.0:
             raise ValueError("value must be in range 1.0..100.0 (percent), got %s" % value)
@@ -649,32 +649,32 @@ class ST_TextFontScalePercentOrPercentString(BaseFloatType):
 
 class ST_TextFontSize(BaseIntType):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 100, 400000)
 
 
 class ST_TextIndentLevelType(BaseIntType):
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 8)
 
 
 class ST_TextSpacingPercentOrPercentString(BaseFloatType):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         if str_value.endswith("%"):
             return cls._convert_from_percent_literal(str_value)
         return int(str_value) / 100000.0
 
     @classmethod
-    def _convert_from_percent_literal(cls, str_value):
+    def _convert_from_percent_literal(cls, str_value: str):
         float_part = str_value[:-1]  # trim off '%' character
         percent_value = float(float_part)
         lines_value = percent_value / 100.0
         return lines_value
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         """
         1.75 -> '175000'
         """
@@ -682,25 +682,25 @@ class ST_TextSpacingPercentOrPercentString(BaseFloatType):
         return str(int(round(lines)))
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_float_in_range(value, 0.0, 132.0)
 
 
 class ST_TextSpacingPoint(BaseIntType):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         """
         Reads string integer centipoints, returns |Length| value.
         """
         return Centipoints(int(str_value))
 
     @classmethod
-    def convert_to_xml(cls, value):
+    def convert_to_xml(cls, value: Any):
         length = Emu(value)  # just to make sure
         return str(length.centipoints)
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value: Any):
         cls.validate_int_in_range(value, 0, 20116800)
 
 
@@ -721,7 +721,7 @@ class ST_TextWrappingType(XsdTokenEnumeration):
 
 class ST_UniversalMeasure(BaseSimpleType):
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value: str):
         float_part, units_part = str_value[:-2], str_value[-2:]
         quantity = float(float_part)
         multiplier = {

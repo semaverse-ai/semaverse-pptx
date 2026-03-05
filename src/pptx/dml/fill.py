@@ -6,9 +6,10 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, cast
 
 from pptx.dml.color import ColorFormat
-from pptx.enum.dml import MSO_FILL
+from pptx.enum.dml import MSO_FILL, MSO_PATTERN_TYPE
 from pptx.oxml.dml.fill import (
     CT_BlipFillProperties,
+    CT_GradientStopList,
     CT_GradientFillProperties,
     CT_GroupFillProperties,
     CT_NoFillProperties,
@@ -21,7 +22,6 @@ from pptx.util import lazyproperty
 
 if TYPE_CHECKING:
     from pptx.enum.dml import MSO_FILL_TYPE
-    from pptx.oxml.xmlchemy import BaseOxmlElement
 
 
 class FillFormat(object):
@@ -108,7 +108,7 @@ class FillFormat(object):
         return self._fill.gradient_angle
 
     @gradient_angle.setter
-    def gradient_angle(self, value):
+    def gradient_angle(self, value: float):
         if self.type != MSO_FILL.GRADIENT:
             raise TypeError("Fill is not of type MSO_FILL_TYPE.GRADIENT")
         if not isinstance(self._fill, _GradFill):
@@ -146,7 +146,7 @@ class FillFormat(object):
         return self._fill.pattern
 
     @pattern.setter
-    def pattern(self, pattern_type):
+    def pattern(self, pattern_type: MSO_PATTERN_TYPE):
         if not isinstance(self._fill, _PattFill):
             tmpl = "fill type %s has no pattern, call .patterned() first"
             raise TypeError(tmpl % self._fill.__class__.__name__)
@@ -255,7 +255,7 @@ class _GradFill(_Fill):
         return counter_clockwise_angle
 
     @gradient_angle.setter
-    def gradient_angle(self, value):
+    def gradient_angle(self, value: float):
         lin = self._gradFill.lin
         if lin is None:
             raise ValueError("not a linear gradient")
@@ -323,7 +323,7 @@ class _PattFill(_Fill):
         return self._pattFill.prst
 
     @pattern.setter
-    def pattern(self, pattern_type):
+    def pattern(self, pattern_type: MSO_PATTERN_TYPE):
         self._pattFill.prst = pattern_type
 
     @property
@@ -357,7 +357,7 @@ class _GradientStops(Sequence["_GradientStop"]):
     through.
     """
 
-    def __init__(self, gsLst):
+    def __init__(self, gsLst: CT_GradientStopList):
         self._gsLst = gsLst
 
     def __getitem__(self, idx):  # pyright: ignore[reportIncompatibleMethodOverride]
@@ -394,5 +394,5 @@ class _GradientStop(ElementProxy):
         return self._gs.pos
 
     @position.setter
-    def position(self, value):
+    def position(self, value: float):
         self._gs.pos = float(value)

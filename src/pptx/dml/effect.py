@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 
 class ShadowFormat(object):
     """Provides access to shadow effect on a shape."""
 
-    def __init__(self, spPr):
+    def __init__(self, spPr: Any):
         # ---spPr may also be a grpSpPr; both have a:effectLst child---
         self._element = spPr
 
@@ -31,7 +33,7 @@ class ShadowFormat(object):
         return False
 
     @inherit.setter
-    def inherit(self, value):
+    def inherit(self, value: bool):
         inherit = bool(value)
         if inherit:
             # ---remove any explicitly-defined effects

@@ -13,6 +13,7 @@ from pptx.oxml.dml.color import (
     CT_SRgbColor,
     CT_SystemColor,
 )
+from pptx.oxml.xmlchemy import BaseOxmlElement
 
 
 class ColorFormat(object):
@@ -21,7 +22,7 @@ class ColorFormat(object):
     luminance adjustments.
     """
 
-    def __init__(self, eg_colorChoice_parent, color):
+    def __init__(self, eg_colorChoice_parent: BaseOxmlElement, color: _Color):
         super(ColorFormat, self).__init__()
         self._xFill = eg_colorChoice_parent
         self._color = color
@@ -36,12 +37,12 @@ class ColorFormat(object):
         return self._color.brightness
 
     @brightness.setter
-    def brightness(self, value):
+    def brightness(self, value: float):
         self._validate_brightness_value(value)
         self._color.brightness = value
 
     @classmethod
-    def from_colorchoice_parent(cls, eg_colorChoice_parent):
+    def from_colorchoice_parent(cls, eg_colorChoice_parent: BaseOxmlElement):
         xClr = eg_colorChoice_parent.eg_colorChoice
         color = _Color(xClr)
         color_format = cls(eg_colorChoice_parent, color)
@@ -82,7 +83,7 @@ class ColorFormat(object):
         return self._color.theme_color
 
     @theme_color.setter
-    def theme_color(self, mso_theme_color_idx):
+    def theme_color(self, mso_theme_color_idx: MSO_THEME_COLOR):
         # change to theme color format if not already
         if not isinstance(self._color, _SchemeColor):
             schemeClr = self._xFill.get_or_change_to_schemeClr()
@@ -98,7 +99,7 @@ class ColorFormat(object):
         """
         return self._color.color_type
 
-    def _validate_brightness_value(self, value):
+    def _validate_brightness_value(self, value: float):
         if value < -1.0 or value > 1.0:
             raise ValueError("brightness must be number in range -1.0 to 1.0")
         if isinstance(self._color, _NoneColor):
@@ -146,7 +147,7 @@ class _Color(object):
         return 0
 
     @brightness.setter
-    def brightness(self, value):
+    def brightness(self, value: float):
         if value > 0:
             self._tint(value)
         elif value < 0:
@@ -174,12 +175,12 @@ class _Color(object):
         """
         return MSO_THEME_COLOR.NOT_THEME_COLOR
 
-    def _shade(self, value):
+    def _shade(self, value: float):
         lumMod_val = 1.0 - abs(value)
         color_elm = self._xClr.clear_lum()
         color_elm.add_lumMod(lumMod_val)
 
-    def _tint(self, value):
+    def _tint(self, value: float):
         lumOff_val = value
         lumMod_val = 1.0 - lumOff_val
         color_elm = self._xClr.clear_lum()
@@ -235,7 +236,7 @@ class _SchemeColor(_Color):
         return self._schemeClr.val
 
     @theme_color.setter
-    def theme_color(self, mso_theme_color_idx):
+    def theme_color(self, mso_theme_color_idx: MSO_THEME_COLOR):
         self._schemeClr.val = mso_theme_color_idx
 
 
@@ -263,7 +264,7 @@ class _SRgbColor(_Color):
         return RGBColor.from_string(self._srgbClr.val)
 
     @rgb.setter
-    def rgb(self, rgb):
+    def rgb(self, rgb: RGBColor):
         self._srgbClr.val = str(rgb)
 
 
@@ -292,7 +293,7 @@ class RGBColor(tuple[int, int, int]):
         return "%02X%02X%02X" % self
 
     @classmethod
-    def from_string(cls, rgb_hex_str):
+    def from_string(cls, rgb_hex_str: str):
         """
         Return a new instance from an RGB color hex string like ``'3C2F80'``.
         """

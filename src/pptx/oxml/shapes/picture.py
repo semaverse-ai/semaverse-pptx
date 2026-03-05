@@ -36,7 +36,7 @@ class CT_Picture(BaseShapeElement):
             return blip.rEmbed
         return None
 
-    def crop_to_fit(self, image_size, view_size):
+    def crop_to_fit(self, image_size: tuple[int, int], view_size: tuple[int, int]):
         """
         Set cropping values in `p:blipFill/a:srcRect` such that an image of
         *image_size* will stretch to exactly fit *view_size* when its aspect
@@ -58,7 +58,7 @@ class CT_Picture(BaseShapeElement):
         return self.spPr.ln
 
     @classmethod
-    def new_ph_pic(cls, id_, name, desc, rId):
+    def new_ph_pic(cls, id_: int, name: str, desc: str, rId: str):
         """
         Return a new `p:pic` placeholder element populated with the supplied
         parameters.
@@ -66,7 +66,17 @@ class CT_Picture(BaseShapeElement):
         return parse_xml(cls._pic_ph_tmpl() % (id_, name, desc, rId))
 
     @classmethod
-    def new_pic(cls, shape_id, name, desc, rId, x, y, cx, cy):
+    def new_pic(
+        cls,
+        shape_id: int,
+        name: str,
+        desc: str,
+        rId: str,
+        x: int,
+        y: int,
+        cx: int,
+        cy: int,
+    ):
         """Return new `<p:pic>` element tree configured with supplied parameters."""
         return parse_xml(cls._pic_tmpl() % (shape_id, name, escape(desc), rId, x, y, cx, cy))
 
@@ -108,7 +118,7 @@ class CT_Picture(BaseShapeElement):
         return self._srcRect_x("b")
 
     @srcRect_b.setter
-    def srcRect_b(self, value):
+    def srcRect_b(self, value: float):
         self.blipFill.get_or_add_srcRect().b = value
 
     @property
@@ -117,7 +127,7 @@ class CT_Picture(BaseShapeElement):
         return self._srcRect_x("l")
 
     @srcRect_l.setter
-    def srcRect_l(self, value):
+    def srcRect_l(self, value: float):
         self.blipFill.get_or_add_srcRect().l = value  # noqa
 
     @property
@@ -126,7 +136,7 @@ class CT_Picture(BaseShapeElement):
         return self._srcRect_x("r")
 
     @srcRect_r.setter
-    def srcRect_r(self, value):
+    def srcRect_r(self, value: float):
         self.blipFill.get_or_add_srcRect().r = value
 
     @property
@@ -135,10 +145,10 @@ class CT_Picture(BaseShapeElement):
         return self._srcRect_x("t")
 
     @srcRect_t.setter
-    def srcRect_t(self, value):
+    def srcRect_t(self, value: float):
         self.blipFill.get_or_add_srcRect().t = value
 
-    def _fill_cropping(self, image_size, view_size):
+    def _fill_cropping(self, image_size: tuple[int, int], view_size: tuple[int, int]):
         """
         Return a (left, top, right, bottom) 4-tuple containing the cropping
         values required to display an image of *image_size* in *view_size*
@@ -250,7 +260,7 @@ class CT_Picture(BaseShapeElement):
             "</p:pic>" % nsdecls("a", "p", "r")
         )
 
-    def _srcRect_x(self, attr_name):
+    def _srcRect_x(self, attr_name: str):
         """
         Value of `p:blipFill/a:srcRect/@{attr_name}` or 0.0 if not present.
         """

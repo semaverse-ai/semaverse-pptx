@@ -181,7 +181,7 @@ class BaseAttribute:
 
     def __set__(self, instance: Any, value: Any) -> None:
         """Typing-only descriptor protocol hook."""
-        return None
+        pass
 
 
 class OptionalAttribute(BaseAttribute):
@@ -308,7 +308,7 @@ class _BaseChildElement:
 
     def __set__(self, instance: Any, value: Any) -> None:
         """Typing-only descriptor protocol hook."""
-        return None
+        pass
 
     def _add_adder(self):
         """Add an ``_add_x()`` method to the element class for this child element."""

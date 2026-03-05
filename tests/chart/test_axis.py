@@ -102,6 +102,14 @@ def test_base_axis_scale_reverse_visible() -> None:
     assert axis.reverse_order is True
     assert axis.visible is True
 
+    axis.maximum_scale = None
+    axis.minimum_scale = None
+
+    assert axis.maximum_scale is None
+    assert axis.minimum_scale is None
+    assert axis._element.scaling.max is None
+    assert axis._element.scaling.min is None
+
 
 def test_base_axis_visible_raises_on_non_bool() -> None:
     axis = _BaseAxis(_cat_ax())

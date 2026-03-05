@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 from collections.abc import Sequence
 from numbers import Number
-from typing import Protocol, runtime_checkable
+from typing import Protocol, overload, runtime_checkable
 
 from pptx.chart.xlsx import (
     BubbleWorkbookWriter,
@@ -13,6 +13,7 @@ from pptx.chart.xlsx import (
     XyWorkbookWriter,
 )
 from pptx.chart.xmlwriter import ChartXmlWriter
+from pptx.enum.chart import XL_CHART_TYPE
 from pptx.util import lazyproperty
 
 
@@ -57,21 +58,27 @@ class _BaseChartData(Sequence["_BaseSeriesData"]):
     category charts and XY charts.
     """
 
-    def __init__(self, number_format="General"):
+    def __init__(self, number_format: str = "General"):
         super(_BaseChartData, self).__init__()
         self._number_format = number_format
         self._series = []
 
-    def __getitem__(self, index):
+    @overload
+    def __getitem__(self, index: int) -> "_BaseSeriesData": ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list["_BaseSeriesData"]: ...
+
+    def __getitem__(self, index: int | slice):
         return self._series.__getitem__(index)
 
     def __len__(self):
         return self._series.__len__()
 
-    def append(self, series):
+    def append(self, series: "_BaseSeriesData"):
         return self._series.append(series)
 
-    def data_point_offset(self, series):
+    def data_point_offset(self, series: "_BaseSeriesData"):
         """
         The total integer number of data points appearing in the series of
         this chart that are prior to *series* in this sequence.
@@ -94,7 +101,7 @@ class _BaseChartData(Sequence["_BaseSeriesData"]):
         """
         return self._number_format
 
-    def series_index(self, series):
+    def series_index(self, series: "_BaseSeriesData"):
         """
         Return the integer index of *series* in this sequence.
         """
@@ -103,7 +110,7 @@ class _BaseChartData(Sequence["_BaseSeriesData"]):
                 return idx
         raise ValueError("series not in chart data object")
 
-    def series_name_ref(self, series):
+    def series_name_ref(self, series: "_BaseSeriesData"):
         """
         Return the Excel worksheet reference to the cell containing the name
         for *series*.
@@ -113,7 +120,7 @@ class _BaseChartData(Sequence["_BaseSeriesData"]):
             raise TypeError("chart data does not support series name references")
         return workbook_writer.series_name_ref(series)
 
-    def x_values_ref(self, series):
+    def x_values_ref(self, series: "_BaseSeriesData"):
         """
         The Excel worksheet reference to the X values for *series* (not
         including the column label).
@@ -131,7 +138,7 @@ class _BaseChartData(Sequence["_BaseSeriesData"]):
         """
         return self._workbook_writer.xlsx_blob
 
-    def xml_bytes(self, chart_type):
+    def xml_bytes(self, chart_type: XL_CHART_TYPE):
         """
         Return a blob containing the XML for a chart of *chart_type*
         containing the series in this chart data object, as bytes suitable
@@ -139,7 +146,7 @@ class _BaseChartData(Sequence["_BaseSeriesData"]):
         """
         return self._xml(chart_type).encode("utf-8")
 
-    def y_values_ref(self, series):
+    def y_values_ref(self, series: "_BaseSeriesData"):
         """
         The Excel worksheet reference to the Y values for *series* (not
         including the column label).
@@ -157,7 +164,7 @@ class _BaseChartData(Sequence["_BaseSeriesData"]):
         """
         raise NotImplementedError("must be implemented by all subclasses")
 
-    def _xml(self, chart_type):
+    def _xml(self, chart_type: XL_CHART_TYPE):
         """
         Return (as unicode text) the XML for a chart of *chart_type*
         populated with the values in this chart data object. The XML is
@@ -175,19 +182,25 @@ class _BaseSeriesData(Sequence["_BaseDataPoint"]):
     access to series-level attributes like the series label.
     """
 
-    def __init__(self, chart_data, name, number_format):
+    def __init__(self, chart_data: _BaseChartData, name: str | None, number_format: str | None):
         self._chart_data = chart_data
         self._name = name
         self._number_format = number_format
         self._data_points = []
 
-    def __getitem__(self, index):
+    @overload
+    def __getitem__(self, index: int) -> "_BaseDataPoint": ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list["_BaseDataPoint"]: ...
+
+    def __getitem__(self, index: int | slice):
         return self._data_points.__getitem__(index)
 
     def __len__(self):
         return self._data_points.__len__()
 
-    def append(self, data_point):
+    def append(self, data_point: "_BaseDataPoint"):
         return self._data_points.append(data_point)
 
     @property
@@ -274,7 +287,7 @@ class _BaseDataPoint(object):
     Base class providing common members for data point objects.
     """
 
-    def __init__(self, series_data, number_format):
+    def __init__(self, series_data: _BaseSeriesData, number_format: str | None):
         super(_BaseDataPoint, self).__init__()
         self._series_data = series_data
         self._number_format = number_format
@@ -309,7 +322,7 @@ class CategoryChartData(_BaseChartData):
     The corresponding X value is inferred by its position in the sequence.
     """
 
-    def add_category(self, label):
+    def add_category(self, label: str | float | datetime.date | datetime.datetime):
         """
         Return a newly created |data.Category| object having *label* and
         appended to the end of the category collection for this chart.
@@ -320,7 +333,12 @@ class CategoryChartData(_BaseChartData):
         """
         return self.categories.add_category(label)
 
-    def add_series(self, name, values=(), number_format=None):
+    def add_series(
+        self,
+        name: str,
+        values: Sequence[float | None] = (),
+        number_format: str | None = None,
+    ):
         """
         Add a series to this data set entitled *name* and having the data
         points specified by *values*, an iterable of numeric values.
@@ -350,7 +368,9 @@ class CategoryChartData(_BaseChartData):
         return self._categories
 
     @categories.setter
-    def categories(self, category_labels):
+    def categories(
+        self, category_labels: Sequence[str | float | datetime.date | datetime.datetime]
+    ):
         categories = Categories()
         for label in category_labels:
             categories.add_category(label)
@@ -367,7 +387,7 @@ class CategoryChartData(_BaseChartData):
             raise TypeError("chart data does not support category references")
         return workbook_writer.categories_ref
 
-    def values_ref(self, series):
+    def values_ref(self, series: _BaseSeriesData):
         """
         The Excel worksheet reference to the values for *series* (not
         including the column heading).
@@ -397,7 +417,13 @@ class Categories(Sequence["Category"]):
         self._categories = []
         self._number_format = None
 
-    def __getitem__(self, idx):
+    @overload
+    def __getitem__(self, idx: int) -> "Category": ...
+
+    @overload
+    def __getitem__(self, idx: slice) -> list["Category"]: ...
+
+    def __getitem__(self, idx: int | slice):
         return self._categories.__getitem__(idx)
 
     def __len__(self):
@@ -409,7 +435,7 @@ class Categories(Sequence["Category"]):
         """
         return self._categories.__len__()
 
-    def add_category(self, label):
+    def add_category(self, label: str | float | datetime.date | datetime.datetime):
         """
         Return a newly created |data.Category| object having *label* and
         appended to the end of this category sequence. *label* can be
@@ -553,7 +579,7 @@ class Categories(Sequence["Category"]):
         return GENERAL
 
     @number_format.setter
-    def number_format(self, value):
+    def number_format(self, value: str | None):
         self._number_format = value
 
 
@@ -564,13 +590,17 @@ class Category(object):
     of multi-level category charts.
     """
 
-    def __init__(self, label, parent):
+    def __init__(
+        self,
+        label: str | float | datetime.date | datetime.datetime | None,
+        parent: Categories | Category,
+    ):
         super(Category, self).__init__()
         self._label = label
         self._parent = parent
         self._sub_categories = []
 
-    def add_sub_category(self, label):
+    def add_sub_category(self, label: str | float | datetime.date | datetime.datetime | None):
         """
         Return a newly created |data.Category| object having *label* and
         appended to the end of the sub-category sequence for this category.
@@ -603,7 +633,7 @@ class Category(object):
         """
         return self._parent.index(self)
 
-    def index(self, sub_category):
+    def index(self, sub_category: Category):
         """
         The offset of *sub_category* in the overall sequence of leaf
         categories.
@@ -634,7 +664,7 @@ class Category(object):
         """
         return self._label if self._label is not None else ""
 
-    def numeric_str_val(self, date_1904=False):
+    def numeric_str_val(self, date_1904: bool = False):
         """
         The string representation of the numeric (or date) label of this
         category, suitable for use in the XML `c:pt` element for this
@@ -653,13 +683,17 @@ class Category(object):
         """
         return self._sub_categories
 
-    def _excel_date_number(self, date_1904):
+    def _excel_date_number(self, date_1904: bool):
         """
         Return an integer representing the date label of this category as the
         number of days since January 1, 1900 (or 1904 if date_1904 is
         |True|).
         """
         date, label = datetime.date, self._label
+        if not isinstance(label, (datetime.date, datetime.datetime)):
+            raise TypeError(
+                "category label must be date or datetime, got %s" % type(label).__name__
+            )
         # -- get date from label in type-independent-ish way
         date_ = date(label.year, label.month, label.day)
         epoch = date(1904, 1, 1) if date_1904 else date(1899, 12, 31)
@@ -690,7 +724,7 @@ class CategorySeriesData(_BaseSeriesData):
     number format.
     """
 
-    def add_data_point(self, value, number_format=None):
+    def add_data_point(self, value: float | None, number_format: str | None = None):
         """
         Return a CategoryDataPoint object newly created with value *value*,
         an optional *number_format*, and appended to this sequence.
@@ -739,7 +773,7 @@ class XyChartData(_BaseChartData):
     point of each series specifies both an X and a Y value.
     """
 
-    def add_series(self, name, number_format=None):
+    def add_series(self, name: str, number_format: str | None = None):
         """
         Return an |XySeriesData| object newly created and added at the end of
         this sequence, identified by *name* and values formatted with
@@ -765,7 +799,7 @@ class BubbleChartData(XyChartData):
     provide a third quantitative dimension to the exhibit.
     """
 
-    def add_series(self, name, number_format=None):
+    def add_series(self, name: str, number_format: str | None = None):
         """
         Return a |BubbleSeriesData| object newly created and added at the end
         of this sequence, and having series named *name* and values formatted
@@ -775,7 +809,7 @@ class BubbleChartData(XyChartData):
         self.append(series_data)
         return series_data
 
-    def bubble_sizes_ref(self, series):
+    def bubble_sizes_ref(self, series: _BaseSeriesData):
         """
         The Excel worksheet reference for the range containing the bubble
         sizes for *series*.
@@ -806,7 +840,9 @@ class XySeriesData(_BaseSeriesData):
     points are not automatically sorted into increasing order by X value.
     """
 
-    def add_data_point(self, x, y, number_format=None):
+    def add_data_point(
+        self, x: float | None, y: float | None, number_format: str | None = None
+    ):
         """
         Return an XyDataPoint object newly created with values *x* and *y*,
         and appended to this sequence.
@@ -829,7 +865,11 @@ class BubbleSeriesData(XySeriesData):
     """
 
     def add_data_point(  # pyright: ignore[reportIncompatibleMethodOverride]
-        self, x, y, size, number_format=None
+        self,
+        x: float | None,
+        y: float | None,
+        size: float | None,
+        number_format: str | None = None,
     ):
         """
         Append a new BubbleDataPoint object having the values *x*, *y*, and
@@ -864,7 +904,9 @@ class CategoryDataPoint(_BaseDataPoint):
     Excel file.
     """
 
-    def __init__(self, series_data, value, number_format):
+    def __init__(
+        self, series_data: _BaseSeriesData, value: float | None, number_format: str | None
+    ):
         super(CategoryDataPoint, self).__init__(series_data, number_format)
         self._value = value
 
@@ -882,7 +924,13 @@ class XyDataPoint(_BaseDataPoint):
     of the datapoint.
     """
 
-    def __init__(self, series_data, x, y, number_format):
+    def __init__(
+        self,
+        series_data: _BaseSeriesData,
+        x: float | None,
+        y: float | None,
+        number_format: str | None,
+    ):
         super(XyDataPoint, self).__init__(series_data, number_format)
         self._x = x
         self._y = y
@@ -908,7 +956,14 @@ class BubbleDataPoint(XyDataPoint):
     size values of the datapoint.
     """
 
-    def __init__(self, series_data, x, y, size, number_format):
+    def __init__(
+        self,
+        series_data: _BaseSeriesData,
+        x: float | None,
+        y: float | None,
+        size: float | None,
+        number_format: str | None,
+    ):
         super(BubbleDataPoint, self).__init__(series_data, x, y, number_format)
         self._size = size
 
