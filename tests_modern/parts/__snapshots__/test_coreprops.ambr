@@ -1,0 +1,303 @@
+# serializer version: 1
+# name: test_core_props_date_setters[created-value0]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2001-02-03T04:05:00Z</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_date_setters[last_printed-value1]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:00:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_date_setters[modified-value2]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+    <dcterms:modified xsi:type="dcterms:W3CDTF">2005-04-03T02:01:00Z</dcterms:modified>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_revision_setter
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>42</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[author-semaverse-ai]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-ai</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[category-silly stories]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+    <cp:category>silly stories</cp:category>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[comments-Bar foo to you]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description>Bar foo to you</dc:description>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[content_status-FINAL]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>FINAL</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[identifier-GT 5.2.xab]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GT 5.2.xab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[keywords-dog cat moo]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>dog cat moo</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[language-GB-EN]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>GB-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[last_modified_by-Billy Bob]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>Billy Bob</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[subject-Eggs]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Eggs</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[title-Dissertation]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Dissertation</dc:title>
+    <cp:version>1.2.88</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
+# name: test_core_props_string_setters[version-81.2.8]
+  '''
+  <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <cp:contentStatus>DRAFT</cp:contentStatus>
+    <dc:creator>semaverse-pptx</dc:creator>
+    <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+    <dc:description/>
+    <dc:identifier>GXS 10.2.1ab</dc:identifier>
+    <dc:language>US-EN</dc:language>
+    <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+    <cp:keywords>foo bar baz</cp:keywords>
+    <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+    <cp:revision>4</cp:revision>
+    <dc:subject>Spam</dc:subject>
+    <dc:title>Presentation</dc:title>
+    <cp:version>81.2.8</cp:version>
+  </cp:coreProperties>
+  
+  '''
+# ---
