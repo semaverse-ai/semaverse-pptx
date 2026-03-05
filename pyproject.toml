@@ -43,6 +43,7 @@ test = [
     "pytest>=2.5",
     "pytest-cov",
     "pytest-xdist",
+    "syrupy",
     "ruff",
     "tox",
     "tox-uv",
@@ -91,7 +92,7 @@ filterwarnings = [
     "ignore:Unknown config option. looponfailroots:pytest.PytestConfigWarning",
 ]
 
-looponfailroots = ["src", "tests"]
+looponfailroots = ["src", "tests", "tests_modern"]
 norecursedirs = [
     "docs",
     "*.egg-info",
