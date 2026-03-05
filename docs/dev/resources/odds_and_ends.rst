@@ -103,4 +103,3 @@ Odds and Ends
 * spTree in cSld is a GroupShape (ShapeGroup?) perhaps Shape and ShapeGroup
   are ... ? not sure who should inherit from the other. GroupShapes can
   include other GroupShapes.
-

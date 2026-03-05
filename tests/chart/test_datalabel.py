@@ -3,6 +3,7 @@ from __future__ import annotations
 from pptx.chart.datalabel import DataLabel, DataLabels
 from pptx.enum.chart import XL_DATA_LABEL_POSITION
 from pptx.oxml import parse_xml
+from tests.stubs import PartProviderStub
 
 
 def test_data_labels_properties() -> None:
@@ -54,3 +55,12 @@ def test_data_label_properties() -> None:
     label.has_text_frame = False
 
     assert label.has_text_frame is False
+
+
+def test_data_label_exposes_part_from_series() -> None:
+    part = object()
+    label = DataLabel(PartProviderStub(part=part), 0)
+
+    resolved_part = label.part
+
+    assert resolved_part is part

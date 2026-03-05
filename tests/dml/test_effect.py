@@ -26,16 +26,11 @@ def _sp_pr(has_effect_list: bool, group: bool = False):
         (True, True, False),
     ],
 )
-def test_shadow_format_inherit_getter(
-    group: bool, has_effect_list: bool, expected: bool
-) -> None:
-    # Arrange
+def test_shadow_format_inherit_getter(group: bool, has_effect_list: bool, expected: bool) -> None:
     shadow = ShadowFormat(_sp_pr(has_effect_list=has_effect_list, group=group))
 
-    # Act
     inherit = shadow.inherit
 
-    # Assert
     assert inherit is expected
 
 
@@ -51,12 +46,9 @@ def test_shadow_format_inherit_getter(
 def test_shadow_format_inherit_setter(
     initial_has_effect_list: bool, value: bool, expected_has_effect_list: bool
 ) -> None:
-    # Arrange
     sp_pr = _sp_pr(has_effect_list=initial_has_effect_list, group=False)
     shadow = ShadowFormat(sp_pr)
 
-    # Act
     shadow.inherit = value
 
-    # Assert
     assert (sp_pr.effectLst is not None) is expected_has_effect_list

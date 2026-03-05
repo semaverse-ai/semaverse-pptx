@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 from contextlib import contextmanager
 
-from xlsxwriter import Workbook
+from xlsxwriter import Workbook  # pyright: ignore[reportMissingTypeStubs]
 
 
 class _BaseWorkbookWriter(object):

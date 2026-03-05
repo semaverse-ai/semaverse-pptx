@@ -150,6 +150,11 @@ class DataLabel(object):
         self._ser = self._element = ser
         self._idx = idx
 
+    @property
+    def part(self):
+        """The package part containing this object."""
+        return self._ser.part
+
     @lazyproperty
     def font(self):
         """The |Font| object providing text formatting for this data label.

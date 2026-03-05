@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.oxml import parse_xml
@@ -21,7 +20,7 @@ def _connector(
 ) -> Connector:
     flip_h_attr = ' flipH="1"' if flip_h else ""
     flip_v_attr = ' flipV="1"' if flip_v else ""
-    xml = """
+    xml = f"""
         <p:cxnSp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
                  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
           <p:nvCxnSpPr>
@@ -36,14 +35,7 @@ def _connector(
             </a:xfrm>
           </p:spPr>
         </p:cxnSp>
-    """.format(
-        flip_h_attr=flip_h_attr,
-        flip_v_attr=flip_v_attr,
-        x=x,
-        y=y,
-        cx=cx,
-        cy=cy,
-    )
+    """
 
     return Connector(
         parse_xml(xml.encode("utf-8")),
@@ -120,7 +112,7 @@ def test_connector_point_properties(parent) -> None:
     assert connector.end_y == 700
 
 
-def test_connector_connectors_add_st_cxn_and_end_cxn(parent, snapshot: SnapshotAssertion) -> None:
+def test_connector_connectors_add_st_cxn_and_end_cxn(parent) -> None:
     connector = Connector(
         parse_xml(
             b"""
@@ -151,7 +143,10 @@ def test_connector_connectors_add_st_cxn_and_end_cxn(parent, snapshot: SnapshotA
     assert connector.begin_y == 200
     assert connector.end_x == 250
     assert connector.end_y == 600
-    assert snapshot == connector._element.xml
+    assert connector._element.nvCxnSpPr.cNvCxnSpPr.stCxn.id == 77
+    assert connector._element.nvCxnSpPr.cNvCxnSpPr.stCxn.idx == 0
+    assert connector._element.nvCxnSpPr.cNvCxnSpPr.endCxn.id == 77
+    assert connector._element.nvCxnSpPr.cNvCxnSpPr.endCxn.idx == 2
 
 
 def test_connector_line_and_shape_type(parent) -> None:
@@ -202,13 +197,10 @@ def test_connector_begin_x_setter_all_branches(
     expected_cx: int,
     expected_flip_h: bool,
 ) -> None:
-    # Arrange
     connector = _connector(parent, flip_h=flip_h)
 
-    # Act
     connector.begin_x = new_x
 
-    # Assert
     assert int(connector._element.x) == expected_x
     assert int(connector._element.cx) == expected_cx
     assert bool(connector._element.flipH) is expected_flip_h
@@ -233,13 +225,10 @@ def test_connector_begin_y_setter_all_branches(
     expected_cy: int,
     expected_flip_v: bool,
 ) -> None:
-    # Arrange
     connector = _connector(parent, flip_v=flip_v)
 
-    # Act
     connector.begin_y = new_y
 
-    # Assert
     assert int(connector._element.y) == expected_y
     assert int(connector._element.cy) == expected_cy
     assert bool(connector._element.flipV) is expected_flip_v
@@ -264,13 +253,10 @@ def test_connector_end_x_setter_all_branches(
     expected_cx: int,
     expected_flip_h: bool,
 ) -> None:
-    # Arrange
     connector = _connector(parent, flip_h=flip_h)
 
-    # Act
     connector.end_x = new_x
 
-    # Assert
     assert int(connector._element.x) == expected_x
     assert int(connector._element.cx) == expected_cx
     assert bool(connector._element.flipH) is expected_flip_h
@@ -295,13 +281,10 @@ def test_connector_end_y_setter_all_branches(
     expected_cy: int,
     expected_flip_v: bool,
 ) -> None:
-    # Arrange
     connector = _connector(parent, flip_v=flip_v)
 
-    # Act
     connector.end_y = new_y
 
-    # Assert
     assert int(connector._element.y) == expected_y
     assert int(connector._element.cy) == expected_cy
     assert bool(connector._element.flipV) is expected_flip_v

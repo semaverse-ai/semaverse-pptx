@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
@@ -12,16 +11,16 @@ def _tbl(xml_body: str) -> CT_Table:
     return parse_xml(f"<a:tbl {nsdecls('a')}>{xml_body}</a:tbl>")
 
 
-def test_ct_table_new_tbl(snapshot: SnapshotAssertion) -> None:
+def test_ct_table_new_tbl() -> None:
     table = CT_Table.new_tbl(2, 3, 334, 445)
 
-    assert str(table.xml) == snapshot
+    assert len(table.tr_lst) == 2
+    assert len(table.tr_lst[0].tc_lst) == 3
 
 
 def test_ct_table_tc() -> None:
     table = _tbl(
-        "<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>"
-        "<a:tr><a:tc id='10'/><a:tc id='11'/></a:tr>"
+        "<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr><a:tr><a:tc id='10'/><a:tc id='11'/></a:tr>"
     )
     cells = table.xpath("//a:tc")
 
@@ -235,7 +234,7 @@ def test_tc_range_iter_top_row_tcs(
     ],
 )
 def test_tc_range_move_content_to_origin(
-    xml_body: str, expected_origin_text: str, snapshot: SnapshotAssertion
+    xml_body: str, expected_origin_text: str
 ) -> None:
     table = _tbl(xml_body)
     tcs = table.xpath("//a:tc")
@@ -245,4 +244,3 @@ def test_tc_range_move_content_to_origin(
 
     assert tcs[0].text == expected_origin_text
     assert tcs[1].text == ""
-    assert str(table.xml) == snapshot

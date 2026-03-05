@@ -13,9 +13,7 @@ from pptx.util import Emu
 def _sp_pr(ln_xml: bytes = b""):
     return parse_xml(
         b'<p:spPr xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
-        b'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
-        + ln_xml
-        + b"</p:spPr>"
+        b'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' + ln_xml + b"</p:spPr>"
     )
 
 
@@ -28,13 +26,10 @@ def _sp_pr(ln_xml: bytes = b""):
     ],
 )
 def test_line_format_dash_style_getter(ln_xml: bytes, expected: MSO_LINE | None) -> None:
-    # Arrange
     line = LineFormat(_sp_pr(ln_xml))
 
-    # Act
     dash_style = line.dash_style
 
-    # Assert
     assert dash_style == expected
 
 
@@ -43,7 +38,7 @@ def test_line_format_dash_style_getter(ln_xml: bytes, expected: MSO_LINE | None)
     [
         (b"", MSO_LINE.ROUND_DOT, True),
         (b"<a:ln/>", MSO_LINE.LONG_DASH, True),
-        (b'<a:ln><a:custDash/></a:ln>', MSO_LINE.DASH_DOT, True),
+        (b"<a:ln><a:custDash/></a:ln>", MSO_LINE.DASH_DOT, True),
         (b"", None, False),
         (b'<a:ln><a:prstDash val="dash"/></a:ln>', None, False),
     ],
@@ -51,14 +46,11 @@ def test_line_format_dash_style_getter(ln_xml: bytes, expected: MSO_LINE | None)
 def test_line_format_dash_style_setter(
     initial_ln_xml: bytes, dash_style: MSO_LINE | None, expect_prst_dash: bool
 ) -> None:
-    # Arrange
     sp_pr = _sp_pr(initial_ln_xml)
     line = LineFormat(sp_pr)
 
-    # Act
     line.dash_style = dash_style
 
-    # Assert
     ln = sp_pr.ln
     if ln is None:
         assert dash_style is None
@@ -68,27 +60,21 @@ def test_line_format_dash_style_setter(
 
 
 def test_line_format_fill_property_creates_ln() -> None:
-    # Arrange
     sp_pr = _sp_pr()
     line = LineFormat(sp_pr)
 
-    # Act
     fill = line.fill
 
-    # Assert
     assert isinstance(fill, FillFormat)
     assert sp_pr.ln is not None
 
 
 def test_line_format_color_property_makes_fill_solid() -> None:
-    # Arrange
     sp_pr = _sp_pr(b"<a:ln><a:noFill/></a:ln>")
     line = LineFormat(sp_pr)
 
-    # Act
     color = line.color
 
-    # Assert
     assert isinstance(color, ColorFormat)
     assert line.fill.type == MSO_FILL.SOLID
     assert sp_pr.ln.solidFill is not None
@@ -102,24 +88,18 @@ def test_line_format_color_property_makes_fill_solid() -> None:
     ],
 )
 def test_line_format_width_getter(ln_xml: bytes, expected: Emu) -> None:
-    # Arrange
     line = LineFormat(_sp_pr(ln_xml))
 
-    # Act
     width = line.width
 
-    # Assert
     assert width == expected
 
 
 @pytest.mark.parametrize(("value", "expected"), [(None, Emu(0)), (12700, Emu(12700))])
 def test_line_format_width_setter(value: int | None, expected: Emu) -> None:
-    # Arrange
     sp_pr = _sp_pr()
     line = LineFormat(sp_pr)
 
-    # Act
     line.width = value
 
-    # Assert
     assert sp_pr.ln.w == expected

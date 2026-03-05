@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # ruff: noqa: E501
 from collections.abc import Callable
+from textwrap import dedent
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -14,7 +15,7 @@ from tests.chart.factories import (
     make_category_chart_data,
     make_xy_chart_data,
 )
-from tests.xml_utils import serialize_xml
+from tests.xml_utils import canonical_xml
 
 
 def _category_data() -> object:
@@ -76,7 +77,7 @@ def test_chart_xml_writer_matrix(
 
     xml = ChartXmlWriter(chart_type, chart_data).xml
 
-    assert xml == snapshot(name=chart_type.name)
+    assert canonical_xml(xml) == snapshot(name=chart_type.name)
 
 
 @pytest.mark.parametrize(
@@ -103,12 +104,30 @@ def test_series_xml_rewriter_factory(chart_type: XL_CHART_TYPE, expected_cls: st
 def test_series_xml_rewriter_replaces_data(snapshot: SnapshotAssertion) -> None:
     chart_data = make_category_chart_data(2, str, 1)
     chart_space_elm = chart_space(
-        b"<c:chart><c:plotArea><c:barChart>"
-        b"<c:ser><c:idx val='0'/><c:order val='0'/><c:tx><c:strRef><c:strCache><c:pt idx='0'><c:v>Old</c:v></c:pt></c:strCache></c:strRef></c:tx></c:ser>"
-        b"</c:barChart></c:plotArea></c:chart>"
+        dedent(
+            """
+            <c:chart>
+              <c:plotArea>
+                <c:barChart>
+                  <c:ser>
+                    <c:idx val="0"/>
+                    <c:order val="0"/>
+                    <c:tx>
+                      <c:strRef>
+                        <c:strCache>
+                          <c:pt idx="0"><c:v>Old</c:v></c:pt>
+                        </c:strCache>
+                      </c:strRef>
+                    </c:tx>
+                  </c:ser>
+                </c:barChart>
+              </c:plotArea>
+            </c:chart>
+            """
+        ).encode("utf-8")
     )
 
     rewriter = SeriesXmlRewriterFactory(XL_CHART_TYPE.BAR_CLUSTERED, chart_data)
     rewriter.replace_series_data(chart_space_elm)
 
-    assert serialize_xml(chart_space_elm) == snapshot
+    assert canonical_xml(chart_space_elm.xml) == snapshot

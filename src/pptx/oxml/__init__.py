@@ -35,7 +35,7 @@ def parse_from_template(template_file_name: str):
     return parse_xml(xml)
 
 
-def parse_xml(xml: XmlSource) -> etree._Element:
+def parse_xml(xml: XmlSource) -> etree._Element:  # pyright: ignore[reportPrivateUsage]
     """Return root lxml element obtained by parsing XML character string in `xml`."""
     return etree.fromstring(xml, oxml_parser)
 

@@ -64,6 +64,8 @@ class Video(object):
         """
         if self._filename:
             return os.path.splitext(self._filename)[1].lstrip(".")
+        if self._mime_type is None:
+            return "vid"
         return {
             CT.ASF: "asf",
             CT.AVI: "avi",

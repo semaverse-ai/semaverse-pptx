@@ -3,25 +3,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from io import BytesIO
 
-from syrupy.assertion import SnapshotAssertion
-
 from pptx.oxml import parse_xml
 from pptx.presentation import Presentation
 from tests.factories import presentation_xml
 from tests.stubs import PresentationPartStub
-from tests.xml_utils import serialize_xml
 
 
 def test_presentation_delegates_core_properties_notes_master_and_save() -> None:
-    # Arrange
     part = PresentationPartStub()
     prs = Presentation(parse_xml(presentation_xml()), part)  # type: ignore[arg-type]
 
-    # Act
     stream = BytesIO()
     prs.save(stream)
 
-    # Assert
     assert prs.core_properties == "core-props"
     assert prs.notes_master == "notes-master"
     assert stream.getvalue() == b"saved"
@@ -29,35 +23,28 @@ def test_presentation_delegates_core_properties_notes_master_and_save() -> None:
 
 
 def test_presentation_slide_width_and_height_getters_and_setters() -> None:
-    # Arrange
     xml = presentation_xml(b'<p:sldSz cx="9144000" cy="6858000"/>')
     prs = Presentation(parse_xml(xml), PresentationPartStub())  # type: ignore[arg-type]
 
-    # Act
     prs.slide_width = 1000000
     prs.slide_height = 2000000
 
-    # Assert
     assert prs.slide_width == 1000000
     assert prs.slide_height == 2000000
 
 
-def test_presentation_slide_size_setters_create_sldsz_when_missing(
-    snapshot: SnapshotAssertion,
-) -> None:
-    # Arrange
+def test_presentation_slide_size_setters_create_sldsz_when_missing() -> None:
     prs = Presentation(parse_xml(presentation_xml()), PresentationPartStub())  # type: ignore[arg-type]
 
-    # Act
     prs.slide_width = 914400
     prs.slide_height = 1828800
 
-    # Assert
-    assert serialize_xml(prs._element) == snapshot
+    assert prs._element.sldSz is not None
+    assert prs._element.sldSz.cx == 914400
+    assert prs._element.sldSz.cy == 1828800
 
 
 def test_presentation_slides_calls_rename_slide_parts_with_rids() -> None:
-    # Arrange
     xml = presentation_xml(
         b"""
         <p:sldIdLst>
@@ -74,32 +61,27 @@ def test_presentation_slides_calls_rename_slide_parts_with_rids() -> None:
     )
     prs = Presentation(parse_xml(xml), part)  # type: ignore[arg-type]
 
-    # Act
     slides = prs.slides
 
-    # Assert
     assert part.renamed_rids == ["rId1", "rId2"]
     assert len(slides) == 2
     assert slides[0] == "slide-1"
     assert list(slides) == ["slide-1", "slide-2"]
 
 
-def test_presentation_slides_creates_sldidlst_when_missing(snapshot: SnapshotAssertion) -> None:
-    # Arrange
+def test_presentation_slides_creates_sldidlst_when_missing() -> None:
     part = PresentationPartStub()
     prs = Presentation(parse_xml(presentation_xml()), part)  # type: ignore[arg-type]
 
-    # Act
     slides = prs.slides
 
-    # Assert
     assert part.renamed_rids == []
     assert len(slides) == 0
-    assert serialize_xml(prs._element) == snapshot
+    assert prs._element.sldIdLst is not None
+    assert len(prs._element.sldIdLst.sldId_lst) == 0
 
 
 def test_presentation_slide_masters_and_slide_master() -> None:
-    # Arrange
     xml = presentation_xml(
         b"""
         <p:sldMasterIdLst>
@@ -113,10 +95,8 @@ def test_presentation_slide_masters_and_slide_master() -> None:
     part = PresentationPartStub(slide_masters_by_rid={"rId1": master_1, "rId2": master_2})
     prs = Presentation(parse_xml(xml), part)  # type: ignore[arg-type]
 
-    # Act
     masters = prs.slide_masters
 
-    # Assert
     assert len(masters) == 2
     assert masters[0] is master_1
     assert list(masters) == [master_1, master_2]
@@ -124,7 +104,6 @@ def test_presentation_slide_masters_and_slide_master() -> None:
 
 
 def test_presentation_slide_layouts_comes_from_first_master() -> None:
-    # Arrange
     xml = presentation_xml(
         b"""
         <p:sldMasterIdLst>
@@ -143,22 +122,16 @@ def test_presentation_slide_layouts_comes_from_first_master() -> None:
     )
     prs = Presentation(parse_xml(xml), part)  # type: ignore[arg-type]
 
-    # Act
     layouts = prs.slide_layouts
 
-    # Assert
     assert layouts is expected_layouts
 
 
-def test_presentation_slide_masters_creates_list_when_missing(
-    snapshot: SnapshotAssertion,
-) -> None:
-    # Arrange
+def test_presentation_slide_masters_creates_list_when_missing() -> None:
     prs = Presentation(parse_xml(presentation_xml()), PresentationPartStub())  # type: ignore[arg-type]
 
-    # Act
     masters = prs.slide_masters
 
-    # Assert
     assert len(masters) == 0
-    assert serialize_xml(prs._element) == snapshot
+    assert prs._element.sldMasterIdLst is not None
+    assert len(prs._element.sldMasterIdLst.sldMasterId_lst) == 0

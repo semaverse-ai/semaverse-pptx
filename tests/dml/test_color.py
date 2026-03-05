@@ -28,7 +28,6 @@ def _solid_fill(color_choice_xml: bytes = b""):
     ],
 )
 def test_color_format_type(color_choice_xml: bytes, expected: MSO_COLOR_TYPE | None) -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(color_choice_xml))
 
     # Act / Assert
@@ -36,7 +35,6 @@ def test_color_format_type(color_choice_xml: bytes, expected: MSO_COLOR_TYPE | N
 
 
 def test_color_format_rgb_setter_rejects_non_rgbcolor() -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(b'<a:srgbClr val="123456"/>'))
 
     # Act / Assert
@@ -45,25 +43,19 @@ def test_color_format_rgb_setter_rejects_non_rgbcolor() -> None:
 
 
 def test_color_format_rgb_setter_changes_non_rgb_color_to_rgb() -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(b'<a:schemeClr val="accent1"/>'))
 
-    # Act
     color_format.rgb = RGBColor(0x12, 0x34, 0x56)
 
-    # Assert
     assert color_format.type == MSO_COLOR_TYPE.RGB
     assert color_format.rgb == RGBColor(0x12, 0x34, 0x56)
 
 
 def test_color_format_theme_color_setter_changes_to_scheme_color() -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(b'<a:srgbClr val="123456"/>'))
 
-    # Act
     color_format.theme_color = MSO_THEME_COLOR.ACCENT_6
 
-    # Assert
     assert color_format.type == MSO_COLOR_TYPE.SCHEME
     assert color_format.theme_color == MSO_THEME_COLOR.ACCENT_6
 
@@ -77,7 +69,6 @@ def test_color_format_theme_color_setter_changes_to_scheme_color() -> None:
     ],
 )
 def test_color_format_brightness_getter(color_choice_xml: bytes, expected: float) -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(color_choice_xml))
 
     # Act / Assert
@@ -91,13 +82,10 @@ def test_color_format_brightness_getter(color_choice_xml: bytes, expected: float
 def test_color_format_brightness_setter(
     value: float, expected_lum_mod: float | None, expected_lum_off: float | None
 ) -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(b'<a:srgbClr val="123456"/>'))
 
-    # Act
     color_format.brightness = value
 
-    # Assert
     srgb_clr = color_format._xFill.eg_colorChoice
     lum_mod = srgb_clr.lumMod.val if srgb_clr.lumMod is not None else None
     lum_off = srgb_clr.lumOff.val if srgb_clr.lumOff is not None else None
@@ -106,7 +94,6 @@ def test_color_format_brightness_setter(
 
 
 def test_color_format_brightness_setter_validates_range() -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(b'<a:srgbClr val="123456"/>'))
 
     # Act / Assert
@@ -118,7 +105,6 @@ def test_color_format_brightness_setter_validates_range() -> None:
 
 
 def test_color_format_brightness_setter_raises_when_color_type_is_none() -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill())
 
     # Act / Assert
@@ -137,7 +123,6 @@ def test_color_format_brightness_setter_raises_when_color_type_is_none() -> None
     ],
 )
 def test_color_format_rgb_getter_raises_on_non_rgb_color(color_choice_xml: bytes) -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(color_choice_xml))
 
     # Act / Assert
@@ -146,7 +131,6 @@ def test_color_format_rgb_getter_raises_on_non_rgb_color(color_choice_xml: bytes
 
 
 def test_none_color_theme_color_getter_raises() -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill())
 
     # Act / Assert
@@ -159,7 +143,6 @@ def test_none_color_theme_color_getter_raises() -> None:
     [b"<a:srgbClr val='123456'/>", b"<a:hslClr/>", b"<a:sysClr/>"],
 )
 def test_theme_color_returns_not_theme_color_for_non_scheme_colors(color_choice_xml: bytes) -> None:
-    # Arrange
     color_format = ColorFormat.from_colorchoice_parent(_solid_fill(color_choice_xml))
 
     # Act / Assert
@@ -170,7 +153,6 @@ def test_rgb_color_value_object_behaviors() -> None:
     # Arrange / Act
     color = RGBColor(0x12, 0x34, 0x56)
 
-    # Assert
     assert str(color) == "123456"
     assert RGBColor.from_string("123456") == color
 

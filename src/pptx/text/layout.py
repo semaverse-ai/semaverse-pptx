@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from pptx.util import Length
 
 
-class TextFitter(tuple):
+class TextFitter(tuple[object, int, int, str]):
     """Value object that knows how to fit text into given rectangular extents."""
 
     def __new__(cls, line_source, extents, font_file):
@@ -38,7 +38,8 @@ class TextFitter(tuple):
         """
         predicate = self._fits_inside_predicate
         sizes = _BinarySearchTree.from_ordered_sequence(range(1, int(max_size) + 1))
-        return sizes.find_max(predicate)
+        best_size = sizes.find_max(predicate)
+        return 1 if best_size is None else best_size
 
     def _break_line(self, line_source, point_size):
         """
@@ -109,7 +110,10 @@ class TextFitter(tuple):
         *line_source* wrapped within this fitter when rendered at
         *point_size*.
         """
-        text, remainder = self._break_line(line_source, point_size)
+        result = self._break_line(line_source, point_size)
+        if result is None:
+            return []
+        text, remainder = result
         lines = [text]
         if remainder:
             lines.extend(self._wrap_lines(remainder, point_size))
@@ -258,7 +262,7 @@ class _LineSource(object):
         return "<_LineSource('%s')>" % self._text
 
 
-class _Line(tuple):
+class _Line(tuple[str, _LineSource]):
     """
     A candidate line broken at an even word boundary from a string of text,
     and a |_LineSource| value containing the text that remains after the line
@@ -303,7 +307,7 @@ class _Fonts(object):
         return cls.fonts[(font_path, point_size)]
 
 
-def _rendered_size(text, point_size, font_file):
+def _rendered_size(text, point_size, font_file) -> tuple[int, int]:
     """
     Return a (width, height) pair representing the size of *text* in English
     Metric Units (EMU) when rendered at *point_size* in the font defined in

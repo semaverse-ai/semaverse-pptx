@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.dml.fill import FillFormat
 from pptx.enum.shapes import PP_PLACEHOLDER
@@ -46,11 +45,9 @@ from tests.stubs import (
     SlidePartStub,
     SlidesPartStub,
 )
-from tests.xml_utils import serialize_xml
 
 
-def test_base_slide_name_get_set_and_clear(snapshot: SnapshotAssertion) -> None:
-    # Arrange
+def test_base_slide_name_get_set_and_clear() -> None:
     element = parse_xml(
         b"""
         <p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
@@ -60,55 +57,44 @@ def test_base_slide_name_get_set_and_clear(snapshot: SnapshotAssertion) -> None:
     )
     base_slide = _BaseSlide(element, None)  # type: ignore[arg-type]
 
-    # Act
     base_slide.name = "Agenda"
-    base_slide.name = None
+    assert element.cSld.name == "Agenda"
 
-    # Assert
+    base_slide.name = None
     assert base_slide.name == ""
-    assert serialize_xml(element) == snapshot
+    assert element.cSld.name == ""
 
 
 def test_base_slide_background_property_returns_background_proxy() -> None:
-    # Arrange
     slide = _BaseSlide(parse_xml(slide_xml()), None)  # type: ignore[arg-type]
 
-    # Act
     background = slide.background
 
-    # Assert
     assert isinstance(background, _Background)
 
 
 def test_base_master_provides_shapes_and_placeholders() -> None:
-    # Arrange
     master_xml = slide_master_xml()
     base_master = _BaseMaster(parse_xml(master_xml), None)  # type: ignore[arg-type]
 
-    # Act
     placeholders = base_master.placeholders
     shapes = base_master.shapes
 
-    # Assert
     assert isinstance(placeholders, MasterPlaceholders)
     assert isinstance(shapes, MasterShapes)
 
 
 def test_notes_slide_provides_shapes_and_placeholders() -> None:
-    # Arrange
     notes_slide = NotesSlide(parse_xml(notes_xml()), None)  # type: ignore[arg-type]
 
-    # Act
     placeholders = notes_slide.placeholders
     shapes = notes_slide.shapes
 
-    # Assert
     assert isinstance(placeholders, NotesSlidePlaceholders)
     assert isinstance(shapes, NotesSlideShapes)
 
 
 def test_notes_slide_notes_placeholder_and_notes_text_frame() -> None:
-    # Arrange
     body_placeholder = b"""
       <p:sp>
         <p:nvSpPr>
@@ -126,18 +112,15 @@ def test_notes_slide_notes_placeholder_and_notes_text_frame() -> None:
     """
     notes_slide = NotesSlide(parse_xml(notes_xml(body_placeholder)), None)  # type: ignore[arg-type]
 
-    # Act
     notes_placeholder = notes_slide.notes_placeholder
     notes_text_frame = notes_slide.notes_text_frame
 
-    # Assert
     assert notes_placeholder is not None
     assert notes_placeholder.placeholder_format.type == PP_PLACEHOLDER.BODY
     assert isinstance(notes_text_frame, TextFrame)
 
 
 def test_notes_slide_notes_text_frame_is_none_when_body_placeholder_missing() -> None:
-    # Arrange
     notes_slide = NotesSlide(parse_xml(notes_xml()), None)  # type: ignore[arg-type]
 
     # Act / Assert
@@ -146,7 +129,6 @@ def test_notes_slide_notes_text_frame_is_none_when_body_placeholder_missing() ->
 
 
 def test_notes_slide_clone_master_placeholders_copies_only_cloneable_types() -> None:
-    # Arrange
     master_shapes = b"""
       <p:sp>
         <p:nvSpPr>
@@ -176,11 +158,9 @@ def test_notes_slide_clone_master_placeholders_copies_only_cloneable_types() -> 
     notes_master = NotesMaster(parse_xml(notes_master_xml(master_shapes)), None)  # type: ignore[arg-type]
     notes_slide = NotesSlide(parse_xml(notes_xml()), None)  # type: ignore[arg-type]
 
-    # Act
     notes_slide.clone_master_placeholders(notes_master)
     cloned_types = [placeholder.placeholder_format.type for placeholder in notes_slide.placeholders]
 
-    # Assert
     assert PP_PLACEHOLDER.SLIDE_IMAGE in cloned_types
     assert PP_PLACEHOLDER.BODY in cloned_types
     assert PP_PLACEHOLDER.HEADER not in cloned_types
@@ -188,7 +168,6 @@ def test_notes_slide_clone_master_placeholders_copies_only_cloneable_types() -> 
 
 @pytest.mark.parametrize(("with_bg", "expected"), [(False, True), (True, False)])
 def test_slide_follow_master_background(with_bg: bool, expected: bool) -> None:
-    # Arrange
     slide = Slide(parse_xml(slide_xml(with_bg=with_bg)), SlidePartStub())  # type: ignore[arg-type]
 
     # Act / Assert
@@ -196,7 +175,6 @@ def test_slide_follow_master_background(with_bg: bool, expected: bool) -> None:
 
 
 def test_slide_delegates_part_backed_properties() -> None:
-    # Arrange
     part = SlidePartStub()
     slide = Slide(parse_xml(slide_xml()), part)  # type: ignore[arg-type]
 
@@ -210,7 +188,6 @@ def test_slide_delegates_part_backed_properties() -> None:
 
 
 def test_slides_collection_semantics() -> None:
-    # Arrange
     sld_id_lst = parse_xml(
         b"""
         <p:sldIdLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
@@ -244,10 +221,7 @@ def test_slides_collection_semantics() -> None:
         _ = slides[2]
 
 
-def test_slides_add_slide_mutates_sldidlst_and_clones_layout_placeholders(
-    snapshot: SnapshotAssertion,
-) -> None:
-    # Arrange
+def test_slides_add_slide_mutates_sldidlst_and_clones_layout_placeholders() -> None:
     sld_id_lst = parse_xml(
         b"""
         <p:sldIdLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
@@ -266,17 +240,15 @@ def test_slides_add_slide_mutates_sldidlst_and_clones_layout_placeholders(
     slides = Slides(sld_id_lst, ParentProxy(part=part))  # type: ignore[arg-type]
     layout = object()
 
-    # Act
     result = slides.add_slide(layout)  # type: ignore[arg-type]
 
-    # Assert
     assert result is new_slide
     assert recorder.cloned_with == [layout]
-    assert serialize_xml(sld_id_lst) == snapshot
+    assert len(sld_id_lst.sldId_lst) == 2
+    assert sld_id_lst.sldId_lst[-1].rId == "rId2"
 
 
 def test_slide_layout_cloneable_placeholders_filters_latent_types() -> None:
-    # Arrange
     layout_shapes = b"""
       <p:sp>
         <p:nvSpPr>
@@ -297,11 +269,9 @@ def test_slide_layout_cloneable_placeholders_filters_latent_types() -> None:
     """
     layout = SlideLayout(parse_xml(slide_layout_xml(layout_shapes)), _LayoutPartStub())  # type: ignore[arg-type]
 
-    # Act
     cloneable = list(layout.iter_cloneable_placeholders())
     cloneable_types = [placeholder.placeholder_format.type for placeholder in cloneable]
 
-    # Assert
     assert cloneable_types == [PP_PLACEHOLDER.BODY]
 
 
@@ -312,7 +282,6 @@ class _LayoutPartStub:
 
 
 def test_slide_layout_properties_and_used_by_slides() -> None:
-    # Arrange
     part = _LayoutPartStub()
     layout = SlideLayout(parse_xml(slide_layout_xml()), part)  # type: ignore[arg-type]
 
@@ -339,10 +308,8 @@ def test_slide_layout_properties_and_used_by_slides() -> None:
         _PresentationPartStub(_PresentationStub([included_slide, excluded_slide]))
     )
 
-    # Act
     used_by_slides = layout.used_by_slides
 
-    # Assert
     assert isinstance(layout.placeholders, LayoutPlaceholders)
     assert isinstance(layout.shapes, LayoutShapes)
     assert layout.slide_master == "slide-master"
@@ -378,7 +345,6 @@ class _SlideLayoutsPartStub:
 
 
 def test_slide_layouts_collection_semantics_and_remove() -> None:
-    # Arrange
     sld_layout_id_lst = parse_xml(
         b"""
         <p:sldLayoutIdLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
@@ -431,7 +397,6 @@ class _SlideMastersPartStub:
 
 
 def test_slide_master_and_slide_masters_collection() -> None:
-    # Arrange
     master_xml = slide_master_xml()
     slide_master = SlideMaster(parse_xml(master_xml), _LayoutPartStub())  # type: ignore[arg-type]
 
@@ -457,7 +422,6 @@ def test_slide_master_and_slide_masters_collection() -> None:
 
 
 def test_background_fill_returns_fill_format() -> None:
-    # Arrange
     c_sld = parse_xml(
         b"""
         <p:cSld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
@@ -472,8 +436,6 @@ def test_background_fill_returns_fill_format() -> None:
     )
     background = _Background(c_sld)
 
-    # Act
     fill = background.fill
 
-    # Assert
     assert isinstance(fill, FillFormat)

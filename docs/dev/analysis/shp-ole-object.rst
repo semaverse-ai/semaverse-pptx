@@ -85,7 +85,7 @@ PowerPoint UI behaviors
   format, perhaps to allow smooth scaling.
 
   In the general case (i.e. non-Windows OS), `semaverse-pptx` has neither the option of
-  extracting icons from an arbitrary icon or resource library or 
+  extracting icons from an arbitrary icon or resource library or
 
 * **Link to file rather than embed.** When inserting an object from a file, a user can
   choose to link the selected file rather than embed it. This option appears in the

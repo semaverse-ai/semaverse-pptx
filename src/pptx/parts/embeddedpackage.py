@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+# pyright: reportAssignmentType=false
 from typing import TYPE_CHECKING
 
 from pptx.enum.shapes import PROG_ID

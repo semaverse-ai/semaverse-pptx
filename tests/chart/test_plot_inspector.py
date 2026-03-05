@@ -12,7 +12,6 @@ def _plot(xml: bytes):
 
 
 def test_base_plot_chart_categories_series_and_data_labels() -> None:
-    # Arrange
     plot = _plot(
         b'<c:barChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">'
         b"<c:ser>"
@@ -25,12 +24,10 @@ def test_base_plot_chart_categories_series_and_data_labels() -> None:
         b"</c:barChart>"
     )
 
-    # Act
     categories = plot.categories
     series = plot.series
     chart = plot.chart
 
-    # Assert
     assert chart == "chart-proxy"
     assert len(categories) == 2
     assert len(series) == 1
@@ -39,7 +36,6 @@ def test_base_plot_chart_categories_series_and_data_labels() -> None:
 
 
 def test_base_plot_data_labels_and_vary_colors_setter_paths() -> None:
-    # Arrange
     plot = _plot(
         b'<c:barChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">'
         b"<c:ser><c:idx val='0'/><c:order val='0'/></c:ser>"
@@ -48,13 +44,11 @@ def test_base_plot_data_labels_and_vary_colors_setter_paths() -> None:
         b"</c:barChart>"
     )
 
-    # Act
     labels = plot.data_labels
     plot.has_data_labels = False
     plot.has_data_labels = True
     plot.vary_by_categories = True
 
-    # Assert
     assert labels is not None
     assert plot.has_data_labels is True
     assert plot._element.dLbls.showVal.val is True
@@ -62,7 +56,6 @@ def test_base_plot_data_labels_and_vary_colors_setter_paths() -> None:
 
 
 def test_bar_plot_overlap_zero_removes_overlap_element() -> None:
-    # Arrange
     plot = _plot(
         b'<c:barChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">'
         b"<c:barDir val='bar'/><c:grouping val='clustered'/>"
@@ -71,15 +64,12 @@ def test_bar_plot_overlap_zero_removes_overlap_element() -> None:
         b"</c:barChart>"
     )
 
-    # Act
     plot.overlap = 0
 
-    # Assert
     assert plot._element.overlap is None
 
 
 def test_bubble_plot_bubble_scale_none_removes_override() -> None:
-    # Arrange
     plot = _plot(
         b'<c:bubbleChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">'
         b"<c:bubbleScale val='120'/>"
@@ -87,18 +77,13 @@ def test_bubble_plot_bubble_scale_none_removes_override() -> None:
         b"</c:bubbleChart>"
     )
 
-    # Act
     plot.bubble_scale = None
 
-    # Assert
     assert plot._element.bubbleScale is None
 
 
 def test_plot_factory_raises_for_unsupported_plot() -> None:
-    # Arrange
-    xml = (
-        b'<c:surfaceChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"/>'
-    )
+    xml = b'<c:surfaceChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"/>'
 
     # Act / Assert
     with pytest.raises(ValueError, match="unsupported plot type"):
@@ -174,18 +159,14 @@ def test_plot_factory_raises_for_unsupported_plot() -> None:
     ],
 )
 def test_plot_type_inspector_chart_type(xml: bytes, expected: XL) -> None:
-    # Arrange
     plot = _plot(xml)
 
-    # Act
     chart_type = PlotTypeInspector.chart_type(plot)
 
-    # Assert
     assert chart_type == expected
 
 
 def test_plot_type_inspector_raises_for_unknown_plot_class() -> None:
-    # Arrange
     class UnknownPlot:
         pass
 
@@ -195,7 +176,6 @@ def test_plot_type_inspector_raises_for_unknown_plot_class() -> None:
 
 
 def test_plot_type_inspector_invalid_bar_dir_raises() -> None:
-    # Arrange
     plot = _plot(
         b'<c:barChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">'
         b"<c:barDir val='diag'/><c:grouping val='clustered'/>"
@@ -208,7 +188,6 @@ def test_plot_type_inspector_invalid_bar_dir_raises() -> None:
 
 
 def test_plot_type_inspector_radar_default_and_no_marker_paths() -> None:
-    # Arrange
     default_plot = _plot(
         b'<c:radarChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">'
         b"<c:radarStyle/>"
@@ -227,7 +206,6 @@ def test_plot_type_inspector_radar_default_and_no_marker_paths() -> None:
 
 
 def test_plot_type_inspector_xy_line_marker_variants() -> None:
-    # Arrange
     no_line_plot = _plot(
         b'<c:scatterChart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" '
         b'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'

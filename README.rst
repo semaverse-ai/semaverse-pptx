@@ -23,3 +23,32 @@ semaverse-pptx.
 
 .. _`examples with screenshots`:
    https://semaverse-pptx.readthedocs.org/en/latest/user/quickstart.html
+
+Developer Hygiene
+-----------------
+
+Use ``pre-commit`` locally to run formatting, linting, and type checks before each commit.
+
+1. Sync dev dependencies:
+
+   .. code-block:: bash
+
+      uv sync --extra dev
+
+2. Install git hooks:
+
+   .. code-block:: bash
+
+      uv run pre-commit install
+
+3. Run checks manually across the repository:
+
+   .. code-block:: bash
+
+      uv run pre-commit run --all-files
+
+If you need to unblock formatting/lint-only changes while legacy typing debt is being addressed:
+
+.. code-block:: bash
+
+   SKIP=pyright uv run pre-commit run --all-files

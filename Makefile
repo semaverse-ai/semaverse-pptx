@@ -22,7 +22,7 @@ accept:
 build:
 	rm -rf dist
 	uv build
-	uv run twine check dist/*
+	uv run --extra dev twine check dist/*
 
 .PHONY: clean
 clean:
@@ -52,8 +52,8 @@ opendocs:
 
 .PHONY: test-upload
 test-upload: build
-	uv run twine upload --repository testpypi dist/*
+	uv run --extra dev twine upload --repository testpypi dist/*
 
 .PHONY: upload
 upload: clean build
-	uv run twine upload dist/*
+	uv run --extra dev twine upload dist/*

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from pptx.chart.datalabel import DataLabels
 from pptx.chart.marker import Marker
@@ -88,6 +89,8 @@ class _MarkerMixin(object):
     Mixin class providing `.marker` property for line-type chart series. The
     line-type charts are Line, XY, and Radar.
     """
+
+    _ser: Any
 
     @lazyproperty
     def marker(self):
@@ -207,7 +210,7 @@ class BubbleSeries(XySeries):
     """
 
     @lazyproperty
-    def points(self):
+    def points(self):  # pyright: ignore[reportIncompatibleVariableOverride]
         """
         The |BubblePoints| object providing access to individual data point
         objects used to discover and adjust the formatting and data labels of
@@ -216,7 +219,7 @@ class BubbleSeries(XySeries):
         return BubblePoints(self._ser)
 
 
-class SeriesCollection(Sequence):
+class SeriesCollection(Sequence[_BaseSeries]):
     """
     A sequence of |Series| objects.
     """
@@ -226,7 +229,9 @@ class SeriesCollection(Sequence):
         super(SeriesCollection, self).__init__()
         self._element = parent_elm
 
-    def __getitem__(self, index):
+    def __getitem__(self, index):  # pyright: ignore[reportIncompatibleMethodOverride]
+        if isinstance(index, slice):
+            return [_SeriesFactory(ser) for ser in self._element.sers[index]]
         ser = self._element.sers[index]
         return _SeriesFactory(ser)
 
@@ -256,3 +261,4 @@ def _SeriesFactory(ser):
         raise NotImplementedError("series class for %s not yet implemented" % xChart_tag)
 
     return SeriesCls(ser)
+    _ser: Any

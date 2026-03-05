@@ -478,4 +478,3 @@ sys.exit()
 # txBody.add_child('a:bodyPr'   , cardinality='1')
 # txBody.add_child('a:lstStyle' , cardinality='?')
 # txBody.add_child('a:p'        , cardinality='+')
-

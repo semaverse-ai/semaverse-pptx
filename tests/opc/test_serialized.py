@@ -4,7 +4,6 @@ import io
 import zipfile
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.exc import PackageNotFoundError
 from pptx.opc.constants import CONTENT_TYPE as CT
@@ -19,6 +18,7 @@ from pptx.opc.serialized import (
     _ZipPkgReader,
     _ZipPkgWriter,
 )
+from tests.xml_utils import xml_string_eq_ignores_attribute_order
 
 
 def test_phys_pkg_reader_factory_raises_on_not_found() -> None:
@@ -91,7 +91,7 @@ def test_package_writer_write() -> None:
     assert "ppt/slides/slide1.xml" in names
 
 
-def test_content_types_item_xml_for(snapshot: SnapshotAssertion) -> None:
+def test_content_types_item_xml_for() -> None:
     parts = [
         Part(PackURI("/media/image1.png"), CT.PNG, None),
         Part(PackURI("/ppt/slides/slide1.xml"), CT.PML_SLIDE, None),
@@ -100,4 +100,22 @@ def test_content_types_item_xml_for(snapshot: SnapshotAssertion) -> None:
 
     xml = _ContentTypesItem.xml_for(parts).xml
 
-    assert snapshot == xml
+    expected_xml = """
+    <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+      <Default Extension="png" ContentType="image/png"/>
+      <Default
+        Extension="rels"
+        ContentType="application/vnd.openxmlformats-package.relationships+xml"
+      />
+      <Default Extension="xml" ContentType="application/xml"/>
+      <Override
+        PartName="/docProps/core.xml"
+        ContentType="application/vnd.openxmlformats-package.core-properties+xml"
+      />
+      <Override
+        PartName="/ppt/slides/slide1.xml"
+        ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"
+      />
+    </Types>
+    """
+    assert xml_string_eq_ignores_attribute_order(xml, expected_xml)

@@ -10,7 +10,7 @@ from pptx.dml.chtfmt import ChartFormat
 from pptx.util import lazyproperty
 
 
-class _BasePoints(Sequence):
+class _BasePoints(Sequence["Point"]):
     """
     Sequence providing access to the individual data points in a series.
     """
@@ -20,7 +20,9 @@ class _BasePoints(Sequence):
         self._element = ser
         self._ser = ser
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx):  # pyright: ignore[reportIncompatibleMethodOverride]
+        if isinstance(idx, slice):
+            return [self[i] for i in range(*idx.indices(self.__len__()))]
         if idx < 0 or idx >= self.__len__():
             raise IndexError("point index out of range")
         return Point(self._ser, idx)

@@ -60,11 +60,6 @@ class BaseSimpleType:
     def validate_string(cls, value):
         if isinstance(value, str):
             return value
-        try:
-            if isinstance(value, basestring):
-                return value
-        except NameError:  # means we're on Python 3
-            pass
         raise TypeError("value must be a string, got %s" % type(value))
 
 
@@ -149,7 +144,7 @@ class XsdBoolean(BaseSimpleType):
     def validate(cls, value):
         if value not in (True, False):
             raise TypeError(
-                "only True or False (and possibly None) may be assigned, got" " '%s'" % value
+                "only True or False (and possibly None) may be assigned, got '%s'" % value
             )
 
 
@@ -228,7 +223,7 @@ class ST_Angle(XsdInt):
     THREE_SIXTY = 360 * DEGREE_INCREMENTS
 
     @classmethod
-    def convert_from_xml(cls, str_value: str) -> float:
+    def convert_from_xml(cls, str_value: str) -> float:  # pyright: ignore[reportIncompatibleMethodOverride]
         rot = int(str_value) % cls.THREE_SIXTY
         return float(rot) / cls.DEGREE_INCREMENTS
 
@@ -462,7 +457,7 @@ class ST_LineWidth(XsdInt):
         super(ST_LineWidth, cls).validate(value)
         if value < 0 or value > 20116800:
             raise ValueError(
-                "value must be in range 0-20116800 inclusive (0-1584 points)" ", got %d" % value
+                "value must be in range 0-20116800 inclusive (0-1584 points), got %d" % value
             )
 
 
@@ -507,7 +502,7 @@ class ST_Percentage(BaseIntType):
     """
 
     @classmethod
-    def convert_from_xml(cls, str_value):
+    def convert_from_xml(cls, str_value):  # pyright: ignore[reportIncompatibleMethodOverride]
         if "%" in str_value:
             return cls._convert_from_percent_literal(str_value)
         return int(str_value) / 100000.0
@@ -557,11 +552,12 @@ class ST_PositiveFixedAngle(ST_Angle):
     """
 
     @classmethod
-    def convert_to_xml(cls, degrees):
+    def convert_to_xml(cls, value):
         """Convert signed angle float like -427.42 to int 60000 per degree.
 
         Value is normalized to a positive value less than 360 degrees.
         """
+        degrees = value
         if degrees < 0.0:
             degrees %= -360
             degrees += 360
@@ -605,7 +601,7 @@ class ST_SlideSizeCoordinate(BaseIntType):
         cls.validate_int(value)
         if value < 914400 or value > 51206400:
             raise ValueError(
-                "value must be in range(914400, 51206400) (1-56 inches), got" " %d" % value
+                "value must be in range(914400, 51206400) (1-56 inches), got %d" % value
             )
 
 

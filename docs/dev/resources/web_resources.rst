@@ -86,4 +86,3 @@ Other Resources
 * `lxml API Reference <http://lxml.de/api/index.html>`_
 
 * `The factory pattern in Python with __new__ <http://whilefalse.net/2009/10/21/factory-pattern-python-__new__/>`_
-

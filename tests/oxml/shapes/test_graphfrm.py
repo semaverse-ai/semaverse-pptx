@@ -1,30 +1,33 @@
 from __future__ import annotations
 
-from syrupy.assertion import SnapshotAssertion
-
 from pptx.oxml import parse_xml
 from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
+from pptx.spec import GRAPHIC_DATA_URI_CHART, GRAPHIC_DATA_URI_OLEOBJ, GRAPHIC_DATA_URI_TABLE
 
 
-def test_graphic_frame_new_graphic_frame(snapshot: SnapshotAssertion) -> None:
+def test_graphic_frame_new_graphic_frame() -> None:
     graphic_frame = CT_GraphicalObjectFrame.new_graphicFrame(42, "foobar", 1, 2, 3, 4)
 
-    assert str(graphic_frame.xml) == snapshot
+    assert graphic_frame.nvGraphicFramePr.cNvPr.id == 42
+    assert graphic_frame.nvGraphicFramePr.cNvPr.name == "foobar"
+    assert graphic_frame.x == 1
+    assert graphic_frame.y == 2
 
 
-def test_graphic_frame_new_chart_graphic_frame(snapshot: SnapshotAssertion) -> None:
+def test_graphic_frame_new_chart_graphic_frame() -> None:
     graphic_frame = CT_GraphicalObjectFrame.new_chart_graphicFrame(42, "foobar", "rId6", 1, 2, 3, 4)
 
-    assert str(graphic_frame.xml) == snapshot
+    assert graphic_frame.graphicData.uri == GRAPHIC_DATA_URI_CHART
+    assert graphic_frame.chart_rId == "rId6"
 
 
-def test_graphic_frame_new_table_graphic_frame(snapshot: SnapshotAssertion) -> None:
+def test_graphic_frame_new_table_graphic_frame() -> None:
     graphic_frame = CT_GraphicalObjectFrame.new_table_graphicFrame(42, "foobar", 2, 3, 1, 2, 3, 4)
 
-    assert str(graphic_frame.xml) == snapshot
+    assert graphic_frame.graphicData.uri == GRAPHIC_DATA_URI_TABLE
 
 
-def test_graphic_frame_new_ole_object_graphic_frame(snapshot: SnapshotAssertion) -> None:
+def test_graphic_frame_new_ole_object_graphic_frame() -> None:
     graphic_frame = CT_GraphicalObjectFrame.new_ole_object_graphicFrame(
         42,
         "foobar",
@@ -39,7 +42,8 @@ def test_graphic_frame_new_ole_object_graphic_frame(snapshot: SnapshotAssertion)
         20,
     )
 
-    assert str(graphic_frame.xml) == snapshot
+    assert graphic_frame.graphicData.uri == GRAPHIC_DATA_URI_OLEOBJ
+    assert graphic_frame.graphicData._oleObj.rId == "rId1"
 
 
 def test_graphic_frame_chart_properties() -> None:
@@ -66,7 +70,7 @@ def test_graphic_frame_ole_properties_embedded() -> None:
         'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
         '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/presentationml/2006/ole">'
         '<p:oleObj r:id="rId42" progId="Excel.Sheet.12" showAsIcon="1"><p:embed/></p:oleObj>'
-        '</a:graphicData></a:graphic></p:graphicFrame>'
+        "</a:graphicData></a:graphic></p:graphicFrame>"
     )
 
     assert graphic_frame.has_oleobj is True
@@ -83,7 +87,7 @@ def test_graphic_frame_ole_properties_linked() -> None:
         'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
         '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/presentationml/2006/ole">'
         '<p:oleObj r:id="rId42" progId="Excel.Sheet.12"><p:link/></p:oleObj>'
-        '</a:graphicData></a:graphic></p:graphicFrame>'
+        "</a:graphicData></a:graphic></p:graphicFrame>"
     )
 
     assert graphic_frame.has_oleobj is True

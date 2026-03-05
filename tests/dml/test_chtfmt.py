@@ -21,27 +21,21 @@ def _chart_element(tag: str, with_sp_pr: bool):
 
 @pytest.mark.parametrize("tag", ["catAx", "dPt", "majorGridlines", "valAx"])
 def test_chart_format_fill_returns_fill_format_and_creates_sppr(tag: str) -> None:
-    # Arrange
     element = _chart_element(tag=tag, with_sp_pr=False)
     chart_format = ChartFormat(element)
 
-    # Act
     fill = chart_format.fill
 
-    # Assert
     assert isinstance(fill, FillFormat)
     assert element.spPr is not None
 
 
 def test_chart_format_line_returns_line_format_and_reuses_existing_sppr() -> None:
-    # Arrange
     element = _chart_element(tag="catAx", with_sp_pr=True)
     original_xml = serialize_xml(element)
     chart_format = ChartFormat(element)
 
-    # Act
     line = chart_format.line
 
-    # Assert
     assert isinstance(line, LineFormat)
     assert serialize_xml(element) == original_xml

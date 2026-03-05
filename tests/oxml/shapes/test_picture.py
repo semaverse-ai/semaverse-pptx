@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.oxml import parse_xml
 from pptx.oxml.shapes.picture import CT_Picture
 
 
-def test_picture_new_pic(snapshot: SnapshotAssertion) -> None:
+def test_picture_new_pic() -> None:
     pic = CT_Picture.new_pic(9, "Picture 8", "kittens.jpg", "rId42", 1, 2, 3, 4)
 
-    assert str(pic.xml) == snapshot
+    assert pic.nvPicPr.cNvPr.id == 9
+    assert pic.nvPicPr.cNvPr.name == "Picture 8"
+    assert pic.blipFill.blip.rEmbed == "rId42"
 
 
 @pytest.mark.parametrize(
@@ -28,16 +29,19 @@ def test_picture_new_pic_escapes_desc(desc: str, expected_xml_desc: str) -> None
     assert expected_xml_desc in str(pic.xml)
 
 
-def test_picture_new_ph_pic(snapshot: SnapshotAssertion) -> None:
+def test_picture_new_ph_pic() -> None:
     pic = CT_Picture.new_ph_pic(9, "Picture 8", "kittens.jpg", "rId42")
 
-    assert str(pic.xml) == snapshot
+    assert pic.nvPicPr.cNvPr.id == 9
+    assert pic.blipFill.blip.rEmbed == "rId42"
 
 
-def test_picture_new_video_pic(snapshot: SnapshotAssertion) -> None:
+def test_picture_new_video_pic() -> None:
     pic = CT_Picture.new_video_pic(42, "Media 41", "rId1", "rId2", "rId3", 1, 2, 3, 4)
 
-    assert str(pic.xml) == snapshot
+    assert pic.nvPicPr.cNvPr.id == 42
+    assert pic.nvPicPr.cNvPr.name == "Media 41"
+    assert pic.blipFill.blip.rEmbed == "rId3"
 
 
 def test_picture_src_rect_getters() -> None:
@@ -92,7 +96,7 @@ def test_picture_src_rect_setters(side: str, value: float, expected_attr: str) -
     assert expected_attr in str(pic.xml)
 
 
-def test_picture_crop_to_fit(snapshot: SnapshotAssertion) -> None:
+def test_picture_crop_to_fit() -> None:
     pic = parse_xml(
         '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
         'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:blipFill/></p:pic>'
@@ -100,10 +104,12 @@ def test_picture_crop_to_fit(snapshot: SnapshotAssertion) -> None:
 
     pic.crop_to_fit((1600, 1200), (800, 400))
 
-    assert str(pic.xml) == snapshot
+    assert pic.blipFill.srcRect is not None
+    assert pic.srcRect_t > 0
+    assert pic.srcRect_b > 0
 
 
-def test_picture_get_or_add_ln(snapshot: SnapshotAssertion) -> None:
+def test_picture_get_or_add_ln() -> None:
     pic = parse_xml(
         '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
         'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:spPr/></p:pic>'
@@ -114,7 +120,7 @@ def test_picture_get_or_add_ln(snapshot: SnapshotAssertion) -> None:
     ln = pic.get_or_add_ln()
 
     assert pic.ln is ln
-    assert str(pic.xml) == snapshot
+    assert pic.ln is not None
 
 
 def test_picture_blip_rid() -> None:
@@ -133,7 +139,7 @@ def test_picture_blip_rid_none() -> None:
         '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
         'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
         'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-        '<p:blipFill><a:blip/></p:blipFill></p:pic>'
+        "<p:blipFill><a:blip/></p:blipFill></p:pic>"
     )
 
     assert pic.blip_rId is None

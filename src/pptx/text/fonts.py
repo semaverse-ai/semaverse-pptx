@@ -57,7 +57,7 @@ class FontFiles(object):
         is_italic) 3-tuple, like ('Arial', True, False), and the value is the
         absolute path to the font file.
         """
-        for root, dirs, files in os.walk(directory):
+        for root, _dirs, files in os.walk(directory):
             for filename in files:
                 file_ext = os.path.splitext(filename)[1]
                 if file_ext.lower() not in (".otf", ".ttf"):
@@ -166,7 +166,7 @@ class _Font(object):
         tmpl = ">4sLLL"
         for i in range(count):
             offset = i * 16
-            tag, checksum, off, len_ = unpack_from(tmpl, bufr, offset)
+            tag, _, off, len_ = unpack_from(tmpl, bufr, offset)
             yield tag.decode("utf-8"), off, len_
 
     @lazyproperty
@@ -320,7 +320,7 @@ class _NameTable(_BaseTable):
         The key is a (platform_id, name_id) 2-tuple and the value is the unicode text
         corresponding to that key.
         """
-        table_format, count, strings_offset = self._table_header
+        _table_format, count, strings_offset = self._table_header
         table_bytes = self._table_bytes
 
         for idx in range(count):
@@ -355,7 +355,7 @@ class _NameTable(_BaseTable):
         `idx` position in `bufr`. `strings_offset` is the index into `bufr` where actual
         name strings begin. The returned name is a unicode string.
         """
-        platform_id, enc_id, lang_id, name_id, length, str_offset = self._name_header(bufr, idx)
+        platform_id, enc_id, _lang_id, name_id, length, str_offset = self._name_header(bufr, idx)
         name = self._read_name_text(bufr, platform_id, enc_id, strings_offset, str_offset, length)
         return platform_id, name_id, name
 

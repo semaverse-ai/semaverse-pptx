@@ -1,4 +1,4 @@
-# pyright: reportPrivateUsage=false
+# pyright: reportPrivateUsage=false, reportUnnecessaryComparison=false, reportReturnType=false
 
 """lxml custom element classes for shape-related XML elements."""
 

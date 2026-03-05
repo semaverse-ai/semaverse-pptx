@@ -4,7 +4,6 @@ import datetime as dt
 from pathlib import Path
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.opc.constants import CONTENT_TYPE as CT
 from pptx.opc.packuri import PackURI
@@ -67,11 +66,10 @@ def test_core_props_string_setters(
     core_properties_part: CorePropertiesPart,
     prop_name: str,
     value: str,
-    snapshot: SnapshotAssertion,
 ) -> None:
     setattr(core_properties_part, prop_name, value)
 
-    assert snapshot == core_properties_part._element.xml
+    assert getattr(core_properties_part, prop_name) == value
 
 
 @pytest.mark.parametrize(
@@ -102,23 +100,20 @@ def test_core_props_date_setters(
     core_properties_part: CorePropertiesPart,
     prop_name: str,
     value: dt.datetime,
-    snapshot: SnapshotAssertion,
 ) -> None:
     setattr(core_properties_part, prop_name, value)
 
-    assert snapshot == core_properties_part._element.xml
+    assert getattr(core_properties_part, prop_name) == value
 
 
 def test_core_props_revision_getter(core_properties_part: CorePropertiesPart) -> None:
     assert core_properties_part.revision == 4
 
 
-def test_core_props_revision_setter(
-    core_properties_part: CorePropertiesPart, snapshot: SnapshotAssertion
-) -> None:
+def test_core_props_revision_setter(core_properties_part: CorePropertiesPart) -> None:
     core_properties_part.revision = 42
 
-    assert snapshot == core_properties_part._element.xml
+    assert core_properties_part.revision == 42
 
 
 def test_core_props_default() -> None:

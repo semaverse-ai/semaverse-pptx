@@ -20,13 +20,11 @@ import sys
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath(".."))
 
-from pptx import __version__  # noqa: E402
-
-
 # -- Allow nonlocal image URI's to accommodate external status images -------
-
 import sphinx.environment  # noqa: E402
 from docutils.utils import get_source_line  # noqa: E402
+
+from pptx import __version__  # noqa: E402
 
 
 def _warn_node(self, msg, node, **kwargs):
@@ -68,8 +66,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"semaverse-pptx"
-copyright = u"2012, 2013, Steve Canny"
+project = "semaverse-pptx"
+copyright = "2012, 2013, Steve Canny"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -449,9 +447,7 @@ html_static_path = ["_static"]
 # html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-    "**": ["localtoc.html", "relations.html", "sidebarlinks.html", "searchbox.html"]
-}
+html_sidebars = {"**": ["localtoc.html", "relations.html", "sidebarlinks.html", "searchbox.html"]}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -505,8 +501,8 @@ latex_documents = [
     (
         "index",
         "semaverse-pptx.tex",
-        u"semaverse-pptx Documentation",
-        u"Steve Canny",
+        "semaverse-pptx Documentation",
+        "Steve Canny",
         "manual",
     ),
 ]
@@ -536,9 +532,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ("index", "semaverse-pptx", u"semaverse-pptx Documentation", [u"Steve Canny"], 1)
-]
+man_pages = [("index", "semaverse-pptx", "semaverse-pptx Documentation", ["Steve Canny"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -553,8 +547,8 @@ texinfo_documents = [
     (
         "index",
         "semaverse-pptx",
-        u"semaverse-pptx Documentation",
-        u"Steve Canny",
+        "semaverse-pptx Documentation",
+        "Steve Canny",
         "semaverse-pptx",
         "One line description of project.",
         "Miscellaneous",

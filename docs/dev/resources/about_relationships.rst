@@ -202,5 +202,3 @@ General description of package relationships items
   suffix. For example, the relationship item for a part named
   ``/ppt/slides/slide1.xml`` would have the URI
   ``/ppt/slides/_rels/slide1.xml.rels``.
-
-

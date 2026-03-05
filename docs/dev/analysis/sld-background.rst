@@ -155,4 +155,3 @@ Schema excerpt
       <xsd:maxExclusive value="2147483648"/>
     </xsd:restriction>
   </xsd:simpleType>
-

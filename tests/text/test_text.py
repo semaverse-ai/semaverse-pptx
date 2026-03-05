@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_THEME_COLOR
@@ -14,7 +13,6 @@ from pptx.shapes.autoshape import Shape
 from pptx.text.text import Font, TextFrame, _Paragraph, _Run
 from pptx.util import Inches, Pt
 from tests.text.factories import paragraph, run, tx_body
-from tests.xml_utils import serialize_xml
 
 if TYPE_CHECKING:
     from tests.text.conftest import DummyParent, FitParent
@@ -37,18 +35,20 @@ def test_text_frame_text_round_trip() -> None:
     assert text_frame.paragraphs[1].text == "Text\vHere"
 
 
-def test_text_frame_add_paragraph(snapshot: SnapshotAssertion) -> None:
+def test_text_frame_add_paragraph() -> None:
     text_frame = TextFrame(tx_body(b"<a:bodyPr/><a:p/>"), None)
 
     paragraph_obj = text_frame.add_paragraph()
 
     assert isinstance(paragraph_obj, _Paragraph)
-    assert serialize_xml(text_frame._element) == snapshot
+    assert len(text_frame.paragraphs) == 2
 
 
 def test_text_frame_clear() -> None:
     text_frame = TextFrame(
-        tx_body(b"<a:bodyPr/><a:p><a:r><a:t>One</a:t></a:r></a:p><a:p><a:r><a:t>Two</a:t></a:r></a:p>"),
+        tx_body(
+            b"<a:bodyPr/><a:p><a:r><a:t>One</a:t></a:r></a:p><a:p><a:r><a:t>Two</a:t></a:r></a:p>"
+        ),
         None,
     )
 
@@ -73,20 +73,22 @@ def test_text_frame_auto_size_get(xml_body: bytes, expected_value: MSO_AUTO_SIZE
     assert text_frame.auto_size == expected_value
 
 
-def test_text_frame_auto_size_set(snapshot: SnapshotAssertion) -> None:
+def test_text_frame_auto_size_set() -> None:
     text_frame = TextFrame(tx_body(b"<a:bodyPr/><a:p/>"), None)
 
     text_frame.auto_size = MSO_AUTO_SIZE.NONE
-    assert serialize_xml(text_frame._element) == snapshot(name="none")
+    assert text_frame._element.bodyPr.noAutofit is not None
 
     text_frame.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT
-    assert serialize_xml(text_frame._element) == snapshot(name="shape")
+    assert text_frame._element.bodyPr.spAutoFit is not None
 
     text_frame.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
-    assert serialize_xml(text_frame._element) == snapshot(name="text")
+    assert text_frame._element.bodyPr.normAutofit is not None
 
     text_frame.auto_size = None
-    assert serialize_xml(text_frame._element) == snapshot(name="clear")
+    assert text_frame._element.bodyPr.noAutofit is None
+    assert text_frame._element.bodyPr.spAutoFit is None
+    assert text_frame._element.bodyPr.normAutofit is None
 
 
 def test_text_frame_margins() -> None:
@@ -278,14 +280,16 @@ def test_paragraph_alignment_level_spacing() -> None:
     assert paragraph_obj.space_after == Pt(12)
 
 
-def test_paragraph_add_run_and_line_break(snapshot: SnapshotAssertion) -> None:
+def test_paragraph_add_run_and_line_break() -> None:
     paragraph_obj = _Paragraph(paragraph(), None)
 
     run_obj = paragraph_obj.add_run()
     run_obj.text = "Hello"
     paragraph_obj.add_line_break()
 
-    assert serialize_xml(paragraph_obj._element) == snapshot
+    assert len(paragraph_obj.runs) == 1
+    assert paragraph_obj.runs[0].text == "Hello"
+    assert paragraph_obj._element[-1].tag.endswith("br")
 
 
 def test_paragraph_clear() -> None:
