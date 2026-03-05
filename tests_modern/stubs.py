@@ -82,3 +82,124 @@ class CloneRecorder:
 @dataclass
 class NewSlideStub:
     shapes: CloneRecorder
+
+
+@dataclass
+class _SlidesProxy:
+    slides: list[object]
+
+
+@dataclass
+class _PresentationPartProxy:
+    presentation: _SlidesProxy
+
+
+@dataclass
+class _PackageProxy:
+    presentation_part: _PresentationPartProxy
+
+
+@dataclass
+class RelatedSlidePartStub:
+    slide: object
+
+
+@dataclass
+class SlideTargetStub:
+    part: object
+
+
+@dataclass
+class ActionPartStub:
+    slide: object | None = None
+    slides: list[object] = field(default_factory=list)
+    relate_to_rid: str = "rId3"
+    target_refs_by_rid: dict[str, str] = field(default_factory=dict)
+    related_parts_by_rid: dict[str, object] = field(default_factory=dict)
+    dropped_rids: list[str] = field(default_factory=list)
+    relate_to_calls: list[tuple[object, str, bool]] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        self.package = _PackageProxy(_PresentationPartProxy(_SlidesProxy(self.slides)))
+
+    def drop_rel(self, rid: str) -> None:
+        self.dropped_rids.append(rid)
+
+    def relate_to(self, target: object, reltype: str, is_external: bool = False) -> str:
+        self.relate_to_calls.append((target, reltype, is_external))
+        return self.relate_to_rid
+
+    def related_part(self, rid: str) -> object:
+        return self.related_parts_by_rid[rid]
+
+    def target_ref(self, rid: str) -> str:
+        return self.target_refs_by_rid[rid]
+
+
+@dataclass
+class NotesMasterPartProxy:
+    notes_master: object
+
+
+@dataclass
+class SlidePartProxy:
+    slide: object
+
+
+@dataclass
+class SlideMasterPartProxy:
+    slide_master: object
+
+
+@dataclass
+class SlideLayoutPartProxy:
+    slide_layout: object
+
+
+@dataclass
+class CorePropertiesPackageStub:
+    core_properties: object
+
+
+@dataclass
+class SaveCallPackageStub:
+    saved_paths: list[str] = field(default_factory=list)
+
+    def save(self, path_or_stream: str) -> None:
+        self.saved_paths.append(path_or_stream)
+
+
+@dataclass
+class NotesSlideCloneProxy:
+    clone_calls: list[object] = field(default_factory=list)
+
+    def clone_master_placeholders(self, notes_master: object) -> None:
+        self.clone_calls.append(notes_master)
+
+
+@dataclass
+class NotesSlidePartProxy:
+    notes_slide: NotesSlideCloneProxy
+
+
+@dataclass
+class PresentationPartNotesMasterProxy:
+    notes_master_part: object
+
+
+@dataclass
+class PackagePresentationProxy:
+    presentation_part: PresentationPartNotesMasterProxy
+
+
+@dataclass
+class SlideIdPresentationPartProxy:
+    slide_id_value: int
+
+    def slide_id(self, _slide_part: object) -> int:
+        return self.slide_id_value
+
+
+@dataclass
+class PackageWithPresentationPartProxy:
+    presentation_part: SlideIdPresentationPartProxy
