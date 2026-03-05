@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_paragraph_add_run_and_line_break
+  '''
+  <a:p xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <a:r>
+      <a:t>Hello</a:t>
+    </a:r>
+    <a:br/>
+  </a:p>
+  
+  '''
+# ---
+# name: test_text_frame_add_paragraph
+  '''
+  <p:txBody xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <a:bodyPr/>
+    <a:p/>
+    <a:p/>
+  </p:txBody>
+  
+  '''
+# ---
+# name: test_text_frame_auto_size_set[clear]
+  '''
+  <p:txBody xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <a:bodyPr/>
+    <a:p/>
+  </p:txBody>
+  
+  '''
+# ---
+# name: test_text_frame_auto_size_set[none]
+  '''
+  <p:txBody xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <a:bodyPr>
+      <a:noAutofit/>
+    </a:bodyPr>
+    <a:p/>
+  </p:txBody>
+  
+  '''
+# ---
+# name: test_text_frame_auto_size_set[shape]
+  '''
+  <p:txBody xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <a:bodyPr>
+      <a:spAutoFit/>
+    </a:bodyPr>
+    <a:p/>
+  </p:txBody>
+  
+  '''
+# ---
+# name: test_text_frame_auto_size_set[text]
+  '''
+  <p:txBody xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <a:bodyPr>
+      <a:normAutofit/>
+    </a:bodyPr>
+    <a:p/>
+  </p:txBody>
+  
+  '''
+# ---

@@ -1,152 +1,122 @@
-"""Unit-test suite for `pptx.oxml.dml` module."""
-
 from __future__ import annotations
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from pptx.enum.dml import MSO_THEME_COLOR
+from pptx.oxml import parse_xml
 from pptx.oxml.dml.color import CT_Percentage, CT_SchemeColor, CT_SRgbColor
 from pptx.oxml.ns import qn
 
-from .unitdata.dml import a_lumMod, a_lumOff, a_schemeClr, an_srgbClr
+
+@pytest.fixture
+def scheme_clr() -> CT_SchemeColor:
+    return parse_xml(
+        '<a:schemeClr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="bg1"/>'
+    )
 
 
-class Describe_BaseColorElement(object):
-    def it_can_get_the_lumMod_child_element_if_there_is_one(
-        self, schemeClr, schemeClr_with_lumMod, lumMod
-    ):
-        assert schemeClr.lumMod is None
-        assert schemeClr_with_lumMod.lumMod is lumMod
-
-    def it_can_get_the_lumOff_child_element_if_there_is_one(
-        self, schemeClr, schemeClr_with_lumOff, lumOff
-    ):
-        assert schemeClr.lumOff is None
-        assert schemeClr_with_lumOff.lumOff is lumOff
-
-    def it_can_remove_existing_lumMod_and_lumOff_child_elements(
-        self, schemeClr_with_lumMod, schemeClr_with_lumOff, schemeClr_xml
-    ):
-        schemeClr_with_lumMod.clear_lum()
-        schemeClr_with_lumOff.clear_lum()
-        assert schemeClr_with_lumMod.xml == schemeClr_xml
-        assert schemeClr_with_lumOff.xml == schemeClr_xml
-
-    def it_can_add_a_lumMod_child_element(self, schemeClr, schemeClr_with_lumMod_xml):
-        lumMod = schemeClr.add_lumMod(0.75)
-        assert schemeClr.xml == schemeClr_with_lumMod_xml
-        assert schemeClr.find(qn("a:lumMod")) == lumMod
-
-    def it_can_add_a_lumOff_child_element(self, schemeClr, schemeClr_with_lumOff_xml):
-        lumOff = schemeClr.add_lumOff(0.4)
-        assert schemeClr.xml == schemeClr_with_lumOff_xml
-        assert schemeClr.find(qn("a:lumOff")) == lumOff
-
-    # fixtures ---------------------------------------------
-
-    @pytest.fixture
-    def lumMod(self):
-        return a_lumMod().with_nsdecls().element
-
-    @pytest.fixture
-    def lumOff(self):
-        return a_lumOff().with_nsdecls().element
-
-    @pytest.fixture
-    def schemeClr(self):
-        return a_schemeClr().with_nsdecls().element
-
-    @pytest.fixture
-    def schemeClr_xml(self):
-        return a_schemeClr().with_nsdecls().xml()
-
-    @pytest.fixture
-    def schemeClr_with_lumMod(self, lumMod):
-        schemeClr = a_schemeClr().with_nsdecls().element
-        schemeClr.append(lumMod)
-        return schemeClr
-
-    @pytest.fixture
-    def schemeClr_with_lumMod_xml(self):
-        lumMod_bldr = a_lumMod().with_val(75000)
-        return a_schemeClr().with_nsdecls().with_child(lumMod_bldr).xml()
-
-    @pytest.fixture
-    def schemeClr_with_lumOff_xml(self):
-        lumOff_bldr = a_lumOff().with_val(40000)
-        return a_schemeClr().with_nsdecls().with_child(lumOff_bldr).xml()
-
-    @pytest.fixture
-    def schemeClr_with_lumOff(self, lumOff):
-        schemeClr = a_schemeClr().with_nsdecls().element
-        schemeClr.append(lumOff)
-        return schemeClr
+@pytest.fixture
+def scheme_clr_with_lum_mod() -> CT_SchemeColor:
+    return parse_xml(
+        '<a:schemeClr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="bg1">'
+        '<a:lumMod val="75000"/>'
+        "</a:schemeClr>"
+    )
 
 
-class DescribeCT_Percentage(object):
-    def it_is_used_by_the_parser_for_a_lumOff_element(self, lumOff):
-        assert isinstance(lumOff, CT_Percentage)
-
-    def it_is_used_by_the_parser_for_a_lumMod_element(self, lumMod):
-        assert isinstance(lumMod, CT_Percentage)
-
-    def it_knows_the_percentage_value(self, ct_percentage):
-        assert ct_percentage.val == 0.99999
-
-    # fixtures ---------------------------------------------
-
-    @pytest.fixture
-    def ct_percentage(self):
-        return a_lumMod().with_nsdecls().with_val("99999").element
-
-    @pytest.fixture
-    def lumMod(self):
-        return a_lumMod().with_nsdecls().with_val("33333").element
-
-    @pytest.fixture
-    def lumOff(self):
-        return a_lumOff().with_nsdecls().with_val("66666").element
+@pytest.fixture
+def scheme_clr_with_lum_off() -> CT_SchemeColor:
+    return parse_xml(
+        '<a:schemeClr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="bg1">'
+        '<a:lumOff val="40000"/>'
+        "</a:schemeClr>"
+    )
 
 
-class DescribeCT_SchemeColor(object):
-    def it_is_used_by_the_parser_for_a_schemeClr_element(self, schemeClr):
-        assert isinstance(schemeClr, CT_SchemeColor)
-
-    def it_knows_the_theme_color_idx(self, schemeClr):
-        assert schemeClr.val == MSO_THEME_COLOR.BACKGROUND_1
-
-    def it_can_set_the_scheme_color_value(self, schemeClr, schemeClr_xml):
-        schemeClr.val = MSO_THEME_COLOR.ACCENT_1
-        assert schemeClr.xml == schemeClr_xml
-
-    # fixtures ---------------------------------------------
-
-    @pytest.fixture
-    def schemeClr(self):
-        return a_schemeClr().with_nsdecls().with_val("bg1").element
-
-    @pytest.fixture
-    def schemeClr_xml(self):
-        return a_schemeClr().with_nsdecls().with_val("accent1").xml()
+def test_base_color_element_lum_mod_getter(
+    scheme_clr: CT_SchemeColor, scheme_clr_with_lum_mod: CT_SchemeColor
+) -> None:
+    assert scheme_clr.lumMod is None
+    assert isinstance(scheme_clr_with_lum_mod.lumMod, CT_Percentage)
 
 
-class DescribeCT_SRgbColor(object):
-    def it_is_used_by_the_parser_for_an_srgbClr_element(self, srgbClr):
-        assert isinstance(srgbClr, CT_SRgbColor)
+def test_base_color_element_lum_off_getter(
+    scheme_clr: CT_SchemeColor, scheme_clr_with_lum_off: CT_SchemeColor
+) -> None:
+    assert scheme_clr.lumOff is None
+    assert isinstance(scheme_clr_with_lum_off.lumOff, CT_Percentage)
 
-    def it_knows_the_rgb_str_value(self, srgbClr):
-        assert srgbClr.val == "123456"
 
-    def it_can_set_the_rgb_str_value(self, srgbClr, srgbClr_xml):
-        srgbClr.val = "987654"
-        assert srgbClr.xml == srgbClr_xml
+def test_base_color_element_clear_lum(
+    scheme_clr_with_lum_mod: CT_SchemeColor,
+    scheme_clr_with_lum_off: CT_SchemeColor,
+    snapshot: SnapshotAssertion,
+) -> None:
+    scheme_clr_with_lum_mod.clear_lum()
+    scheme_clr_with_lum_off.clear_lum()
 
-    # fixtures ---------------------------------------------
+    assert str(scheme_clr_with_lum_mod.xml) == snapshot(name="lum_mod_removed")
+    assert str(scheme_clr_with_lum_off.xml) == snapshot(name="lum_off_removed")
 
-    @pytest.fixture
-    def srgbClr(self):
-        return an_srgbClr().with_nsdecls().with_val("123456").element
 
-    @pytest.fixture
-    def srgbClr_xml(self):
-        return an_srgbClr().with_nsdecls().with_val("987654").xml()
+def test_base_color_element_add_lum_mod(
+    scheme_clr: CT_SchemeColor, snapshot: SnapshotAssertion
+) -> None:
+    lum_mod = scheme_clr.add_lumMod(0.75)
+
+    assert scheme_clr.find(qn("a:lumMod")) is lum_mod
+    assert str(scheme_clr.xml) == snapshot
+
+
+def test_base_color_element_add_lum_off(
+    scheme_clr: CT_SchemeColor, snapshot: SnapshotAssertion
+) -> None:
+    lum_off = scheme_clr.add_lumOff(0.4)
+
+    assert scheme_clr.find(qn("a:lumOff")) is lum_off
+    assert str(scheme_clr.xml) == snapshot
+
+
+def test_ct_percentage_is_used_for_lum_elements() -> None:
+    lum_mod = parse_xml(
+        '<a:lumMod xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="33333"/>'
+    )
+    lum_off = parse_xml(
+        '<a:lumOff xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="66666"/>'
+    )
+
+    assert isinstance(lum_mod, CT_Percentage)
+    assert isinstance(lum_off, CT_Percentage)
+
+
+def test_ct_percentage_knows_value() -> None:
+    percentage = parse_xml(
+        '<a:lumMod xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="99999"/>'
+    )
+
+    assert percentage.val == 0.99999
+
+
+def test_ct_scheme_color_behaviors(
+    scheme_clr: CT_SchemeColor, snapshot: SnapshotAssertion
+) -> None:
+    assert isinstance(scheme_clr, CT_SchemeColor)
+    assert scheme_clr.val == MSO_THEME_COLOR.BACKGROUND_1
+
+    scheme_clr.val = MSO_THEME_COLOR.ACCENT_1
+
+    assert str(scheme_clr.xml) == snapshot
+
+
+def test_ct_srgb_color_behaviors(snapshot: SnapshotAssertion) -> None:
+    srgb_clr = parse_xml(
+        '<a:srgbClr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" val="123456"/>'
+    )
+
+    assert isinstance(srgb_clr, CT_SRgbColor)
+    assert srgb_clr.val == "123456"
+
+    srgb_clr.val = "987654"
+
+    assert str(srgb_clr.xml) == snapshot

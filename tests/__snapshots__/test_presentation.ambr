@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_presentation_slide_masters_creates_list_when_missing
+  '''
+  <p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <p:sldMasterIdLst/>
+  </p:presentation>
+  
+  '''
+# ---
+# name: test_presentation_slide_size_setters_create_sldsz_when_missing
+  '''
+  <p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <p:sldSz cx="914400" cy="1828800"/>
+  </p:presentation>
+  
+  '''
+# ---
+# name: test_presentation_slides_creates_sldidlst_when_missing
+  '''
+  <p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <p:sldIdLst/>
+  </p:presentation>
+  
+  '''
+# ---

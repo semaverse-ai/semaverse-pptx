@@ -36,7 +36,11 @@ cleandocs:
 
 .PHONY: coverage
 coverage:
-	uv run pytest --cov-report term-missing --cov=pptx --cov=tests
+	uv run pytest --cov-report term-missing --cov=pptx tests
+
+.PHONY: coverage_modern
+coverage_modern:
+	uv run pytest --cov-report term-missing --cov=pptx tests
 
 .PHONY: docs
 docs:

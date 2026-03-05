@@ -1,0 +1,6 @@
+*.xml
+*.xsd
+*.wmf
+*.WMF
+*.emf
+tests_obsolete/

@@ -1,0 +1,356 @@
+# serializer version: 1
+# name: test_group_shape_add_autoshape
+  '''
+  <p:spTree xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:sp>
+      <p:nvSpPr>
+        <p:cNvPr id="42" name="name"/>
+        <p:cNvSpPr/>
+        <p:nvPr/>
+      </p:nvSpPr>
+      <p:spPr>
+        <a:xfrm>
+          <a:off x="9" y="8"/>
+          <a:ext cx="7" cy="6"/>
+        </a:xfrm>
+        <a:prstGeom prst="rect">
+          <a:avLst/>
+        </a:prstGeom>
+      </p:spPr>
+      <p:style>
+        <a:lnRef idx="1">
+          <a:schemeClr val="accent1"/>
+        </a:lnRef>
+        <a:fillRef idx="3">
+          <a:schemeClr val="accent1"/>
+        </a:fillRef>
+        <a:effectRef idx="2">
+          <a:schemeClr val="accent1"/>
+        </a:effectRef>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="lt1"/>
+        </a:fontRef>
+      </p:style>
+      <p:txBody>
+        <a:bodyPr rtlCol="0" anchor="ctr"/>
+        <a:lstStyle/>
+        <a:p>
+          <a:pPr algn="ctr"/>
+        </a:p>
+      </p:txBody>
+    </p:sp>
+  </p:spTree>
+  
+  '''
+# ---
+# name: test_group_shape_add_cxn_sp
+  '''
+  <p:spTree xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:cxnSp>
+      <p:nvCxnSpPr>
+        <p:cNvPr id="42" name="name"/>
+        <p:cNvCxnSpPr/>
+        <p:nvPr/>
+      </p:nvCxnSpPr>
+      <p:spPr>
+        <a:xfrm flipV="1">
+          <a:off x="9" y="8"/>
+          <a:ext cx="7" cy="6"/>
+        </a:xfrm>
+        <a:prstGeom prst="line">
+          <a:avLst/>
+        </a:prstGeom>
+      </p:spPr>
+      <p:style>
+        <a:lnRef idx="2">
+          <a:schemeClr val="accent1"/>
+        </a:lnRef>
+        <a:fillRef idx="0">
+          <a:schemeClr val="accent1"/>
+        </a:fillRef>
+        <a:effectRef idx="1">
+          <a:schemeClr val="accent1"/>
+        </a:effectRef>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="tx1"/>
+        </a:fontRef>
+      </p:style>
+    </p:cxnSp>
+  </p:spTree>
+  
+  '''
+# ---
+# name: test_group_shape_add_freeform_sp
+  '''
+  <p:spTree xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:sp>
+      <p:nvSpPr>
+        <p:cNvPr id="1" name="Freeform 0"/>
+        <p:cNvSpPr/>
+        <p:nvPr/>
+      </p:nvSpPr>
+      <p:spPr>
+        <a:xfrm>
+          <a:off x="9" y="8"/>
+          <a:ext cx="7" cy="6"/>
+        </a:xfrm>
+        <a:custGeom>
+          <a:avLst/>
+          <a:gdLst/>
+          <a:ahLst/>
+          <a:cxnLst/>
+          <a:rect l="l" t="t" r="r" b="b"/>
+          <a:pathLst/>
+        </a:custGeom>
+      </p:spPr>
+      <p:style>
+        <a:lnRef idx="1">
+          <a:schemeClr val="accent1"/>
+        </a:lnRef>
+        <a:fillRef idx="3">
+          <a:schemeClr val="accent1"/>
+        </a:fillRef>
+        <a:effectRef idx="2">
+          <a:schemeClr val="accent1"/>
+        </a:effectRef>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="lt1"/>
+        </a:fontRef>
+      </p:style>
+      <p:txBody>
+        <a:bodyPr rtlCol="0" anchor="ctr"/>
+        <a:lstStyle/>
+        <a:p>
+          <a:pPr algn="ctr"/>
+        </a:p>
+      </p:txBody>
+    </p:sp>
+  </p:spTree>
+  
+  '''
+# ---
+# name: test_group_shape_add_grp_sp
+  '''
+  <p:spTree xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:grpSp xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name="Group 0"/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+    </p:grpSp>
+  </p:spTree>
+  
+  '''
+# ---
+# name: test_group_shape_add_pic
+  '''
+  <p:spTree xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:pic xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+      <p:nvPicPr>
+        <p:cNvPr id="42" name="name" descr="desc"/>
+        <p:cNvPicPr>
+          <a:picLocks noChangeAspect="1"/>
+        </p:cNvPicPr>
+        <p:nvPr/>
+      </p:nvPicPr>
+      <p:blipFill>
+        <a:blip r:embed="rId6"/>
+        <a:stretch>
+          <a:fillRect/>
+        </a:stretch>
+      </p:blipFill>
+      <p:spPr>
+        <a:xfrm>
+          <a:off x="6" y="7"/>
+          <a:ext cx="8" cy="9"/>
+        </a:xfrm>
+        <a:prstGeom prst="rect">
+          <a:avLst/>
+        </a:prstGeom>
+      </p:spPr>
+    </p:pic>
+  </p:spTree>
+  
+  '''
+# ---
+# name: test_group_shape_add_placeholder
+  '''
+  <p:spTree xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:sp>
+      <p:nvSpPr>
+        <p:cNvPr id="42" name="name"/>
+        <p:cNvSpPr>
+          <a:spLocks noGrp="1"/>
+        </p:cNvSpPr>
+        <p:nvPr>
+          <p:ph idx="24"/>
+        </p:nvPr>
+      </p:nvSpPr>
+      <p:spPr/>
+      <p:txBody>
+        <a:bodyPr/>
+        <a:lstStyle/>
+        <a:p/>
+      </p:txBody>
+    </p:sp>
+  </p:spTree>
+  
+  '''
+# ---
+# name: test_group_shape_add_table
+  '''
+  <p:spTree xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:graphicFrame>
+      <p:nvGraphicFramePr>
+        <p:cNvPr id="42" name="name"/>
+        <p:cNvGraphicFramePr>
+          <a:graphicFrameLocks noGrp="1"/>
+        </p:cNvGraphicFramePr>
+        <p:nvPr/>
+      </p:nvGraphicFramePr>
+      <p:xfrm>
+        <a:off x="5" y="4"/>
+        <a:ext cx="3" cy="2"/>
+      </p:xfrm>
+      <a:graphic>
+        <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">
+          <a:tbl>
+            <a:tblPr firstRow="1" bandRow="1">
+              <a:tableStyleId>{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}</a:tableStyleId>
+            </a:tblPr>
+            <a:tblGrid>
+              <a:gridCol w="1"/>
+              <a:gridCol w="1"/>
+              <a:gridCol w="1"/>
+            </a:tblGrid>
+            <a:tr h="1">
+              <a:tc>
+                <a:txBody>
+                  <a:bodyPr/>
+                  <a:lstStyle/>
+                  <a:p/>
+                </a:txBody>
+                <a:tcPr/>
+              </a:tc>
+              <a:tc>
+                <a:txBody>
+                  <a:bodyPr/>
+                  <a:lstStyle/>
+                  <a:p/>
+                </a:txBody>
+                <a:tcPr/>
+              </a:tc>
+              <a:tc>
+                <a:txBody>
+                  <a:bodyPr/>
+                  <a:lstStyle/>
+                  <a:p/>
+                </a:txBody>
+                <a:tcPr/>
+              </a:tc>
+            </a:tr>
+            <a:tr h="1">
+              <a:tc>
+                <a:txBody>
+                  <a:bodyPr/>
+                  <a:lstStyle/>
+                  <a:p/>
+                </a:txBody>
+                <a:tcPr/>
+              </a:tc>
+              <a:tc>
+                <a:txBody>
+                  <a:bodyPr/>
+                  <a:lstStyle/>
+                  <a:p/>
+                </a:txBody>
+                <a:tcPr/>
+              </a:tc>
+              <a:tc>
+                <a:txBody>
+                  <a:bodyPr/>
+                  <a:lstStyle/>
+                  <a:p/>
+                </a:txBody>
+                <a:tcPr/>
+              </a:tc>
+            </a:tr>
+          </a:tbl>
+        </a:graphicData>
+      </a:graphic>
+    </p:graphicFrame>
+  </p:spTree>
+  
+  '''
+# ---
+# name: test_group_shape_add_textbox
+  '''
+  <p:spTree xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:sp>
+      <p:nvSpPr>
+        <p:cNvPr id="42" name="name"/>
+        <p:cNvSpPr txBox="1"/>
+        <p:nvPr/>
+      </p:nvSpPr>
+      <p:spPr>
+        <a:xfrm>
+          <a:off x="3" y="4"/>
+          <a:ext cx="5" cy="6"/>
+        </a:xfrm>
+        <a:prstGeom prst="rect">
+          <a:avLst/>
+        </a:prstGeom>
+        <a:noFill/>
+      </p:spPr>
+      <p:txBody>
+        <a:bodyPr wrap="none">
+          <a:spAutoFit/>
+        </a:bodyPr>
+        <a:lstStyle/>
+        <a:p/>
+      </p:txBody>
+    </p:sp>
+  </p:spTree>
+  
+  '''
+# ---
+# name: test_group_shape_recalculate_extents
+  '''
+  <p:grpSp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+    <p:grpSpPr>
+      <a:xfrm>
+        <a:off x="100" y="200"/>
+        <a:ext cx="350" cy="450"/>
+        <a:chOff x="100" y="200"/>
+        <a:chExt cx="350" cy="450"/>
+      </a:xfrm>
+    </p:grpSpPr>
+    <p:sp>
+      <p:spPr>
+        <a:xfrm>
+          <a:off x="100" y="200"/>
+          <a:ext cx="300" cy="400"/>
+        </a:xfrm>
+      </p:spPr>
+    </p:sp>
+    <p:sp>
+      <p:spPr>
+        <a:xfrm>
+          <a:off x="150" y="250"/>
+          <a:ext cx="300" cy="400"/>
+        </a:xfrm>
+      </p:spPr>
+    </p:sp>
+  </p:grpSp>
+  
+  '''
+# ---

@@ -1,0 +1,18 @@
+# serializer version: 1
+# name: test_base_slide_name_get_set_and_clear
+  '''
+  <p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+    <p:cSld/>
+  </p:sld>
+  
+  '''
+# ---
+# name: test_slides_add_slide_mutates_sldidlst_and_clones_layout_placeholders
+  '''
+  <p:sldIdLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+    <p:sldId id="256" r:id="rId1"/>
+    <p:sldId id="257" r:id="rId2"/>
+  </p:sldIdLst>
+  
+  '''
+# ---

@@ -163,8 +163,7 @@ class ActionSetting(Subshape):
         click action. Returns |None| if the element is not present.
         """
         if self._hover:
-            assert isinstance(self._element, CT_NonVisualDrawingProps)
-            return self._element.hlinkHover
+            return cast("CT_NonVisualDrawingProps", self._element).hlinkHover
         return self._element.hlinkClick
 
     @lazyproperty
