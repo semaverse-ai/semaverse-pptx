@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+# pyright: reportReturnType=false, reportAssignmentType=false
+from typing import TYPE_CHECKING, Any, Callable
 
 from pptx.dml.fill import CT_GradientFillProperties
 from pptx.enum.shapes import PP_PLACEHOLDER
@@ -46,7 +47,7 @@ class BaseShapeElement(BaseOxmlElement):
         return self._get_xfrm_attr("cx")
 
     @cx.setter
-    def cx(self, value):
+    def cx(self, value: Length):
         self._set_xfrm_attr("cx", value)
 
     @property
@@ -54,7 +55,7 @@ class BaseShapeElement(BaseOxmlElement):
         return self._get_xfrm_attr("cy")
 
     @cy.setter
-    def cy(self, value):
+    def cy(self, value: Length):
         self._set_xfrm_attr("cy", value)
 
     @property
@@ -62,7 +63,7 @@ class BaseShapeElement(BaseOxmlElement):
         return bool(self._get_xfrm_attr("flipH"))
 
     @flipH.setter
-    def flipH(self, value):
+    def flipH(self, value: bool):
         self._set_xfrm_attr("flipH", value)
 
     @property
@@ -70,7 +71,7 @@ class BaseShapeElement(BaseOxmlElement):
         return bool(self._get_xfrm_attr("flipV"))
 
     @flipV.setter
-    def flipV(self, value):
+    def flipV(self, value: bool):
         self._set_xfrm_attr("flipV", value)
 
     def get_or_add_xfrm(self):
@@ -177,7 +178,7 @@ class BaseShapeElement(BaseOxmlElement):
         return self._get_xfrm_attr("x")
 
     @x.setter
-    def x(self, value):
+    def x(self, value: Length):
         self._set_xfrm_attr("x", value)
 
     @property
@@ -194,7 +195,7 @@ class BaseShapeElement(BaseOxmlElement):
         return self._get_xfrm_attr("y")
 
     @y.setter
-    def y(self, value):
+    def y(self, value: Length):
         self._set_xfrm_attr("y", value)
 
     @property
@@ -212,7 +213,7 @@ class BaseShapeElement(BaseOxmlElement):
             return None
         return getattr(xfrm, name)
 
-    def _set_xfrm_attr(self, name, value):
+    def _set_xfrm_attr(self, name: str, value: Any):
         xfrm = self.get_or_add_xfrm()
         setattr(xfrm, name, value)
 
@@ -286,7 +287,7 @@ class CT_LineProperties(BaseOxmlElement):
         return prstDash.val
 
     @prstDash_val.setter
-    def prstDash_val(self, val):
+    def prstDash_val(self, val: str):
         self._remove_custDash()
         prstDash = self.get_or_add_prstDash()
         prstDash.val = val
@@ -309,18 +310,10 @@ class CT_NonVisualDrawingProps(BaseOxmlElement):
 class CT_Placeholder(BaseOxmlElement):
     """`p:ph` custom element class."""
 
-    type: PP_PLACEHOLDER = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "type", PP_PLACEHOLDER, default=PP_PLACEHOLDER.OBJECT
-    )
-    orient: str = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "orient", ST_Direction, default=ST_Direction.HORZ
-    )
-    sz: str = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "sz", ST_PlaceholderSize, default=ST_PlaceholderSize.FULL
-    )
-    idx: int = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "idx", XsdUnsignedInt, default=0
-    )
+    type: PP_PLACEHOLDER = OptionalAttribute("type", PP_PLACEHOLDER, default=PP_PLACEHOLDER.OBJECT)
+    orient: str = OptionalAttribute("orient", ST_Direction, default=ST_Direction.HORZ)
+    sz: str = OptionalAttribute("sz", ST_PlaceholderSize, default=ST_PlaceholderSize.FULL)
+    idx: int = OptionalAttribute("idx", XsdUnsignedInt, default=0)
 
 
 class CT_Point2D(BaseOxmlElement):
@@ -328,8 +321,8 @@ class CT_Point2D(BaseOxmlElement):
     Custom element class for <a:off> element.
     """
 
-    x: Length = RequiredAttribute("x", ST_Coordinate)  # pyright: ignore[reportAssignmentType]
-    y: Length = RequiredAttribute("y", ST_Coordinate)  # pyright: ignore[reportAssignmentType]
+    x: Length = RequiredAttribute("x", ST_Coordinate)
+    y: Length = RequiredAttribute("y", ST_Coordinate)
 
 
 class CT_PositiveSize2D(BaseOxmlElement):
@@ -369,15 +362,9 @@ class CT_ShapeProperties(BaseOxmlElement):
         "a:sp3d",
         "a:extLst",
     )
-    xfrm: CT_Transform2D | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "a:xfrm", successors=_tag_seq[1:]
-    )
-    custGeom: CT_CustomGeometry2D | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "a:custGeom", successors=_tag_seq[2:]
-    )
-    prstGeom: CT_PresetGeometry2D | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "a:prstGeom", successors=_tag_seq[3:]
-    )
+    xfrm: CT_Transform2D | None = ZeroOrOne("a:xfrm", successors=_tag_seq[1:])
+    custGeom: CT_CustomGeometry2D | None = ZeroOrOne("a:custGeom", successors=_tag_seq[2:])
+    prstGeom: CT_PresetGeometry2D | None = ZeroOrOne("a:prstGeom", successors=_tag_seq[3:])
     eg_fillProperties = ZeroOrOneChoice(
         (
             Choice("a:noFill"),
@@ -389,9 +376,7 @@ class CT_ShapeProperties(BaseOxmlElement):
         ),
         successors=_tag_seq[9:],
     )
-    ln: CT_LineProperties | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "a:ln", successors=_tag_seq[10:]
-    )
+    ln: CT_LineProperties | None = ZeroOrOne("a:ln", successors=_tag_seq[10:])
     effectLst = ZeroOrOne("a:effectLst", successors=_tag_seq[11:])
     del _tag_seq
 
@@ -449,16 +434,12 @@ class CT_Transform2D(BaseOxmlElement):
     """
 
     _tag_seq = ("a:off", "a:ext", "a:chOff", "a:chExt")
-    off: CT_Point2D | None = ZeroOrOne(  # pyright: ignore[reportAssignmentType]
-        "a:off", successors=_tag_seq[1:]
-    )
+    off: CT_Point2D | None = ZeroOrOne("a:off", successors=_tag_seq[1:])
     ext = ZeroOrOne("a:ext", successors=_tag_seq[2:])
     chOff = ZeroOrOne("a:chOff", successors=_tag_seq[3:])
     chExt = ZeroOrOne("a:chExt", successors=_tag_seq[4:])
     del _tag_seq
-    rot: float | None = OptionalAttribute(  # pyright: ignore[reportAssignmentType]
-        "rot", ST_Angle, default=0.0
-    )
+    rot: float | None = OptionalAttribute("rot", ST_Angle, default=0.0)
     flipH = OptionalAttribute("flipH", XsdBoolean, default=False)
     flipV = OptionalAttribute("flipV", XsdBoolean, default=False)
 
@@ -470,7 +451,7 @@ class CT_Transform2D(BaseOxmlElement):
         return off.x
 
     @x.setter
-    def x(self, value):
+    def x(self, value: Length):
         off = self.get_or_add_off()
         off.x = value
 
@@ -482,7 +463,7 @@ class CT_Transform2D(BaseOxmlElement):
         return off.y
 
     @y.setter
-    def y(self, value):
+    def y(self, value: Length):
         off = self.get_or_add_off()
         off.y = value
 
@@ -494,7 +475,7 @@ class CT_Transform2D(BaseOxmlElement):
         return ext.cx
 
     @cx.setter
-    def cx(self, value):
+    def cx(self, value: Length):
         ext = self.get_or_add_ext()
         ext.cx = value
 
@@ -506,7 +487,7 @@ class CT_Transform2D(BaseOxmlElement):
         return ext.cy
 
     @cy.setter
-    def cy(self, value):
+    def cy(self, value: Length):
         ext = self.get_or_add_ext()
         ext.cy = value
 

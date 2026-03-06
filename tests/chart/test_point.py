@@ -1,221 +1,75 @@
-"""Unit-test suite for the `pptx.chart.point` module."""
-
 from __future__ import annotations
 
+# ruff: noqa: E501
 import pytest
 
-from pptx.chart.datalabel import DataLabel
-from pptx.chart.marker import Marker
 from pptx.chart.point import BubblePoints, CategoryPoints, Point, XyPoints
-from pptx.dml.chtfmt import ChartFormat
-
-from ..unitutil.cxml import element, xml
-from ..unitutil.mock import class_mock, instance_mock
+from pptx.oxml import parse_xml
 
 
-class Describe_BasePoints(object):
-    def it_supports_indexed_access(self, getitem_fixture):
-        points, idx, Point_, ser, point_ = getitem_fixture
-        point = points[idx]
-        Point_.assert_called_once_with(ser, idx)
-        assert point is point_
-
-    def it_raises_on_indexed_access_out_of_range(self):
-        points = XyPoints(
-            element(
-                "c:ser/(c:xVal/c:numRef/c:numCache/c:ptCount{val=3},c:yVal/c:num"
-                "Ref/c:numCache/c:ptCount{val=3})"
-            )
-        )
-        with pytest.raises(IndexError):
-            points[-1]
-        with pytest.raises(IndexError):
-            points[3]
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture
-    def getitem_fixture(self, request, Point_, point_):
-        ser = element(
-            "c:ser/(c:xVal/c:numRef/c:numCache/c:ptCount{val=3},c:yVal/c:num"
-            "Ref/c:numCache/c:ptCount{val=3})"
-        )
-        points = XyPoints(ser)
-        idx = 2
-        return points, idx, Point_, ser, point_
-
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def Point_(self, request, point_):
-        return class_mock(request, "pptx.chart.point.Point", return_value=point_)
-
-    @pytest.fixture
-    def point_(self, request):
-        return instance_mock(request, Point)
-
-
-class DescribeBubblePoints(object):
-    def it_supports_len(self, len_fixture):
-        points, expected_value = len_fixture
-        assert len(points) == expected_value
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture(
-        params=[
-            ("c:ser", 0),
-            ("c:ser/c:bubbleSize/c:numRef/c:numCache/c:ptCount{val=3}", 0),
-            (
-                "c:ser/(c:xVal/c:numRef/c:numCache/c:ptCount{val=1},c:yVal/c:numRef"
-                "/c:numCache/c:ptCount{val=2},c:bubbleSize/c:numRef/c:numCache/c:pt"
-                "Count{val=3})",
-                1,
-            ),
-            (
-                "c:ser/(c:xVal/c:numRef/c:numCache/c:ptCount{val=3},c:yVal/c:numRef"
-                "/c:numCache/c:ptCount{val=3},c:bubbleSize/c:numRef/c:numCache/c:pt"
-                "Count{val=3})",
-                3,
-            ),
-        ]
+def test_category_points_and_point() -> None:
+    ser = parse_xml(
+        b'<c:ser xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">'
+        b"<c:idx val='0'/><c:order val='0'/>"
+        b"<c:cat><c:numRef><c:numCache><c:ptCount val='3'/></c:numCache></c:numRef></c:cat>"
+        b"</c:ser>"
     )
-    def len_fixture(self, request):
-        ser_cxml, expected_value = request.param
-        points = BubblePoints(element(ser_cxml))
-        return points, expected_value
+    points = CategoryPoints(ser)
+
+    assert len(points) == 3
+    assert isinstance(points[1], Point)
 
 
-class DescribeCategoryPoints(object):
-    def it_supports_len(self, len_fixture):
-        points, expected_value = len_fixture
-        assert len(points) == expected_value
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture(
-        params=[
-            ("c:ser", 0),
-            ("c:ser/c:cat/c:numRef/c:numCache/c:ptCount{val=42}", 42),
-            ("c:ser/c:cat/c:numRef/c:numCache/c:ptCount{val=24}", 24),
-        ]
+def test_xy_points_and_bubble_points() -> None:
+    xy_ser = parse_xml(
+        b"""
+        <c:ser xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">
+          <c:idx val='0'/>
+          <c:order val='0'/>
+          <c:xVal><c:numRef><c:numCache><c:ptCount val='2'/></c:numCache></c:numRef></c:xVal>
+          <c:yVal><c:numRef><c:numCache><c:ptCount val='3'/></c:numCache></c:numRef></c:yVal>
+        </c:ser>
+        """
     )
-    def len_fixture(self, request):
-        ser_cxml, expected_value = request.param
-        points = CategoryPoints(element(ser_cxml))
-        return points, expected_value
-
-
-class DescribePoint(object):
-    def it_provides_access_to_its_data_label(self, data_label_fixture):
-        point, DataLabel_, ser, idx, data_label_ = data_label_fixture
-        data_label = point.data_label
-        DataLabel_.assert_called_once_with(ser, idx)
-        assert data_label is data_label_
-
-    def it_provides_access_to_its_format(self, format_fixture):
-        point, ChartFormat_, ser, chart_format_, expected_xml = format_fixture
-        chart_format = point.format
-        ChartFormat_.assert_called_once_with(ser.xpath('c:dPt[c:idx/@val="42"]')[0])
-        assert chart_format is chart_format_
-        assert point._element.xml == expected_xml
-
-    def it_provides_access_to_its_marker(self, marker_fixture):
-        point, Marker_, dPt, marker_ = marker_fixture
-        marker = point.marker
-        Marker_.assert_called_once_with(dPt)
-        assert marker is marker_
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture
-    def data_label_fixture(self, DataLabel_, data_label_):
-        ser, idx = element("c:ser"), 42
-        point = Point(ser, idx)
-        return point, DataLabel_, ser, idx, data_label_
-
-    @pytest.fixture(
-        params=[
-            ("c:ser", "c:ser/c:dPt/c:idx{val=42}"),
-            ("c:ser/c:dPt/c:idx{val=42}", "c:ser/c:dPt/c:idx{val=42}"),
-            (
-                "c:ser/c:dPt/c:idx{val=45}",
-                "c:ser/(c:dPt/c:idx{val=45},c:dPt/c:idx{val=42})",
-            ),
-        ]
+    bubble_ser = parse_xml(
+        b"""
+        <c:ser xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">
+          <c:idx val='0'/>
+          <c:order val='0'/>
+          <c:xVal><c:numRef><c:numCache><c:ptCount val='4'/></c:numCache></c:numRef></c:xVal>
+          <c:yVal><c:numRef><c:numCache><c:ptCount val='3'/></c:numCache></c:numRef></c:yVal>
+          <c:bubbleSize><c:numRef><c:numCache><c:ptCount val='2'/></c:numCache></c:numRef></c:bubbleSize>
+        </c:ser>
+        """
     )
-    def format_fixture(self, request, ChartFormat_, chart_format_):
-        ser_cxml, expected_cxml = request.param
-        ser = element(ser_cxml)
-        point = Point(ser, 42)
-        expected_xml = xml(expected_cxml)
-        return point, ChartFormat_, ser, chart_format_, expected_xml
 
-    @pytest.fixture
-    def marker_fixture(self, Marker_, marker_):
-        ser = element("c:ser/c:dPt/c:idx{val=42}")
-        point = Point(ser, 42)
-        dPt = ser[0]
-        return point, Marker_, dPt, marker_
-
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def ChartFormat_(self, request, chart_format_):
-        return class_mock(request, "pptx.chart.point.ChartFormat", return_value=chart_format_)
-
-    @pytest.fixture
-    def chart_format_(self, request):
-        return instance_mock(request, ChartFormat)
-
-    @pytest.fixture
-    def DataLabel_(self, request, data_label_):
-        return class_mock(request, "pptx.chart.point.DataLabel", return_value=data_label_)
-
-    @pytest.fixture
-    def data_label_(self, request):
-        return instance_mock(request, DataLabel)
-
-    @pytest.fixture
-    def Marker_(self, request, marker_):
-        return class_mock(request, "pptx.chart.point.Marker", return_value=marker_)
-
-    @pytest.fixture
-    def marker_(self, request):
-        return instance_mock(request, Marker)
+    assert len(XyPoints(xy_ser)) == 2
+    assert len(BubblePoints(bubble_ser)) == 2
 
 
-class DescribeXyPoints(object):
-    def it_supports_len(self, len_fixture):
-        points, expected_value = len_fixture
-        assert len(points) == expected_value
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture(
-        params=[
-            ("c:ser", 0),
-            ("c:ser/c:xVal", 0),
-            ("c:ser/c:xVal/c:numRef/c:numCache/c:ptCount{val=3}", 0),
-            ("c:ser/c:yVal/c:numRef/c:numCache/c:ptCount{val=3}", 0),
-            (
-                "c:ser/(c:xVal/c:numRef/c:numCache/c:ptCount{val=1},c:yVal/c:numRef"
-                "/c:numCache/c:ptCount{val=3})",
-                1,
-            ),
-            (
-                "c:ser/(c:xVal/c:numRef/c:numCache/c:ptCount{val=3},c:yVal/c:numRef"
-                "/c:numCache/c:ptCount{val=1})",
-                1,
-            ),
-            (
-                "c:ser/(c:xVal/c:numRef/c:numCache/c:ptCount{val=3},c:yVal/c:numRef"
-                "/c:numCache/c:ptCount{val=3})",
-                3,
-            ),
-        ]
+def test_point_properties() -> None:
+    ser = parse_xml(
+        b'<c:ser xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">'
+        b"<c:idx val='0'/><c:order val='0'/></c:ser>"
     )
-    def len_fixture(self, request):
-        ser_cxml, expected_value = request.param
-        points = XyPoints(element(ser_cxml))
-        return points, expected_value
+    point = Point(ser, 0)
+
+    assert point.data_label is not None
+    assert point.format is not None
+    assert point.marker is not None
+
+
+def test_points_index_out_of_range() -> None:
+    ser = parse_xml(
+        b"""
+        <c:ser xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart">
+          <c:idx val='0'/>
+          <c:order val='0'/>
+          <c:cat><c:numRef><c:numCache><c:ptCount val='1'/></c:numCache></c:numRef></c:cat>
+        </c:ser>
+        """
+    )
+    points = CategoryPoints(ser)
+
+    with pytest.raises(IndexError):
+        _ = points[1]

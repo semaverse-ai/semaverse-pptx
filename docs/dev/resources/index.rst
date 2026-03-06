@@ -14,4 +14,3 @@ Resources
    technical_topics
    applescript
    odds_and_ends
-

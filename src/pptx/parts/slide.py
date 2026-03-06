@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from pptx.chart.data import ChartData
     from pptx.enum.chart import XL_CHART_TYPE
     from pptx.media import Video
+    from pptx.oxml.xmlchemy import BaseOxmlElement
     from pptx.parts.image import Image, ImagePart
 
 
@@ -101,7 +102,7 @@ class NotesMasterPart(BaseSlidePart):
             package.next_partname("/ppt/theme/theme%d.xml"),
             CT.OFC_THEME,
             package,
-            CT_OfficeStyleSheet.new_default(),
+            cast("BaseOxmlElement", CT_OfficeStyleSheet.new_default()),
         )
 
 

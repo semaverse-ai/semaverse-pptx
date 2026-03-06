@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import IO, TYPE_CHECKING, Iterable
+from typing import IO, TYPE_CHECKING, Iterable, cast
 
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import XmlPart
@@ -69,7 +69,7 @@ class PresentationPart(XmlPart):
         The same single instance is returned on each call.
         """
         try:
-            return self.part_related_by(RT.NOTES_MASTER)
+            return cast("NotesMasterPart", self.part_related_by(RT.NOTES_MASTER))
         except KeyError:
             notes_master_part = NotesMasterPart.create_default(self.package)
             self.relate_to(notes_master_part, RT.NOTES_MASTER)

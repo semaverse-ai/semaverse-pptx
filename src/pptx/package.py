@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import IO, Iterator
+from typing import IO, Iterator, cast
 
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.opc.package import OpcPackage
@@ -23,7 +23,7 @@ class Package(OpcPackage):
         Creates a default core properties part if one is not present (not common).
         """
         try:
-            return self.part_related_by(RT.CORE_PROPERTIES)
+            return cast("CorePropertiesPart", self.part_related_by(RT.CORE_PROPERTIES))
         except KeyError:
             core_props = CorePropertiesPart.default(self)
             self.relate_to(core_props, RT.CORE_PROPERTIES)
@@ -86,6 +86,7 @@ class Package(OpcPackage):
                     part.partname.idx
                     for part in self.iter_parts()
                     if part.partname.startswith("/ppt/media/media")
+                    and part.partname.idx is not None
                 ]
             )
             for i, media_idx in enumerate(media_idxs):

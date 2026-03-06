@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<cp:coreProperties
+  xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:dcmitype="http://purl.org/dc/dcmitype/"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <cp:contentStatus>DRAFT</cp:contentStatus>
+  <dc:creator>semaverse-pptx</dc:creator>
+  <dcterms:created xsi:type="dcterms:W3CDTF">2012-11-17T11:07:40-05:30</dcterms:created>
+  <dc:description/>
+  <dc:identifier>GXS 10.2.1ab</dc:identifier>
+  <dc:language>US-EN</dc:language>
+  <cp:lastPrinted>2014-06-04T04:28:00Z</cp:lastPrinted>
+  <cp:keywords>foo bar baz</cp:keywords>
+  <cp:lastModifiedBy>semaverse-ai</cp:lastModifiedBy>
+  <cp:revision>4</cp:revision>
+  <dc:subject>Spam</dc:subject>
+  <dc:title>Presentation</dc:title>
+  <cp:version>1.2.88</cp:version>
+</cp:coreProperties>

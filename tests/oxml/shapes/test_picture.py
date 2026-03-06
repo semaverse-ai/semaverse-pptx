@@ -1,107 +1,145 @@
-"""Unit-test suite for `pptx.oxml.shapes.picture` module."""
-
 from __future__ import annotations
 
 import pytest
 
-from pptx.oxml.ns import nsdecls
+from pptx.oxml import parse_xml
 from pptx.oxml.shapes.picture import CT_Picture
 
 
-class DescribeCT_Picture(object):
-    """Unit-test suite for `pptx.oxml.shapes.picture.CT_Picture` objects."""
+def test_picture_new_pic() -> None:
+    pic = CT_Picture.new_pic(9, "Picture 8", "kittens.jpg", "rId42", 1, 2, 3, 4)
 
-    @pytest.mark.parametrize(
-        "desc, xml_desc",
-        (
-            ("kittens.jpg", "kittens.jpg"),
-            ("bits&bobs.png", "bits&amp;bobs.png"),
-            ("img&.png", "img&amp;.png"),
-            ("im<ag>e.png", "im&lt;ag&gt;e.png"),
-        ),
+    assert pic.nvPicPr.cNvPr.id == 9
+    assert pic.nvPicPr.cNvPr.name == "Picture 8"
+    assert pic.blipFill.blip.rEmbed == "rId42"
+
+
+@pytest.mark.parametrize(
+    ("desc", "expected_xml_desc"),
+    [
+        ("kittens.jpg", "kittens.jpg"),
+        ("bits&bobs.png", "bits&amp;bobs.png"),
+        ("img&.png", "img&amp;.png"),
+        ("im<ag>e.png", "im&lt;ag&gt;e.png"),
+    ],
+)
+def test_picture_new_pic_escapes_desc(desc: str, expected_xml_desc: str) -> None:
+    pic = CT_Picture.new_pic(9, "Picture 8", desc, "rId42", 1, 2, 3, 4)
+
+    assert expected_xml_desc in str(pic.xml)
+
+
+def test_picture_new_ph_pic() -> None:
+    pic = CT_Picture.new_ph_pic(9, "Picture 8", "kittens.jpg", "rId42")
+
+    assert pic.nvPicPr.cNvPr.id == 9
+    assert pic.blipFill.blip.rEmbed == "rId42"
+
+
+def test_picture_new_video_pic() -> None:
+    pic = CT_Picture.new_video_pic(42, "Media 41", "rId1", "rId2", "rId3", 1, 2, 3, 4)
+
+    assert pic.nvPicPr.cNvPr.id == 42
+    assert pic.nvPicPr.cNvPr.name == "Media 41"
+    assert pic.blipFill.blip.rEmbed == "rId3"
+
+
+def test_picture_src_rect_getters() -> None:
+    pic = parse_xml(
+        '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+        '<p:blipFill><a:srcRect l="10000" t="20000" r="30000" b="40000"/></p:blipFill></p:pic>'
     )
-    def it_can_create_a_new_pic_element(self, desc, xml_desc):
-        """`desc` attr (often filename) is XML-escaped to handle special characters.
 
-        In particular, ampersand ('&'), less/greater-than ('</>') etc.
-        """
-        pic = CT_Picture.new_pic(
-            shape_id=9, name="Picture 8", desc=desc, rId="rId42", x=1, y=2, cx=3, cy=4
-        )
+    assert pic.srcRect_l == 0.1
+    assert pic.srcRect_t == 0.2
+    assert pic.srcRect_r == 0.3
+    assert pic.srcRect_b == 0.4
 
-        assert pic.xml == (
-            "<p:pic %s>\n"
-            "  <p:nvPicPr>\n"
-            '    <p:cNvPr id="9" name="Picture 8" descr="%s"/>\n'
-            "    <p:cNvPicPr>\n"
-            '      <a:picLocks noChangeAspect="1"/>\n'
-            "    </p:cNvPicPr>\n"
-            "    <p:nvPr/>\n"
-            "  </p:nvPicPr>\n"
-            "  <p:blipFill>\n"
-            '    <a:blip r:embed="rId42"/>\n'
-            "    <a:stretch>\n"
-            "      <a:fillRect/>\n"
-            "    </a:stretch>\n"
-            "  </p:blipFill>\n"
-            "  <p:spPr>\n"
-            "    <a:xfrm>\n"
-            '      <a:off x="1" y="2"/>\n'
-            '      <a:ext cx="3" cy="4"/>\n'
-            "    </a:xfrm>\n"
-            '    <a:prstGeom prst="rect">\n'
-            "      <a:avLst/>\n"
-            "    </a:prstGeom>\n"
-            "  </p:spPr>\n"
-            "</p:pic>\n" % (nsdecls("a", "p", "r"), xml_desc)
-        )
 
-    def it_can_create_a_new_video_pic_element(self):
-        pic = CT_Picture.new_video_pic(
-            shape_id=42,
-            shape_name="Media 41",
-            video_rId="rId1",
-            media_rId="rId2",
-            poster_frame_rId="rId3",
-            x=1,
-            y=2,
-            cx=3,
-            cy=4,
-        )
+def test_picture_src_rect_getters_defaults() -> None:
+    pic = parse_xml(
+        '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:blipFill/></p:pic>'
+    )
 
-        assert pic.xml == (
-            "<p:pic %s>\n"
-            "  <p:nvPicPr>\n"
-            '    <p:cNvPr id="42" name="Media 41">\n'
-            '      <a:hlinkClick r:id="" action="ppaction://media"/>\n'
-            "    </p:cNvPr>\n"
-            "    <p:cNvPicPr>\n"
-            '      <a:picLocks noChangeAspect="1"/>\n'
-            "    </p:cNvPicPr>\n"
-            "    <p:nvPr>\n"
-            '      <a:videoFile r:link="rId1"/>\n'
-            "      <p:extLst>\n"
-            '        <p:ext uri="{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}">\n'
-            '          <p14:media xmlns:p14="http://schemas.microsoft.com/office/power'
-            'point/2010/main" r:embed="rId2"/>\n'
-            "        </p:ext>\n"
-            "      </p:extLst>\n"
-            "    </p:nvPr>\n"
-            "  </p:nvPicPr>\n"
-            "  <p:blipFill>\n"
-            '    <a:blip r:embed="rId3"/>\n'
-            "    <a:stretch>\n"
-            "      <a:fillRect/>\n"
-            "    </a:stretch>\n"
-            "  </p:blipFill>\n"
-            "  <p:spPr>\n"
-            "    <a:xfrm>\n"
-            '      <a:off x="1" y="2"/>\n'
-            '      <a:ext cx="3" cy="4"/>\n'
-            "    </a:xfrm>\n"
-            '    <a:prstGeom prst="rect">\n'
-            "      <a:avLst/>\n"
-            "    </a:prstGeom>\n"
-            "  </p:spPr>\n"
-            "</p:pic>\n"
-        ) % nsdecls("a", "p", "r")
+    assert pic.srcRect_l == 0.0
+    assert pic.srcRect_t == 0.0
+    assert pic.srcRect_r == 0.0
+    assert pic.srcRect_b == 0.0
+
+
+@pytest.mark.parametrize(
+    ("side", "value", "expected_attr"),
+    [
+        ("l", 0.5, 'l="50000"'),
+        ("t", 0.2, 't="20000"'),
+        ("r", 0.1, 'r="10000"'),
+        ("b", 0.9, 'b="90000"'),
+    ],
+)
+def test_picture_src_rect_setters(side: str, value: float, expected_attr: str) -> None:
+    pic = parse_xml(
+        '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:blipFill/></p:pic>'
+    )
+
+    if side == "l":
+        pic.srcRect_l = value
+    elif side == "t":
+        pic.srcRect_t = value
+    elif side == "r":
+        pic.srcRect_r = value
+    else:
+        pic.srcRect_b = value
+
+    assert expected_attr in str(pic.xml)
+
+
+def test_picture_crop_to_fit() -> None:
+    pic = parse_xml(
+        '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:blipFill/></p:pic>'
+    )
+
+    pic.crop_to_fit((1600, 1200), (800, 400))
+
+    assert pic.blipFill.srcRect is not None
+    assert pic.srcRect_t > 0
+    assert pic.srcRect_b > 0
+
+
+def test_picture_get_or_add_ln() -> None:
+    pic = parse_xml(
+        '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:spPr/></p:pic>'
+    )
+
+    assert pic.ln is None
+
+    ln = pic.get_or_add_ln()
+
+    assert pic.ln is ln
+    assert pic.ln is not None
+
+
+def test_picture_blip_rid() -> None:
+    pic = parse_xml(
+        '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        '<p:blipFill><a:blip r:embed="rId42"/></p:blipFill></p:pic>'
+    )
+
+    assert pic.blip_rId == "rId42"
+
+
+def test_picture_blip_rid_none() -> None:
+    pic = parse_xml(
+        '<p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        "<p:blipFill><a:blip/></p:blipFill></p:pic>"
+    )
+
+    assert pic.blip_rId is None

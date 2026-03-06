@@ -1,0 +1,38 @@
+default_language_version:
+  python: python3
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^tests(?:/.+)?/__snapshots__/.*\.ambr$
+      - id: end-of-file-fixer
+        exclude: ^tests(?:/.+)?/__snapshots__/.*\.ambr$
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: uv run ruff check --fix --force-exclude
+        language: system
+        pass_filenames: true
+        types: [python]
+
+      - id: ruff-format
+        name: ruff-format
+        entry: uv run ruff format --force-exclude
+        language: system
+        pass_filenames: true
+        types: [python]
+
+      - id: pyright
+        name: pyright
+        entry: uv run pyright src/pptx
+        language: system
+        pass_filenames: false
+        require_serial: true
+        types: [python]

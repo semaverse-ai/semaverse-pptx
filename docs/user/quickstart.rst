@@ -264,4 +264,3 @@ Extract all text from slides in presentation
             for paragraph in shape.text_frame.paragraphs:
                 for run in paragraph.runs:
                     text_runs.append(run.text)
-

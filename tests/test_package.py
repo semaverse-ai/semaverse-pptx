@@ -1,377 +1,226 @@
-# pyright: reportPrivateUsage=false
-
-"""Unit-test suite for `pptx.package` module."""
-
 from __future__ import annotations
 
-import os
+from dataclasses import dataclass
 
 import pytest
 
-import pptx
-from pptx.media import Video
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-from pptx.opc.package import Part, _Relationship
 from pptx.opc.packuri import PackURI
 from pptx.package import Package, _ImageParts, _MediaParts
-from pptx.parts.coreprops import CorePropertiesPart
 from pptx.parts.image import Image, ImagePart
 from pptx.parts.media import MediaPart
 
-from .unitutil.mock import call, class_mock, instance_mock, method_mock, property_mock
-
-
-class DescribePackage(object):
-    """Unit-test suite for `pptx.package.Package` objects."""
-
-    def it_provides_access_to_its_core_properties_part(self):
-        default_pptx = os.path.abspath(
-            os.path.join(os.path.split(pptx.__file__)[0], "templates", "default.pptx")
-        )
-        pkg = Package.open(default_pptx)
-        assert isinstance(pkg.core_properties, CorePropertiesPart)
-
-    def it_can_get_or_add_an_image_part(self, image_part_fixture):
-        package, image_file, image_parts_, image_part_ = image_part_fixture
-        image_part = package.get_or_add_image_part(image_file)
-        image_parts_.get_or_add_image_part.assert_called_once_with(image_file)
-        assert image_part is image_part_
-
-    def it_can_get_or_add_a_media_part(self, media_part_fixture):
-        package, media, media_part_ = media_part_fixture
-        media_part = package.get_or_add_media_part(media)
-        package._media_parts.get_or_add_media_part.assert_called_once_with(media)
-        assert media_part is media_part_
-
-    def it_knows_the_next_available_image_partname(self, next_fixture):
-        package, ext, expected_value = next_fixture
-        partname = package.next_image_partname(ext)
-        assert partname == expected_value
-
-    def it_knows_the_next_available_media_partname(self, nmp_fixture):
-        package, ext, expected_value = nmp_fixture
-        partname = package.next_media_partname(ext)
-        assert partname == expected_value
-
-    def it_provides_access_to_its_MediaParts_object(self, m_parts_fixture):
-        package, _MediaParts_, media_parts_ = m_parts_fixture
-        media_parts = package._media_parts
-        _MediaParts_.assert_called_once_with(package)
-        assert media_parts is media_parts_
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture
-    def image_part_fixture(self, image_parts_, image_part_, _image_parts_prop_):
-        package = Package(None)
-        image_file = "foobar.png"
-        _image_parts_prop_.return_value = image_parts_
-        image_parts_.get_or_add_image_part.return_value = image_part_
-        return package, image_file, image_parts_, image_part_
-
-    @pytest.fixture
-    def media_part_fixture(self, media_, media_part_, _media_parts_prop_, media_parts_):
-        package = Package(None)
-        _media_parts_prop_.return_value = media_parts_
-        media_parts_.get_or_add_media_part.return_value = media_part_
-        return package, media_, media_part_
-
-    @pytest.fixture
-    def m_parts_fixture(self, _MediaParts_, media_parts_):
-        package = Package(None)
-        _MediaParts_.return_value = media_parts_
-        return package, _MediaParts_, media_parts_
-
-    @pytest.fixture(params=[((3, 4, 2), 1), ((4, 2, 1), 3), ((2, 3, 1), 4)])
-    def next_fixture(self, request, iter_parts_):
-        idxs, idx = request.param
-        package = Package(None)
-        package.iter_parts.return_value = self.i_image_parts(request, idxs)
-        ext = "foo"
-        expected_value = "/ppt/media/image%d.%s" % (idx, ext)
-        return package, ext, expected_value
-
-    @pytest.fixture(params=[((3, 4, 2), 1), ((4, 2, 1), 3), ((2, 3, 1), 4)])
-    def nmp_fixture(self, request, iter_parts_):
-        idxs, idx = request.param
-        package = Package(None)
-        package.iter_parts.return_value = self.i_media_parts(request, idxs)
-        ext = "foo"
-        expected_value = "/ppt/media/media%d.%s" % (idx, ext)
-        return package, ext, expected_value
-
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def image_part_(self, request):
-        return instance_mock(request, ImagePart)
-
-    @pytest.fixture
-    def image_parts_(self, request):
-        return instance_mock(request, _ImageParts)
-
-    @pytest.fixture
-    def _image_parts_prop_(self, request):
-        return property_mock(request, Package, "_image_parts")
-
-    def i_image_parts(self, request, idxs):
-        def part(idx):
-            partname = PackURI("/ppt/media/image%d.png" % idx)
-            return instance_mock(request, Part, partname=partname)
-
-        return iter([part(idx) for idx in idxs])
-
-    def i_media_parts(self, request, idxs):
-        def part(idx):
-            partname = PackURI("/ppt/media/media%d.mp4" % idx)
-            return instance_mock(request, Part, partname=partname)
-
-        return iter([part(idx) for idx in idxs])
-
-    @pytest.fixture
-    def iter_parts_(self, request):
-        return property_mock(request, Package, "iter_parts")
-
-    @pytest.fixture
-    def media_(self, request):
-        return instance_mock(request, Video)
-
-    @pytest.fixture
-    def media_part_(self, request):
-        return instance_mock(request, MediaPart)
-
-    @pytest.fixture
-    def _MediaParts_(self, request):
-        return class_mock(request, "pptx.package._MediaParts")
-
-    @pytest.fixture
-    def media_parts_(self, request):
-        return instance_mock(request, _MediaParts)
-
-    @pytest.fixture
-    def _media_parts_prop_(self, request):
-        return property_mock(request, Package, "_media_parts")
-
-
-class Describe_ImageParts(object):
-    """Unit-test suite for `pptx.package._ImageParts` objects."""
-
-    def it_can_iterate_over_the_package_image_parts(self, iter_fixture):
-        image_parts, expected_parts = iter_fixture
-        assert list(image_parts) == expected_parts
-
-    def it_can_get_a_matching_image_part(self, Image_, image_, image_part_, _find_by_sha1_):
-        Image_.from_file.return_value = image_
-        _find_by_sha1_.return_value = image_part_
-        image_parts = _ImageParts(None)
-
-        image_part = image_parts.get_or_add_image_part("image.png")
-
-        Image_.from_file.assert_called_once_with("image.png")
-        _find_by_sha1_.assert_called_once_with(image_parts, image_.sha1)
-        assert image_part is image_part_
-
-    def it_can_add_an_image_part(
-        self, package_, Image_, image_, _find_by_sha1_, ImagePart_, image_part_
-    ):
-        Image_.from_file.return_value = image_
-        _find_by_sha1_.return_value = None
-        ImagePart_.new.return_value = image_part_
-        image_parts = _ImageParts(package_)
-
-        image_part = image_parts.get_or_add_image_part("image.png")
-
-        Image_.from_file.assert_called_once_with("image.png")
-        _find_by_sha1_.assert_called_once_with(image_parts, image_.sha1)
-        ImagePart_.new.assert_called_once_with(package_, image_)
-        assert image_part is image_part_
-
-    def it_can_find_an_image_part_by_sha1_hash(self, find_fixture):
-        image_parts, sha1, expected_value = find_fixture
-        image_part = image_parts._find_by_sha1(sha1)
-        assert image_part is expected_value
-
-    def but_it_skips_unsupported_image_types(self, request, _iter_):
-        sha1 = "f00beed"
-        svg_part_ = instance_mock(request, Part, name="svg_part_")
-        png_part_ = instance_mock(request, ImagePart, name="png_part_", sha1=sha1)
-        # ---order iteration to encounter svg part before target part---
-        _iter_.return_value = iter((svg_part_, png_part_))
-        image_parts = _ImageParts(None)
-
-        result = image_parts._find_by_sha1(sha1)
-
-        assert result == png_part_
-
-    # fixtures ---------------------------------------------
-
-    @pytest.fixture(params=[True, False])
-    def find_fixture(self, request, _iter_, image_part_):
-        image_part_is_present = request.param
-        image_parts = _ImageParts(None)
-        _iter_.return_value = iter((image_part_,))
-        sha1 = "foobar"
-        if image_part_is_present:
-            image_part_.sha1 = "foobar"
-            expected_value = image_part_
-        else:
-            image_part_.sha1 = "barfoo"
-            expected_value = None
-        return image_parts, sha1, expected_value
-
-    @pytest.fixture
-    def iter_fixture(self, request, package_):
-        def rel(is_external, reltype):
-            part = instance_mock(request, Part)
-            return instance_mock(
-                request,
-                _Relationship,
-                is_external=is_external,
-                reltype=reltype,
-                target_part=part,
-            )
-
-        rels = (rel(True, RT.IMAGE), rel(False, RT.SLIDE), rel(False, RT.IMAGE))
-
-        package_.iter_rels.return_value = iter((rels[0], rels[1], rels[2], rels[2]))
-        image_parts = _ImageParts(package_)
-        expected_parts = [rels[2].target_part]
-        return image_parts, expected_parts
-
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def _find_by_sha1_(self, request):
-        return method_mock(request, _ImageParts, "_find_by_sha1")
-
-    @pytest.fixture
-    def Image_(self, request):
-        return class_mock(request, "pptx.package.Image")
-
-    @pytest.fixture
-    def image_(self, request):
-        return instance_mock(request, Image)
-
-    @pytest.fixture
-    def ImagePart_(self, request):
-        return class_mock(request, "pptx.package.ImagePart")
-
-    @pytest.fixture
-    def image_part_(self, request):
-        return instance_mock(request, ImagePart)
-
-    @pytest.fixture
-    def _iter_(self, request):
-        return method_mock(request, _ImageParts, "__iter__")
-
-    @pytest.fixture
-    def package_(self, request):
-        return instance_mock(request, Package)
-
-
-class Describe_MediaParts(object):
-    """Unit-test suite for `pptx.package._MediaParts` objects."""
-
-    def it_can_iterate_the_media_parts_in_the_package(self, iter_fixture):
-        media_parts, expected_parts = iter_fixture
-        assert list(media_parts) == expected_parts
-
-    def it_can_get_or_add_a_media_part(self, get_or_add_fixture):
-        media_parts, media_, sha1, MediaPart_, calls = get_or_add_fixture[:5]
-        media_part_ = get_or_add_fixture[5]
-
-        media_part = media_parts.get_or_add_media_part(media_)
-
-        media_parts._find_by_sha1.assert_called_once_with(media_parts, sha1)
-        assert MediaPart_.new.call_args_list == calls
-        assert media_part is media_part_
-
-    def it_can_find_a_media_part_by_sha1(self, find_fixture):
-        media_parts, sha1, expected_value = find_fixture
-        media_part = media_parts._find_by_sha1(sha1)
-        assert media_part is expected_value
-
-    # fixtures ---------------------------------------------
-
-    @pytest.fixture(params=[True, False])
-    def find_fixture(self, request, _iter_, media_part_):
-        media_part_is_present = request.param
-        media_parts = _MediaParts(None)
-        _iter_.return_value = iter((media_part_,))
-        sha1 = "foobar"
-        if media_part_is_present:
-            media_part_.sha1 = "foobar"
-            expected_value = media_part_
-        else:
-            media_part_.sha1 = "barfoo"
-            expected_value = None
-        return media_parts, sha1, expected_value
-
-    @pytest.fixture(params=[True, False])
-    def get_or_add_fixture(
-        self, request, package_, media_, MediaPart_, media_part_, _find_by_sha1_
-    ):
-        media_present = request.param
-        media_parts = _MediaParts(package_)
-        media_.sha1 = sha1 = "2468"
-        calls = [] if media_present else [call(package_, media_)]
-        _find_by_sha1_.return_value = media_part_ if media_present else None
-        MediaPart_.new.return_value = None if media_present else media_part_
-        return media_parts, media_, sha1, MediaPart_, calls, media_part_
-
-    @pytest.fixture
-    def iter_fixture(self, request, package_):
-        def rel(is_external, reltype, part):
-            return instance_mock(
-                request,
-                _Relationship,
-                is_external=is_external,
-                reltype=reltype,
-                target_part=part,
-            )
-
-        part_mocks = (
-            instance_mock(request, Part, name="linked-media"),
-            instance_mock(request, Part, name="slide"),
-            instance_mock(request, Part, name="embeded-media"),
-        )
-
-        rels = (
-            rel(True, RT.MEDIA, part_mocks[0]),
-            rel(True, RT.VIDEO, part_mocks[0]),
-            rel(False, RT.SLIDE, part_mocks[1]),
-            rel(False, RT.MEDIA, part_mocks[2]),
-            rel(False, RT.VIDEO, part_mocks[2]),
-        )
-
-        package_.iter_rels.return_value = iter(rels)
-
-        media_parts = _MediaParts(package_)
-        expected_parts = [part_mocks[2]]
-        return media_parts, expected_parts
-
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def _find_by_sha1_(self, request):
-        return method_mock(request, _MediaParts, "_find_by_sha1", autospec=True)
-
-    @pytest.fixture
-    def _iter_(self, request):
-        return method_mock(request, _MediaParts, "__iter__")
-
-    @pytest.fixture
-    def media_(self, request):
-        return instance_mock(request, Video)
-
-    @pytest.fixture
-    def MediaPart_(self, request):
-        return class_mock(request, "pptx.package.MediaPart")
-
-    @pytest.fixture
-    def media_part_(self, request):
-        return instance_mock(request, MediaPart)
-
-    @pytest.fixture
-    def package_(self, request):
-        return instance_mock(request, Package)
+
+@dataclass
+class _RelStub:
+    is_external: bool
+    reltype: str
+    target_part: object
+
+
+@dataclass
+class _ShaPartStub:
+    partname: PackURI
+    sha1: str | None = None
+
+
+@dataclass
+class _MediaStub:
+    sha1: str
+
+
+@dataclass
+class _NoShaPartStub:
+    partname: PackURI
+
+
+def test_package_core_properties_returns_existing_related_part(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    package = Package(None)
+    expected = object()
+    monkeypatch.setattr(package, "part_related_by", lambda reltype: expected)
+
+    core_props = package.core_properties
+
+    assert core_props is expected
+
+
+def test_package_core_properties_creates_part_when_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    package = Package(None)
+    created = object()
+    calls: list[tuple[object, str]] = []
+
+    def fake_part_related_by(reltype: str):
+        raise KeyError
+
+    def fake_relate_to(part: object, reltype: str) -> None:
+        calls.append((part, reltype))
+
+    monkeypatch.setattr(package, "part_related_by", fake_part_related_by)
+    monkeypatch.setattr(package, "relate_to", fake_relate_to)
+    monkeypatch.setattr("pptx.package.CorePropertiesPart.default", lambda pkg: created)
+
+    core_props = package.core_properties
+
+    assert core_props is created
+    assert calls == [(created, RT.CORE_PROPERTIES)]
+
+
+@pytest.mark.parametrize(
+    ("existing_partnames", "expected"),
+    [
+        (["/ppt/media/image2.png", "/ppt/media/image4.jpg"], "/ppt/media/image1.png"),
+        (["/ppt/media/image1.png", "/ppt/media/image2.jpg"], "/ppt/media/image3.png"),
+    ],
+)
+def test_package_next_image_partname(existing_partnames: list[str], expected: str) -> None:
+    package = Package(None)
+    parts = [_ShaPartStub(PackURI(name)) for name in existing_partnames]
+    package.iter_parts = lambda: iter(parts)  # type: ignore[method-assign]
+
+    partname = package.next_image_partname("png")
+
+    assert partname == expected
+
+
+@pytest.mark.parametrize(
+    ("existing_partnames", "expected"),
+    [
+        (["/ppt/media/media2.mp4", "/ppt/media/media4.mp4"], "/ppt/media/media1.mp4"),
+        (["/ppt/media/media1.mp4", "/ppt/media/media2.mp4"], "/ppt/media/media3.mp4"),
+    ],
+)
+def test_package_next_media_partname(existing_partnames: list[str], expected: str) -> None:
+    package = Package(None)
+    parts = [_ShaPartStub(PackURI(name)) for name in existing_partnames]
+    package.iter_parts = lambda: iter(parts)  # type: ignore[method-assign]
+
+    partname = package.next_media_partname("mp4")
+
+    assert partname == expected
+
+
+def test_package_presentation_part_delegates_to_main_document_part(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    package = Package(None)
+    expected = object()
+    monkeypatch.setattr(package, "part_related_by", lambda reltype: expected)
+
+    presentation_part = package.presentation_part
+
+    assert presentation_part is expected
+
+
+def test_image_parts_iteration_filters_external_non_image_and_duplicates() -> None:
+    package = Package(None)
+    image_part = _ShaPartStub(PackURI("/ppt/media/image1.png"), sha1="abc")
+    rels = [
+        _RelStub(True, RT.IMAGE, image_part),
+        _RelStub(False, RT.SLIDE, image_part),
+        _RelStub(False, RT.IMAGE, image_part),
+        _RelStub(False, RT.IMAGE, image_part),
+    ]
+    package.iter_rels = lambda: iter(rels)  # type: ignore[method-assign]
+
+    image_parts = list(_ImageParts(package))
+
+    assert image_parts == [image_part]
+
+
+def test_image_parts_get_or_add_reuses_existing(monkeypatch: pytest.MonkeyPatch) -> None:
+    package = Package(None)
+    image_parts = _ImageParts(package)
+    image = _MediaStub("abc")
+    existing = object()
+    monkeypatch.setattr(Image, "from_file", lambda _: image)
+    monkeypatch.setattr(image_parts, "_find_by_sha1", lambda _: existing)
+
+    image_part = image_parts.get_or_add_image_part("image.png")
+
+    assert image_part is existing
+
+
+def test_image_parts_get_or_add_creates_new_when_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    package = Package(None)
+    image_parts = _ImageParts(package)
+    image = _MediaStub("abc")
+    created = object()
+    monkeypatch.setattr(Image, "from_file", lambda _: image)
+    monkeypatch.setattr(image_parts, "_find_by_sha1", lambda _: None)
+    monkeypatch.setattr(ImagePart, "new", lambda pkg, img: created)
+
+    image_part = image_parts.get_or_add_image_part("image.png")
+
+    assert image_part is created
+
+
+def test_image_parts_find_by_sha1_skips_parts_without_sha1() -> None:
+    image_part = _ShaPartStub(PackURI("/ppt/media/image1.png"), sha1="target")
+    no_sha_part = _NoShaPartStub(PackURI("/ppt/media/image2.svg"))
+    rels = [
+        _RelStub(False, RT.IMAGE, no_sha_part),
+        _RelStub(False, RT.IMAGE, image_part),
+    ]
+
+    @dataclass
+    class _PackageIterRelsStub:
+        rels: list[_RelStub]
+
+        def iter_rels(self):
+            return iter(self.rels)
+
+    image_parts = _ImageParts(_PackageIterRelsStub(rels))
+
+    found = image_parts._find_by_sha1("target")
+
+    assert found is image_part
+
+
+def test_media_parts_iteration_filters_and_dedupes() -> None:
+    package = Package(None)
+    media_part = _ShaPartStub(PackURI("/ppt/media/media1.mp4"), sha1="abc")
+    rels = [
+        _RelStub(True, RT.MEDIA, media_part),
+        _RelStub(False, RT.SLIDE, media_part),
+        _RelStub(False, RT.MEDIA, media_part),
+        _RelStub(False, RT.VIDEO, media_part),
+    ]
+    package.iter_rels = lambda: iter(rels)  # type: ignore[method-assign]
+
+    media_parts = list(_MediaParts(package))
+
+    assert media_parts == [media_part]
+
+
+def test_media_parts_get_or_add_branches(monkeypatch: pytest.MonkeyPatch) -> None:
+    package = Package(None)
+    media_parts = _MediaParts(package)
+    media = _MediaStub("abc")
+    existing = object()
+    created = object()
+    monkeypatch.setattr(media_parts, "_find_by_sha1", lambda _: existing)
+
+    reused = media_parts.get_or_add_media_part(media)
+
+    assert reused is existing
+
+    monkeypatch.setattr(media_parts, "_find_by_sha1", lambda _: None)
+    monkeypatch.setattr(MediaPart, "new", lambda pkg, m: created)
+
+    new = media_parts.get_or_add_media_part(media)
+
+    assert new is created
+
+
+def test_media_parts_find_by_sha1_returns_match_or_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    package = Package(None)
+    media_parts = _MediaParts(package)
+    target = _ShaPartStub(PackURI("/ppt/media/media1.mp4"), sha1="target")
+    other = _ShaPartStub(PackURI("/ppt/media/media2.mp4"), sha1="other")
+    monkeypatch.setattr(_MediaParts, "__iter__", lambda self: iter([other, target]))
+
+    # Act / Assert
+    assert media_parts._find_by_sha1("target") is target
+    assert media_parts._find_by_sha1("missing") is None

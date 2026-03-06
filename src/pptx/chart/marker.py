@@ -5,6 +5,8 @@ Only the line-type charts Line, XY, and Radar have markers.
 
 from __future__ import annotations
 
+from typing import Any
+
 from pptx.dml.chtfmt import ChartFormat
 from pptx.shared import ElementProxy
 from pptx.util import lazyproperty
@@ -40,7 +42,7 @@ class Marker(ElementProxy):
         return marker.size_val
 
     @size.setter
-    def size(self, value):
+    def size(self, value: int | None):
         marker = self._element.get_or_add_marker()
         marker._remove_size()
         if value is None:
@@ -61,7 +63,7 @@ class Marker(ElementProxy):
         return marker.symbol_val
 
     @style.setter
-    def style(self, value):
+    def style(self, value: Any | None):
         marker = self._element.get_or_add_marker()
         marker._remove_symbol()
         if value is None:

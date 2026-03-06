@@ -34,4 +34,6 @@ class MediaPart(Part):
 
         Example: `'1be010ea47803b00e140b852765cdf84f491da47'`
         """
+        if self._blob is None:
+            raise RuntimeError("media part has no blob payload")
         return hashlib.sha1(self._blob).hexdigest()

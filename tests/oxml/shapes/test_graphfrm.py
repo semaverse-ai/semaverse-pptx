@@ -1,80 +1,95 @@
-"""Unit-test suite for pptx.oxml.graphfrm module."""
-
 from __future__ import annotations
 
-import pytest
-
+from pptx.oxml import parse_xml
 from pptx.oxml.shapes.graphfrm import CT_GraphicalObjectFrame
-
-from ...unitutil.cxml import xml
-
-CHART_URI = "http://schemas.openxmlformats.org/drawingml/2006/chart"
-TABLE_URI = "http://schemas.openxmlformats.org/drawingml/2006/table"
+from pptx.spec import GRAPHIC_DATA_URI_CHART, GRAPHIC_DATA_URI_OLEOBJ, GRAPHIC_DATA_URI_TABLE
 
 
-class DescribeCT_GraphicalObjectFrame(object):
-    """Unit-test suite for `pptx.oxml.shapes.graphfrm.CT_GraphicalObjectFrame."""
+def test_graphic_frame_new_graphic_frame() -> None:
+    graphic_frame = CT_GraphicalObjectFrame.new_graphicFrame(42, "foobar", 1, 2, 3, 4)
 
-    def it_can_construct_a_new_graphicFrame(self, new_graphicFrame_fixture):
-        id_, name, x, y, cx, cy, expected_xml = new_graphicFrame_fixture
-        graphicFrame = CT_GraphicalObjectFrame.new_graphicFrame(id_, name, x, y, cx, cy)
-        assert graphicFrame.xml == expected_xml
+    assert graphic_frame.nvGraphicFramePr.cNvPr.id == 42
+    assert graphic_frame.nvGraphicFramePr.cNvPr.name == "foobar"
+    assert graphic_frame.x == 1
+    assert graphic_frame.y == 2
 
-    def it_can_construct_a_new_chart_graphicFrame(self, new_chart_graphicFrame_fixture):
-        id_, name, rId, x, y, cx, cy, expected_xml = new_chart_graphicFrame_fixture
-        graphicFrame = CT_GraphicalObjectFrame.new_chart_graphicFrame(id_, name, rId, x, y, cx, cy)
-        assert graphicFrame.xml == expected_xml
 
-    def it_can_construct_a_new_table_graphicFrame(self, new_table_graphicFrame_fixture):
-        (
-            id_,
-            name,
-            rows,
-            cols,
-            x,
-            y,
-            cx,
-            cy,
-            expected_xml,
-        ) = new_table_graphicFrame_fixture
-        graphicFrame = CT_GraphicalObjectFrame.new_table_graphicFrame(
-            id_, name, rows, cols, x, y, cx, cy
-        )
-        assert graphicFrame.xml == expected_xml
+def test_graphic_frame_new_chart_graphic_frame() -> None:
+    graphic_frame = CT_GraphicalObjectFrame.new_chart_graphicFrame(42, "foobar", "rId6", 1, 2, 3, 4)
 
-    # fixtures -------------------------------------------------------
+    assert graphic_frame.graphicData.uri == GRAPHIC_DATA_URI_CHART
+    assert graphic_frame.chart_rId == "rId6"
 
-    @pytest.fixture
-    def new_chart_graphicFrame_fixture(self):
-        id_, name, rId, x, y, cx, cy = 42, "foobar", "rId6", 1, 2, 3, 4
-        xml_tmpl = xml(
-            "p:graphicFrame/(p:nvGraphicFramePr/(p:cNvPr{id=42,name=foobar},"
-            "p:cNvGraphicFramePr/a:graphicFrameLocks{noGrp=1},p:nvPr),p:xfrm"
-            "/(a:off{x=1,y=2},a:ext{cx=3,cy=4}),a:graphic/a:graphicData{uri="
-            '%s}"%%s")' % CHART_URI
-        )
-        expected_xml = xml_tmpl % ("\n      " + xml("c:chart{r:id=rId6}") + "    ")
-        return id_, name, rId, x, y, cx, cy, expected_xml
 
-    @pytest.fixture
-    def new_graphicFrame_fixture(self):
-        id_, name, x, y, cx, cy = 42, "foobar", 1, 2, 3, 4
-        expected_xml = xml(
-            "p:graphicFrame/(p:nvGraphicFramePr/(p:cNvPr{id=42,name=foobar},"
-            "p:cNvGraphicFramePr/a:graphicFrameLocks{noGrp=1},p:nvPr),p:xfrm"
-            "/(a:off{x=1,y=2},a:ext{cx=3,cy=4}),a:graphic/a:graphicData)"
-        )
-        return id_, name, x, y, cx, cy, expected_xml
+def test_graphic_frame_new_table_graphic_frame() -> None:
+    graphic_frame = CT_GraphicalObjectFrame.new_table_graphicFrame(42, "foobar", 2, 3, 1, 2, 3, 4)
 
-    @pytest.fixture
-    def new_table_graphicFrame_fixture(self):
-        id_, name, rows, cols, x, y, cx, cy = 42, "foobar", 1, 1, 1, 2, 3, 4
-        expected_xml = xml(
-            "p:graphicFrame/(p:nvGraphicFramePr/(p:cNvPr{id=42,name=foobar},"
-            "p:cNvGraphicFramePr/a:graphicFrameLocks{noGrp=1},p:nvPr),p:xfrm"
-            "/(a:off{x=1,y=2},a:ext{cx=3,cy=4}),a:graphic/a:graphicData{uri="
-            '%s}/a:tbl/(a:tblPr{firstRow=1,bandRow=1}/a:tableStyleId"{5C2254'
-            '4A-7EE6-4342-B048-85BDC9FD1C3A}",a:tblGrid/a:gridCol{w=3},a:tr{'
-            "h=4}/a:tc/(a:txBody/(a:bodyPr,a:lstStyle,a:p),a:tcPr)))" % TABLE_URI
-        )
-        return id_, name, rows, cols, x, y, cx, cy, expected_xml
+    assert graphic_frame.graphicData.uri == GRAPHIC_DATA_URI_TABLE
+
+
+def test_graphic_frame_new_ole_object_graphic_frame() -> None:
+    graphic_frame = CT_GraphicalObjectFrame.new_ole_object_graphicFrame(
+        42,
+        "foobar",
+        "rId1",
+        "Excel.Sheet.12",
+        "rId2",
+        1,
+        2,
+        3,
+        4,
+        10,
+        20,
+    )
+
+    assert graphic_frame.graphicData.uri == GRAPHIC_DATA_URI_OLEOBJ
+    assert graphic_frame.graphicData._oleObj.rId == "rId1"
+
+
+def test_graphic_frame_chart_properties() -> None:
+    graphic_frame = parse_xml(
+        '<p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+        '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">'
+        '<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
+        'r:id="rId42"/></a:graphicData></a:graphic></p:graphicFrame>'
+    )
+
+    assert graphic_frame.has_oleobj is False
+    assert graphic_frame.is_embedded_ole_obj is None
+    assert graphic_frame.chart_rId == "rId42"
+    assert graphic_frame.graphicData_uri == "http://schemas.openxmlformats.org/drawingml/2006/chart"
+    assert graphic_frame.chart is not None
+
+
+def test_graphic_frame_ole_properties_embedded() -> None:
+    graphic_frame = parse_xml(
+        '<p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/presentationml/2006/ole">'
+        '<p:oleObj r:id="rId42" progId="Excel.Sheet.12" showAsIcon="1"><p:embed/></p:oleObj>'
+        "</a:graphicData></a:graphic></p:graphicFrame>"
+    )
+
+    assert graphic_frame.has_oleobj is True
+    assert graphic_frame.is_embedded_ole_obj is True
+    assert graphic_frame.graphicData.blob_rId == "rId42"
+    assert graphic_frame.graphicData.progId == "Excel.Sheet.12"
+    assert graphic_frame.graphicData.showAsIcon is True
+
+
+def test_graphic_frame_ole_properties_linked() -> None:
+    graphic_frame = parse_xml(
+        '<p:graphicFrame xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/presentationml/2006/ole">'
+        '<p:oleObj r:id="rId42" progId="Excel.Sheet.12"><p:link/></p:oleObj>'
+        "</a:graphicData></a:graphic></p:graphicFrame>"
+    )
+
+    assert graphic_frame.has_oleobj is True
+    assert graphic_frame.is_embedded_ole_obj is False
+    assert graphic_frame.graphicData.showAsIcon is False

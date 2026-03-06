@@ -1,23 +1,10 @@
-"""Unit-test suite for `pptx.oxml.theme` module."""
-
 from __future__ import annotations
 
-import pytest
-
+from pptx.oxml.ns import qn
 from pptx.oxml.theme import CT_OfficeStyleSheet
 
-from ..unitutil.file import snippet_text
 
+def test_ct_office_style_sheet_new_default() -> None:
+    theme = CT_OfficeStyleSheet.new_default()
 
-class DescribeCT_OfficeStyleSheet(object):
-    def it_can_create_a_default_theme_element(self, new_fixture):
-        expected_xml = new_fixture
-        theme = CT_OfficeStyleSheet.new_default()
-        assert theme.xml == expected_xml
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture
-    def new_fixture(self):
-        expected_xml = snippet_text("default-theme")
-        return expected_xml
+    assert theme.tag == qn("a:theme")

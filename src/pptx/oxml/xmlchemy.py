@@ -128,7 +128,7 @@ class MetaOxmlElement(type):
         )
         for key, value in clsdict.items():
             if isinstance(value, dispatchable):
-                value.populate_class_members(cls, key)
+                value.populate_class_members(cls, key)  # pyright: ignore[reportArgumentType]
 
 
 class BaseAttribute:
@@ -172,6 +172,16 @@ class BaseAttribute:
     def _setter(self) -> Callable[[BaseOxmlElement, Any], None]:
         """Callable suitable for the "set" side of the attribute property descriptor."""
         raise NotImplementedError("must be implemented by each subclass")
+
+    def __get__(self, instance: Any, owner: Any) -> Any:
+        """Typing-only descriptor protocol hook."""
+        if instance is None:
+            return self
+        return None
+
+    def __set__(self, instance: Any, value: Any) -> None:
+        """Typing-only descriptor protocol hook."""
+        pass
 
 
 class OptionalAttribute(BaseAttribute):
@@ -289,6 +299,16 @@ class _BaseChildElement:
         """Baseline behavior for adding the appropriate methods to `element_cls`."""
         self._element_cls = element_cls
         self._prop_name = prop_name
+
+    def __get__(self, instance: Any, owner: Any) -> Any:
+        """Typing-only descriptor protocol hook."""
+        if instance is None:
+            return self
+        return None
+
+    def __set__(self, instance: Any, value: Any) -> None:
+        """Typing-only descriptor protocol hook."""
+        pass
 
     def _add_adder(self):
         """Add an ``_add_x()`` method to the element class for this child element."""
@@ -447,7 +467,7 @@ class Choice(_BaseChildElement):
             return child
 
         get_or_change_to_child.__doc__ = (
-            "Return the ``<%s>`` child, replacing any other group element if" " found."
+            "Return the ``<%s>`` child, replacing any other group element if found."
         ) % self._nsptagname
         self._add_to_class(self._get_or_change_to_method_name, get_or_change_to_child)
 

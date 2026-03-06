@@ -40,7 +40,7 @@ class CT_BlipFillProperties(BaseOxmlElement):
     srcRect = ZeroOrOne("a:srcRect", successors=_tag_seq[2:])
     del _tag_seq
 
-    def crop(self, cropping):
+    def crop(self, cropping: tuple[float, float, float, float]):
         """
         Set `a:srcRect` child to crop according to *cropping* values.
         """
@@ -161,13 +161,13 @@ class CT_PatternFillProperties(BaseOxmlElement):
 
     def _new_bgClr(self):
         """Override default to add minimum subtree."""
-        xml = ("<a:bgClr %s>\n" ' <a:srgbClr val="FFFFFF"/>\n' "</a:bgClr>\n") % nsdecls("a")
+        xml = ('<a:bgClr %s>\n <a:srgbClr val="FFFFFF"/>\n</a:bgClr>\n') % nsdecls("a")
         bgClr = parse_xml(xml)
         return bgClr
 
     def _new_fgClr(self):
         """Override default to add minimum subtree."""
-        xml = ("<a:fgClr %s>\n" ' <a:srgbClr val="000000"/>\n' "</a:fgClr>\n") % nsdecls("a")
+        xml = ('<a:fgClr %s>\n <a:srgbClr val="000000"/>\n</a:fgClr>\n') % nsdecls("a")
         fgClr = parse_xml(xml)
         return fgClr
 

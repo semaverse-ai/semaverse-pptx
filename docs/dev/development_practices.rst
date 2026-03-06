@@ -17,6 +17,7 @@ Release procedure
   + update docs/index.rst
   + confirm docs compile without errors
   + run all tests (``uv run pytest``, ``uv run behave --stop``, tox)
+  + run all linters and type checkers (``uv run ruff check``, ``uv run pyright``)
   + create trial distribution (``make clean build``)
   + ``git commit -m 'Release v0.2.2'``
   + merge develop into master
@@ -68,8 +69,10 @@ Procedure -- Adding a new feature
   + next level method(s) written
   + unit test passing
 
-* all tests passing
+* all checks and tests passing
 
+  + ruff
+  + pyright
   + unit
   + acceptance
   + tox
@@ -120,7 +123,7 @@ Installation
 
 ::
 
-   pip install behave
+   uv sync --extra test
 
 
 Tutorial

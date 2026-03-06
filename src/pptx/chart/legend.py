@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pptx.enum.chart import XL_LEGEND_POSITION
 from pptx.text.text import Font
 from pptx.util import lazyproperty
+
+if TYPE_CHECKING:
+    from pptx.oxml.chart.legend import CT_Legend
 
 
 class Legend(object):
@@ -12,7 +17,7 @@ class Legend(object):
     Represents the legend in a chart. A chart can have at most one legend.
     """
 
-    def __init__(self, legend_elm):
+    def __init__(self, legend_elm: CT_Legend):
         super(Legend, self).__init__()
         self._element = legend_elm
 
@@ -37,7 +42,7 @@ class Legend(object):
         return self._element.horz_offset
 
     @horz_offset.setter
-    def horz_offset(self, value):
+    def horz_offset(self, value: float):
         self._element.horz_offset = value
 
     @property
@@ -57,7 +62,7 @@ class Legend(object):
         return overlay.val
 
     @include_in_layout.setter
-    def include_in_layout(self, value):
+    def include_in_layout(self, value: bool | None):
         if value is None:
             self._element._remove_overlay()
             return
@@ -75,5 +80,5 @@ class Legend(object):
         return legendPos.val
 
     @position.setter
-    def position(self, position):
+    def position(self, position: XL_LEGEND_POSITION):
         self._element.get_or_add_legendPos().val = position

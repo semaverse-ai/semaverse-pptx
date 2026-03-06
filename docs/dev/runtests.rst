@@ -20,3 +20,29 @@ To inspect or run the tox matrix::
 
     $ tox -av
     $ tox -e py39
+
+
+Running linters and type checkers
+=================================
+
+We use `ruff` for linting and formatting, and `pyright` for static type checking.
+
+Install development dependencies from the project root::
+
+    $ uv sync --extra dev --extra test
+
+Run the linter::
+
+    $ uv run ruff check
+
+Run the type checker::
+
+    $ uv run pyright
+
+We also use `pre-commit` to run checks on every commit. To install the pre-commit hooks::
+
+    $ uv run pre-commit install
+
+To run the checks manually on all files::
+
+    $ uv run pre-commit run --all-files

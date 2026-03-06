@@ -6,13 +6,19 @@ each other, such as a line plot layered over a bar plot.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from pptx.chart.category import Categories
 from pptx.chart.datalabel import DataLabels
 from pptx.chart.series import SeriesCollection
 from pptx.enum.chart import XL_CHART_TYPE as XL
 from pptx.oxml.ns import qn
 from pptx.oxml.simpletypes import ST_BarDir, ST_Grouping
+from pptx.oxml.xmlchemy import BaseOxmlElement
 from pptx.util import lazyproperty
+
+if TYPE_CHECKING:
+    from pptx.chart.chart import Chart
 
 
 class _BasePlot(object):
@@ -22,7 +28,7 @@ class _BasePlot(object):
     layers, such as a line plot appearing on top of a bar chart.
     """
 
-    def __init__(self, xChart, chart):
+    def __init__(self, xChart: BaseOxmlElement, chart: Chart):
         super(_BasePlot, self).__init__()
         self._element = xChart
         self._chart = chart
@@ -69,7 +75,7 @@ class _BasePlot(object):
         return self._element.dLbls is not None
 
     @has_data_labels.setter
-    def has_data_labels(self, value):
+    def has_data_labels(self, value: bool):
         """
         Add, remove, or leave alone the ``<c:dLbls>`` child element depending
         on current state and assigned *value*. If *value* is |True| and no
@@ -106,7 +112,7 @@ class _BasePlot(object):
         return varyColors.val
 
     @vary_by_categories.setter
-    def vary_by_categories(self, value):
+    def vary_by_categories(self, value: bool):
         self._element.get_or_add_varyColors().val = bool(value)
 
 
@@ -140,7 +146,7 @@ class BarPlot(_BasePlot):
         return gapWidth.val
 
     @gap_width.setter
-    def gap_width(self, value):
+    def gap_width(self, value: int):
         gapWidth = self._element.get_or_add_gapWidth()
         gapWidth.val = value
 
@@ -159,7 +165,7 @@ class BarPlot(_BasePlot):
         return overlap.val
 
     @overlap.setter
-    def overlap(self, value):
+    def overlap(self, value: int):
         """
         Set the value of the ``<c:overlap>`` child element to *int_value*,
         or remove the overlap element if *int_value* is 0.
@@ -188,7 +194,7 @@ class BubblePlot(_BasePlot):
         return bubbleScale.val
 
     @bubble_scale.setter
-    def bubble_scale(self, value):
+    def bubble_scale(self, value: int | None):
         bubbleChart = self._element
         bubbleChart._remove_bubbleScale()
         if value is None:
@@ -227,7 +233,7 @@ class XyPlot(_BasePlot):
     """
 
 
-def PlotFactory(xChart, chart):
+def PlotFactory(xChart: BaseOxmlElement, chart: Chart):
     """
     Return an instance of the appropriate subclass of _BasePlot based on the
     tagname of *xChart*.
@@ -257,7 +263,7 @@ class PlotTypeInspector(object):
     """
 
     @classmethod
-    def chart_type(cls, plot):
+    def chart_type(cls, plot: Any):
         """
         Return the member of :ref:`XlChartType` that corresponds to the chart
         type of *plot*.
@@ -281,7 +287,7 @@ class PlotTypeInspector(object):
         return chart_type_method(plot)
 
     @classmethod
-    def _differentiate_area_3d_chart_type(cls, plot):
+    def _differentiate_area_3d_chart_type(cls, plot: Any):
         return {
             ST_Grouping.STANDARD: XL.THREE_D_AREA,
             ST_Grouping.STACKED: XL.THREE_D_AREA_STACKED,
@@ -289,7 +295,7 @@ class PlotTypeInspector(object):
         }[plot._element.grouping_val]
 
     @classmethod
-    def _differentiate_area_chart_type(cls, plot):
+    def _differentiate_area_chart_type(cls, plot: Any):
         return {
             ST_Grouping.STANDARD: XL.AREA,
             ST_Grouping.STACKED: XL.AREA_STACKED,
@@ -297,7 +303,7 @@ class PlotTypeInspector(object):
         }[plot._element.grouping_val]
 
     @classmethod
-    def _differentiate_bar_chart_type(cls, plot):
+    def _differentiate_bar_chart_type(cls, plot: Any):
         barChart = plot._element
         if barChart.barDir.val == ST_BarDir.BAR:
             return {
@@ -314,8 +320,8 @@ class PlotTypeInspector(object):
         raise ValueError("invalid barChart.barDir value '%s'" % barChart.barDir.val)
 
     @classmethod
-    def _differentiate_bubble_chart_type(cls, plot):
-        def first_bubble3D(bubbleChart):
+    def _differentiate_bubble_chart_type(cls, plot: Any):
+        def first_bubble3D(bubbleChart: Any):
             results = bubbleChart.xpath("c:ser/c:bubble3D")
             return results[0] if results else None
 
@@ -329,13 +335,13 @@ class PlotTypeInspector(object):
         return XL.BUBBLE
 
     @classmethod
-    def _differentiate_doughnut_chart_type(cls, plot):
+    def _differentiate_doughnut_chart_type(cls, plot: Any):
         doughnutChart = plot._element
         explosion = doughnutChart.xpath("./c:ser/c:explosion")
         return XL.DOUGHNUT_EXPLODED if explosion else XL.DOUGHNUT
 
     @classmethod
-    def _differentiate_line_chart_type(cls, plot):
+    def _differentiate_line_chart_type(cls, plot: Any):
         lineChart = plot._element
 
         def has_line_markers():
@@ -358,13 +364,13 @@ class PlotTypeInspector(object):
             }[plot._element.grouping_val]
 
     @classmethod
-    def _differentiate_pie_chart_type(cls, plot):
+    def _differentiate_pie_chart_type(cls, plot: Any):
         pieChart = plot._element
         explosion = pieChart.xpath("./c:ser/c:explosion")
         return XL.PIE_EXPLODED if explosion else XL.PIE
 
     @classmethod
-    def _differentiate_radar_chart_type(cls, plot):
+    def _differentiate_radar_chart_type(cls, plot: Any):
         radarChart = plot._element
         radar_style = radarChart.xpath("c:radarStyle")[0].get("val")
 
@@ -383,7 +389,7 @@ class PlotTypeInspector(object):
         return XL.RADAR_MARKERS
 
     @classmethod
-    def _differentiate_xy_chart_type(cls, plot):
+    def _differentiate_xy_chart_type(cls, plot: Any):
         scatterChart = plot._element
 
         def noLine():

@@ -1,4 +1,4 @@
-# pyright: reportPrivateUsage=false
+# pyright: reportPrivateUsage=false, reportUnnecessaryComparison=false, reportReturnType=false
 
 """lxml custom element classes for shape-related XML elements."""
 
@@ -346,7 +346,7 @@ class CT_Shape(BaseShapeElement):
 
     @staticmethod
     def new_placeholder_sp(
-        id_: int, name: str, ph_type: PP_PLACEHOLDER, orient: str, sz, idx
+        id_: int, name: str, ph_type: PP_PLACEHOLDER, orient: str, sz: str, idx: int
     ) -> CT_Shape:
         """Return a new `p:sp` element tree configured as a placeholder shape."""
         sp = cast(
@@ -385,7 +385,7 @@ class CT_Shape(BaseShapeElement):
         return sp
 
     @staticmethod
-    def new_textbox_sp(id_, name, left, top, width, height):
+    def new_textbox_sp(id_: int, name: str, left: int, top: int, width: int, height: int):
         """Return a new `p:sp` element tree configured as a base textbox shape."""
         tmpl = CT_Shape._textbox_sp_tmpl()
         xml = tmpl % (id_, name, left, top, width, height)

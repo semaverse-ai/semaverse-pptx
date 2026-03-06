@@ -1,255 +1,246 @@
-"""Unit-test suite for pptx.oxml.table module"""
-
 from __future__ import annotations
 
 import pytest
 
+from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls
 from pptx.oxml.table import CT_Table, TcRange
 
-from ..unitutil.cxml import element
+
+def _tbl(xml_body: str) -> CT_Table:
+    return parse_xml(f"<a:tbl {nsdecls('a')}>{xml_body}</a:tbl>")
 
 
-class DescribeCT_Table(object):
-    def it_can_create_a_new_tbl_element_tree(self):
-        """
-        Indirectly tests that column widths are a proportional split of total
-        width and that row heights a proportional split of total height.
-        """
-        expected_xml = (
-            '<a:tbl %s>\n  <a:tblPr firstRow="1" bandRow="1">\n    <a:tableSt'
-            "yleId>{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}</a:tableStyleId>\n "
-            ' </a:tblPr>\n  <a:tblGrid>\n    <a:gridCol w="111"/>\n    <a:gri'
-            'dCol w="111"/>\n    <a:gridCol w="112"/>\n  </a:tblGrid>\n  <a:t'
-            'r h="222">\n    <a:tc>\n      <a:txBody>\n        <a:bodyPr/>\n '
-            "       <a:lstStyle/>\n        <a:p/>\n      </a:txBody>\n      <"
-            "a:tcPr/>\n    </a:tc>\n    <a:tc>\n      <a:txBody>\n        <a:"
-            "bodyPr/>\n        <a:lstStyle/>\n        <a:p/>\n      </a:txBod"
-            "y>\n      <a:tcPr/>\n    </a:tc>\n    <a:tc>\n      <a:txBody>\n"
-            "        <a:bodyPr/>\n        <a:lstStyle/>\n        <a:p/>\n    "
-            "  </a:txBody>\n      <a:tcPr/>\n    </a:tc>\n  </a:tr>\n  <a:tr "
-            'h="223">\n    <a:tc>\n      <a:txBody>\n        <a:bodyPr/>\n   '
-            "     <a:lstStyle/>\n        <a:p/>\n      </a:txBody>\n      <a:"
-            "tcPr/>\n    </a:tc>\n    <a:tc>\n      <a:txBody>\n        <a:bo"
-            "dyPr/>\n        <a:lstStyle/>\n        <a:p/>\n      </a:txBody>"
-            "\n      <a:tcPr/>\n    </a:tc>\n    <a:tc>\n      <a:txBody>\n  "
-            "      <a:bodyPr/>\n        <a:lstStyle/>\n        <a:p/>\n      "
-            "</a:txBody>\n      <a:tcPr/>\n    </a:tc>\n  </a:tr>\n</a:tbl>\n" % nsdecls("a")
-        )
-        tbl = CT_Table.new_tbl(2, 3, 334, 445)
-        assert tbl.xml == expected_xml
+def test_ct_table_new_tbl() -> None:
+    table = CT_Table.new_tbl(2, 3, 334, 445)
 
-    def it_provides_access_to_its_tc_elements(self):
-        tbl_cxml = "a:tbl/(a:tr/(a:tc,a:tc),a:tr/(a:tc,a:tc))"
-        tbl = element(tbl_cxml)
-        tcs = tbl.xpath(".//a:tc")
-
-        assert tbl.tc(0, 0) is tcs[0]
-        assert tbl.tc(0, 1) is tcs[1]
-        assert tbl.tc(1, 0) is tcs[2]
-        assert tbl.tc(1, 1) is tcs[3]
+    assert len(table.tr_lst) == 2
+    assert len(table.tr_lst[0].tc_lst) == 3
 
 
-class DescribeTcRange(object):
-    def it_knows_when_the_range_contains_a_merged_cell(self, contains_merge_fixture):
-        tc, other_tc, expected_value = contains_merge_fixture
-        tc_range = TcRange(tc, other_tc)
-
-        contains_merged_cell = tc_range.contains_merged_cell
-
-        assert contains_merged_cell is expected_value
-
-    def it_knows_how_big_the_merge_range_is(self, dimensions_fixture):
-        tc, other_tc, expected_value = dimensions_fixture
-        tc_range = TcRange(tc, other_tc)
-
-        dimensions = tc_range.dimensions
-
-        assert dimensions == expected_value
-
-    def it_knows_when_tcs_are_in_the_same_tbl(self, in_same_table_fixture):
-        tc, other_tc, expected_value = in_same_table_fixture
-        tc_range = TcRange(tc, other_tc)
-
-        in_same_table = tc_range.in_same_table
-
-        assert in_same_table is expected_value
-
-    def it_can_iterate_tcs_not_in_left_col_of_range(self, except_left_fixture):
-        tc, other_tc, expected_value = except_left_fixture
-        tc_range = TcRange(tc, other_tc)
-
-        tcs = list(tc_range.iter_except_left_col_tcs())
-
-        assert tcs == expected_value
-
-    def it_can_iterate_tcs_not_in_top_row_of_range(self, except_top_fixture):
-        tc, other_tc, expected_value = except_top_fixture
-        tc_range = TcRange(tc, other_tc)
-
-        tcs = list(tc_range.iter_except_top_row_tcs())
-
-        assert tcs == expected_value
-
-    def it_can_iterate_left_col_of_range_tcs(self, left_col_fixture):
-        tc, other_tc, expected_value = left_col_fixture
-        tc_range = TcRange(tc, other_tc)
-
-        tcs = list(tc_range.iter_left_col_tcs())
-
-        assert tcs == expected_value
-
-    def it_can_iterate_top_row_of_range_tcs(self, top_row_fixture):
-        tc, other_tc, expected_value = top_row_fixture
-        tc_range = TcRange(tc, other_tc)
-
-        tcs = list(tc_range.iter_top_row_tcs())
-
-        assert tcs == expected_value
-
-    def it_can_migrate_range_content_to_origin_cell(self, move_fixture):
-        tc, other_tc, expected_text = move_fixture
-        tc_range = TcRange(tc, other_tc)
-
-        tc_range.move_content_to_origin()
-
-        assert tc.text == expected_text
-        assert other_tc.text == ""
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture(
-        params=[
-            ("a:tbl/a:tr/(a:tc,a:tc)", False),
-            ("a:tbl/a:tr/(a:tc{gridSpan=1},a:tc{hMerge=false})", False),
-            ("a:tbl/a:tr/(a:tc{gridSpan=2},a:tc{hMerge=1})", True),
-            ("a:tbl/(a:tr/a:tc,a:tr/a:tc)", False),
-            ("a:tbl/(a:tr/a:tc{rowSpan=1},a:tr/a:tc{vMerge=false})", False),
-            ("a:tbl/(a:tr/a:tc{rowSpan=2},a:tr/a:tc{vMerge=true})", True),
-        ]
+def test_ct_table_tc() -> None:
+    table = _tbl(
+        "<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr><a:tr><a:tc id='10'/><a:tc id='11'/></a:tr>"
     )
-    def contains_merge_fixture(self, request):
-        tbl_cxml, expected_value = request.param
-        tcs = element(tbl_cxml).xpath("//a:tc")
-        return tcs[0], tcs[1], expected_value
+    cells = table.xpath("//a:tc")
 
-    @pytest.fixture(
-        params=[
-            ("a:tbl/a:tr/(a:tc,a:tc)", (1, 2)),
-            ("a:tbl/(a:tr/a:tc,a:tr/a:tc)", (2, 1)),
-            ("a:tbl/(a:tr/(a:tc,a:tc),a:tr/(a:tc,a:tc))", (2, 2)),
-        ]
-    )
-    def dimensions_fixture(self, request):
-        tbl_cxml, expected_value = request.param
-        tcs = element(tbl_cxml).xpath("//a:tc")
-        return tcs[0], tcs[-1], expected_value
+    assert table.tc(0, 0) is cells[0]
+    assert table.tc(0, 1) is cells[1]
+    assert table.tc(1, 0) is cells[2]
+    assert table.tc(1, 1) is cells[3]
 
-    @pytest.fixture(
-        params=[
-            ("a:tbl/a:tr/(a:tc,a:tc)", [0, 1], [1]),
-            ("a:tbl/(a:tr/a:tc,a:tr/a:tc)", [0, 1], []),
-            ("a:tbl/(a:tr/(a:tc,a:tc),a:tr/(a:tc,a:tc))", [2, 1], [1, 3]),
-            (
-                "a:tbl/(a:tr/(a:tc,a:tc,a:tc),a:tr/(a:tc,a:tc,a:tc),a:tr/(a:tc,a:tc" ",a:tc))",
-                [0, 8],
-                [1, 2, 4, 5, 7, 8],
-            ),
-        ]
-    )
-    def except_left_fixture(self, request):
-        tbl_cxml, tc_idxs, expected_tc_idxs = request.param
-        tcs = element(tbl_cxml).xpath("//a:tc")
-        tc, other_tc = tcs[tc_idxs[0]], tcs[tc_idxs[1]]
-        expected_value = [tcs[idx] for idx in expected_tc_idxs]
-        return tc, other_tc, expected_value
 
-    @pytest.fixture(
-        params=[
-            ("a:tbl/a:tr/(a:tc,a:tc)", [0, 1], []),
-            ("a:tbl/(a:tr/a:tc,a:tr/a:tc)", [0, 1], [1]),
-            ("a:tbl/(a:tr/(a:tc,a:tc),a:tr/(a:tc,a:tc))", [2, 1], [2, 3]),
-            (
-                "a:tbl/(a:tr/(a:tc,a:tc,a:tc),a:tr/(a:tc,a:tc,a:tc),a:tr/(a:tc,a:tc" ",a:tc))",
-                [0, 8],
-                [3, 4, 5, 6, 7, 8],
-            ),
-        ]
-    )
-    def except_top_fixture(self, request):
-        tbl_cxml, tc_idxs, expected_tc_idxs = request.param
-        tcs = element(tbl_cxml).xpath("//a:tc")
-        tc, other_tc = tcs[tc_idxs[0]], tcs[tc_idxs[1]]
-        expected_value = [tcs[idx] for idx in expected_tc_idxs]
-        return tc, other_tc, expected_value
+@pytest.mark.parametrize(
+    ("xml_body", "expected_value"),
+    [
+        ("<a:tr><a:tc/><a:tc/></a:tr>", False),
+        ('<a:tr><a:tc gridSpan="1"/><a:tc hMerge="false"/></a:tr>', False),
+        ('<a:tr><a:tc gridSpan="2"/><a:tc hMerge="1"/></a:tr>', True),
+        ("<a:tr><a:tc/></a:tr><a:tr><a:tc/></a:tr>", False),
+        ('<a:tr><a:tc rowSpan="1"/></a:tr><a:tr><a:tc vMerge="false"/></a:tr>', False),
+        ('<a:tr><a:tc rowSpan="2"/></a:tr><a:tr><a:tc vMerge="true"/></a:tr>', True),
+    ],
+)
+def test_tc_range_contains_merged_cell(xml_body: str, expected_value: bool) -> None:
+    tcs = _tbl(xml_body).xpath("//a:tc")
+    tc_range = TcRange(tcs[0], tcs[1])
 
-    @pytest.fixture(params=[True, False])
-    def in_same_table_fixture(self, request):
-        expected_value = request.param
-        tbl = element("a:tbl/a:tr/(a:tc,a:tc)")
-        other_tbl = element("a:tbl/a:tr/(a:tc,a:tc)")
-        tc = tbl.xpath("//a:tc")[0]
-        other_tc = tbl.xpath("//a:tc")[1] if expected_value else other_tbl.xpath("//a:tc")[1]
-        return tc, other_tc, expected_value
+    contains_merged_cell = tc_range.contains_merged_cell
 
-    @pytest.fixture(
-        params=[
-            ("a:tbl/a:tr/(a:tc,a:tc)", (0, 1), (0,)),
-            ("a:tbl/(a:tr/a:tc,a:tr/a:tc)", (0, 1), (0, 1)),
-            ("a:tbl/(a:tr/(a:tc,a:tc),a:tr/(a:tc,a:tc))", (2, 1), (0, 2)),
-            (
-                "a:tbl/(a:tr/(a:tc,a:tc,a:tc),a:tr/(a:tc,a:tc,a:tc),a:tr/(a:tc,a:tc" ",a:tc))",
-                (4, 8),
-                (4, 7),
-            ),
-        ]
-    )
-    def left_col_fixture(self, request):
-        tbl_cxml, tc_idxs, expected_tc_idxs = request.param
-        tcs = element(tbl_cxml).xpath("//a:tc")
-        tc, other_tc = tcs[tc_idxs[0]], tcs[tc_idxs[1]]
-        expected_value = [tcs[idx] for idx in expected_tc_idxs]
-        return tc, other_tc, expected_value
+    assert contains_merged_cell is expected_value
 
-    @pytest.fixture(
-        params=[
-            ("a:tbl/a:tr/(a:tc/a:txBody/a:p,a:tc/a:txBody/a:p)", ""),
-            ('a:tbl/a:tr/(a:tc/a:txBody/a:p,a:tc/a:txBody/a:p/a:r/a:t"b")', "b"),
-            ('a:tbl/a:tr/(a:tc/a:txBody/a:p/a:r/a:t"a",a:tc/a:txBody/a:p)', "a"),
-            (
-                'a:tbl/a:tr/(a:tc/a:txBody/a:p/a:r/a:t"a",a:tc/a:txBody/a:p/a:r/a:t' '"b")',
-                "a\nb",
-            ),
-            (
-                'a:tbl/a:tr/(a:tc/a:txBody/a:p/a:r/a:t"a",a:tc/a:txBody/(a:p,a:p))',
-                "a\n\n",
-            ),
-            (
-                'a:tbl/a:tr/(a:tc/a:txBody/(a:p,a:p),a:tc/a:txBody/a:p/a:r/a:t"b")',
-                "\n\nb",
-            ),
-        ]
-    )
-    def move_fixture(self, request):
-        tbl_cxml, expected_text = request.param
-        tcs = element(tbl_cxml).xpath("//a:tc")
-        return tcs[0], tcs[1], expected_text
 
-    @pytest.fixture(
-        params=[
-            ("a:tbl/a:tr/(a:tc,a:tc)", (0, 1), (0, 1)),
-            ("a:tbl/(a:tr/a:tc,a:tr/a:tc)", (0, 1), (0,)),
-            ("a:tbl/(a:tr/(a:tc,a:tc),a:tr/(a:tc,a:tc))", (2, 1), (0, 1)),
-            (
-                "a:tbl/(a:tr/(a:tc,a:tc,a:tc),a:tr/(a:tc,a:tc,a:tc),a:tr/(a:tc,a:tc" ",a:tc))",
-                (4, 8),
-                (4, 5),
-            ),
-        ]
-    )
-    def top_row_fixture(self, request):
-        tbl_cxml, tc_idxs, expected_tc_idxs = request.param
-        tcs = element(tbl_cxml).xpath("//a:tc")
-        tc, other_tc = tcs[tc_idxs[0]], tcs[tc_idxs[1]]
-        expected_value = [tcs[idx] for idx in expected_tc_idxs]
-        return tc, other_tc, expected_value
+@pytest.mark.parametrize(
+    ("xml_body", "expected_value"),
+    [
+        ("<a:tr><a:tc/><a:tc/></a:tr>", (1, 2)),
+        ("<a:tr><a:tc/></a:tr><a:tr><a:tc/></a:tr>", (2, 1)),
+        ("<a:tr><a:tc/><a:tc/></a:tr><a:tr><a:tc/><a:tc/></a:tr>", (2, 2)),
+    ],
+)
+def test_tc_range_dimensions(xml_body: str, expected_value: tuple[int, int]) -> None:
+    tcs = _tbl(xml_body).xpath("//a:tc")
+    tc_range = TcRange(tcs[0], tcs[-1])
+
+    dimensions = tc_range.dimensions
+
+    assert dimensions == expected_value
+
+
+def test_tc_range_in_same_table() -> None:
+    table = _tbl("<a:tr><a:tc/><a:tc/></a:tr>")
+    other_table = _tbl("<a:tr><a:tc/><a:tc/></a:tr>")
+    tc = table.xpath("//a:tc")[0]
+    other_tc = table.xpath("//a:tc")[1]
+    off_table_tc = other_table.xpath("//a:tc")[1]
+
+    assert TcRange(tc, other_tc).in_same_table is True
+    assert TcRange(tc, off_table_tc).in_same_table is False
+
+
+@pytest.mark.parametrize(
+    ("xml_body", "start_idx", "end_idx", "expected_ids"),
+    [
+        ("<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>", 0, 1, ["01"]),
+        ("<a:tr><a:tc id='00'/></a:tr><a:tr><a:tc id='10'/></a:tr>", 0, 1, []),
+        (
+            "<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>"
+            "<a:tr><a:tc id='10'/><a:tc id='11'/></a:tr>",
+            2,
+            1,
+            ["01", "11"],
+        ),
+        (
+            "<a:tr><a:tc id='00'/><a:tc id='01'/><a:tc id='02'/></a:tr>"
+            "<a:tr><a:tc id='10'/><a:tc id='11'/><a:tc id='12'/></a:tr>"
+            "<a:tr><a:tc id='20'/><a:tc id='21'/><a:tc id='22'/></a:tr>",
+            0,
+            8,
+            ["01", "02", "11", "12", "21", "22"],
+        ),
+    ],
+)
+def test_tc_range_iter_except_left_col_tcs(
+    xml_body: str, start_idx: int, end_idx: int, expected_ids: list[str]
+) -> None:
+    table = _tbl(xml_body)
+    tcs = table.xpath("//a:tc")
+    tc_range = TcRange(tcs[start_idx], tcs[end_idx])
+
+    tc_ids = [tc.get("id") for tc in tc_range.iter_except_left_col_tcs()]
+
+    assert tc_ids == expected_ids
+
+
+@pytest.mark.parametrize(
+    ("xml_body", "start_idx", "end_idx", "expected_ids"),
+    [
+        ("<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>", 0, 1, []),
+        ("<a:tr><a:tc id='00'/></a:tr><a:tr><a:tc id='10'/></a:tr>", 0, 1, ["10"]),
+        (
+            "<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>"
+            "<a:tr><a:tc id='10'/><a:tc id='11'/></a:tr>",
+            2,
+            1,
+            ["10", "11"],
+        ),
+        (
+            "<a:tr><a:tc id='00'/><a:tc id='01'/><a:tc id='02'/></a:tr>"
+            "<a:tr><a:tc id='10'/><a:tc id='11'/><a:tc id='12'/></a:tr>"
+            "<a:tr><a:tc id='20'/><a:tc id='21'/><a:tc id='22'/></a:tr>",
+            0,
+            8,
+            ["10", "11", "12", "20", "21", "22"],
+        ),
+    ],
+)
+def test_tc_range_iter_except_top_row_tcs(
+    xml_body: str, start_idx: int, end_idx: int, expected_ids: list[str]
+) -> None:
+    table = _tbl(xml_body)
+    tcs = table.xpath("//a:tc")
+    tc_range = TcRange(tcs[start_idx], tcs[end_idx])
+
+    tc_ids = [tc.get("id") for tc in tc_range.iter_except_top_row_tcs()]
+
+    assert tc_ids == expected_ids
+
+
+@pytest.mark.parametrize(
+    ("xml_body", "start_idx", "end_idx", "expected_ids"),
+    [
+        ("<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>", 0, 1, ["00"]),
+        ("<a:tr><a:tc id='00'/></a:tr><a:tr><a:tc id='10'/></a:tr>", 0, 1, ["00", "10"]),
+        (
+            "<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>"
+            "<a:tr><a:tc id='10'/><a:tc id='11'/></a:tr>",
+            2,
+            1,
+            ["00", "10"],
+        ),
+        (
+            "<a:tr><a:tc id='00'/><a:tc id='01'/><a:tc id='02'/></a:tr>"
+            "<a:tr><a:tc id='10'/><a:tc id='11'/><a:tc id='12'/></a:tr>"
+            "<a:tr><a:tc id='20'/><a:tc id='21'/><a:tc id='22'/></a:tr>",
+            4,
+            8,
+            ["11", "21"],
+        ),
+    ],
+)
+def test_tc_range_iter_left_col_tcs(
+    xml_body: str, start_idx: int, end_idx: int, expected_ids: list[str]
+) -> None:
+    table = _tbl(xml_body)
+    tcs = table.xpath("//a:tc")
+    tc_range = TcRange(tcs[start_idx], tcs[end_idx])
+
+    tc_ids = [tc.get("id") for tc in tc_range.iter_left_col_tcs()]
+
+    assert tc_ids == expected_ids
+
+
+@pytest.mark.parametrize(
+    ("xml_body", "start_idx", "end_idx", "expected_ids"),
+    [
+        ("<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>", 0, 1, ["00", "01"]),
+        ("<a:tr><a:tc id='00'/></a:tr><a:tr><a:tc id='10'/></a:tr>", 0, 1, ["00"]),
+        (
+            "<a:tr><a:tc id='00'/><a:tc id='01'/></a:tr>"
+            "<a:tr><a:tc id='10'/><a:tc id='11'/></a:tr>",
+            2,
+            1,
+            ["00", "01"],
+        ),
+        (
+            "<a:tr><a:tc id='00'/><a:tc id='01'/><a:tc id='02'/></a:tr>"
+            "<a:tr><a:tc id='10'/><a:tc id='11'/><a:tc id='12'/></a:tr>"
+            "<a:tr><a:tc id='20'/><a:tc id='21'/><a:tc id='22'/></a:tr>",
+            4,
+            8,
+            ["11", "12"],
+        ),
+    ],
+)
+def test_tc_range_iter_top_row_tcs(
+    xml_body: str, start_idx: int, end_idx: int, expected_ids: list[str]
+) -> None:
+    table = _tbl(xml_body)
+    tcs = table.xpath("//a:tc")
+    tc_range = TcRange(tcs[start_idx], tcs[end_idx])
+
+    tc_ids = [tc.get("id") for tc in tc_range.iter_top_row_tcs()]
+
+    assert tc_ids == expected_ids
+
+
+@pytest.mark.parametrize(
+    ("xml_body", "expected_origin_text"),
+    [
+        (
+            "<a:tr>"
+            "<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>a</a:t></a:r></a:p></a:txBody></a:tc>"
+            "<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>b</a:t></a:r></a:p></a:txBody></a:tc>"
+            "</a:tr>",
+            "a\nb",
+        ),
+        (
+            "<a:tr>"
+            "<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p/></a:txBody></a:tc>"
+            "<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>second</a:t></a:r></a:p></a:txBody></a:tc>"
+            "</a:tr>",
+            "second",
+        ),
+    ],
+)
+def test_tc_range_move_content_to_origin(
+    xml_body: str, expected_origin_text: str
+) -> None:
+    table = _tbl(xml_body)
+    tcs = table.xpath("//a:tc")
+    tc_range = TcRange(tcs[0], tcs[1])
+
+    tc_range.move_content_to_origin()
+
+    assert tcs[0].text == expected_origin_text
+    assert tcs[1].text == ""

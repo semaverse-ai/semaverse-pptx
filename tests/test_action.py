@@ -1,5 +1,3 @@
-"""Unit-test suite for `pptx.action` module."""
-
 from __future__ import annotations
 
 import pytest
@@ -7,367 +5,308 @@ import pytest
 from pptx.action import ActionSetting, Hyperlink
 from pptx.enum.action import PP_ACTION
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-from pptx.opc.package import XmlPart
-from pptx.parts.slide import SlidePart
-from pptx.slide import Slide
+from pptx.oxml import parse_xml
+from tests.stubs import (
+    ActionPartStub,
+    ParentProxy,
+    RelatedSlidePartStub,
+    SlideTargetStub,
+)
 
-from .unitutil.cxml import element, xml
-from .unitutil.mock import call, class_mock, instance_mock, method_mock, property_mock
 
-
-class DescribeActionSetting(object):
-    """Unit-test suite for `pptx.action.ActionSetting` objects."""
-
-    def it_knows_its_action_type(self, action_fixture):
-        action_setting, expected_action = action_fixture
-        action = action_setting.action
-        assert action is expected_action
-
-    def it_provides_access_to_its_hyperlink(self, hyperlink_fixture):
-        action_setting, hyperlink_, Hyperlink_ = hyperlink_fixture[:3]
-        xPr, parent = hyperlink_fixture[3:]
-        hyperlink = action_setting.hyperlink
-        Hyperlink_.assert_called_once_with(xPr, parent, False)
-        assert hyperlink is hyperlink_
-
-    def it_can_find_its_slide_jump_target(self, target_get_fixture):
-        action_setting, expected_value = target_get_fixture
-        target_slide = action_setting.target_slide
-        assert target_slide == expected_value
-
-    def it_can_change_its_slide_jump_target(
-        self, request, _clear_click_action_, slide_, part_prop_, part_
-    ):
-        part_prop_.return_value = part_
-        part_.relate_to.return_value = "rId42"
-        slide_part_ = instance_mock(request, SlidePart)
-        slide_.part = slide_part_
-        action_setting = ActionSetting(element("p:cNvPr{a:b=c,r:s=t}"), None)
-
-        action_setting.target_slide = slide_
-
-        _clear_click_action_.assert_called_once_with(action_setting)
-        part_.relate_to.assert_called_once_with(slide_part_, RT.SLIDE)
-        assert action_setting._element.xml == xml(
-            "p:cNvPr{a:b=c,r:s=t}/a:hlinkClick{action=ppaction://hlinksldjump,r:id=rI" "d42}",
-        )
-
-    def but_it_clears_the_target_slide_if_None_is_assigned(self, _clear_click_action_):
-        action_setting = ActionSetting(element("p:cNvPr{a:b=c,r:s=t}"), None)
-
-        action_setting.target_slide = None
-
-        _clear_click_action_.assert_called_once_with(action_setting)
-        assert action_setting._element.xml == xml("p:cNvPr{a:b=c,r:s=t}")
-
-    def it_raises_on_no_next_prev_slide(self, target_raise_fixture):
-        action_setting = target_raise_fixture
-        with pytest.raises(ValueError):
-            action_setting.target_slide
-
-    def it_knows_its_slide_index_to_help(self, _slide_index_fixture):
-        action_setting, slides, slide, expected_value = _slide_index_fixture
-        slide_index = action_setting._slide_index
-        slides.index.assert_called_once_with(slide)
-        assert slide_index == expected_value
-
-    def it_clears_the_click_action_to_help(self, clear_fixture):
-        action_setting, calls, expected_xml = clear_fixture
-
-        action_setting._clear_click_action()
-
-        assert action_setting.part.drop_rel.call_args_list == calls
-        assert action_setting._element.xml == expected_xml
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture(
-        params=[
-            ("p:cNvPr", None, PP_ACTION.NONE),
-            ("p:cNvPr/a:hlinkClick", None, PP_ACTION.HYPERLINK),
-            (
-                "p:cNvPr/a:hlinkClick",
-                "ppaction://hlinkshowjump?jump=firstslide",
-                PP_ACTION.FIRST_SLIDE,
-            ),
-            (
-                "p:cNvPr/a:hlinkClick",
-                "ppaction://hlinkshowjump?jump=lastslide",
-                PP_ACTION.LAST_SLIDE,
-            ),
-            (
-                "p:cNvPr/a:hlinkClick",
-                "ppaction://hlinkshowjump?jump=nextslide",
-                PP_ACTION.NEXT_SLIDE,
-            ),
-            (
-                "p:cNvPr/a:hlinkClick",
-                "ppaction://hlinkshowjump?jump=previousslide",
-                PP_ACTION.PREVIOUS_SLIDE,
-            ),
-            (
-                "p:cNvPr/a:hlinkClick",
-                "ppaction://hlinkshowjump?jump=endshow",
-                PP_ACTION.END_SHOW,
-            ),
-            ("p:cNvPr/a:hlinkClick", "ppaction://hlinksldjump", PP_ACTION.NAMED_SLIDE),
-            ("p:cNvPr/a:hlinkClick", "ppaction://hlinkfile", PP_ACTION.OPEN_FILE),
-            ("p:cNvPr/a:hlinkClick", "ppaction://hlinkpres", PP_ACTION.PLAY),
-            (
-                "p:cNvPr/a:hlinkClick",
-                "ppaction://customshow",
-                PP_ACTION.NAMED_SLIDE_SHOW,
-            ),
-            ("p:cNvPr/a:hlinkClick", "ppaction://ole", PP_ACTION.OLE_VERB),
-            ("p:cNvPr/a:hlinkClick", "ppaction://macro", PP_ACTION.RUN_MACRO),
-            ("p:cNvPr/a:hlinkClick", "ppaction://program", PP_ACTION.RUN_PROGRAM),
-            (
-                "p:cNvPr/a:hlinkClick",
-                "ppaction://hlinkshowjump?jump=lastslideviewed",
-                PP_ACTION.LAST_SLIDE_VIEWED,
-            ),
-            ("p:cNvPr/a:hlinkClick", "ppaction://media", PP_ACTION.NONE),
-        ]
+def _c_nvpr(children: bytes = b"") -> object:
+    return parse_xml(
+        b'<p:cNvPr xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        b'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+        b'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
+        b'id="1" name="Shape 1">' + children + b"</p:cNvPr>"
     )
-    def action_fixture(self, request):
-        cNvPr_cxml, action_text, expected_action = request.param
-        cNvPr = element(cNvPr_cxml)
-        if action_text is not None:
-            cNvPr.hlinkClick.action = action_text
-        action_setting = ActionSetting(cNvPr, None)
-        return action_setting, expected_action
 
-    @pytest.fixture(
-        params=[
-            ("p:cNvPr", None, "p:cNvPr"),
-            (
-                "p:cNvPr{a:b=c,r:s=t}/a:hlinkClick{r:id=rId42}",
-                "rId42",
-                "p:cNvPr{a:b=c,r:s=t}",
-            ),
-        ]
+
+@pytest.mark.parametrize(
+    ("children", "expected_action"),
+    [
+        (b"", PP_ACTION.NONE),
+        (b"<a:hlinkClick/>", PP_ACTION.HYPERLINK),
+        (
+            b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=firstslide"/>',
+            PP_ACTION.FIRST_SLIDE,
+        ),
+        (
+            b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=lastslide"/>',
+            PP_ACTION.LAST_SLIDE,
+        ),
+        (
+            b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=nextslide"/>',
+            PP_ACTION.NEXT_SLIDE,
+        ),
+        (
+            b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=previousslide"/>',
+            PP_ACTION.PREVIOUS_SLIDE,
+        ),
+        (
+            b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=lastslideviewed"/>',
+            PP_ACTION.LAST_SLIDE_VIEWED,
+        ),
+        (
+            b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=endshow"/>',
+            PP_ACTION.END_SHOW,
+        ),
+        (b'<a:hlinkClick action="ppaction://hlinksldjump"/>', PP_ACTION.NAMED_SLIDE),
+        (b'<a:hlinkClick action="ppaction://hlinkfile"/>', PP_ACTION.OPEN_FILE),
+        (b'<a:hlinkClick action="ppaction://hlinkpres"/>', PP_ACTION.PLAY),
+        (b'<a:hlinkClick action="ppaction://customshow"/>', PP_ACTION.NAMED_SLIDE_SHOW),
+        (b'<a:hlinkClick action="ppaction://ole"/>', PP_ACTION.OLE_VERB),
+        (b'<a:hlinkClick action="ppaction://macro"/>', PP_ACTION.RUN_MACRO),
+        (b'<a:hlinkClick action="ppaction://program"/>', PP_ACTION.RUN_PROGRAM),
+        (b'<a:hlinkClick action="ppaction://media"/>', PP_ACTION.NONE),
+    ],
+)
+def test_action_setting_action_matrix(children: bytes, expected_action: PP_ACTION) -> None:
+    action_setting = ActionSetting(_c_nvpr(children), ParentProxy(part=ActionPartStub()))
+
+    action = action_setting.action
+
+    assert action is expected_action
+
+
+def test_action_setting_hyperlink_property_returns_cached_hyperlink() -> None:
+    action_setting = ActionSetting(_c_nvpr(), ParentProxy(part=ActionPartStub()))
+
+    hyperlink_1 = action_setting.hyperlink
+    hyperlink_2 = action_setting.hyperlink
+
+    assert isinstance(hyperlink_1, Hyperlink)
+    assert hyperlink_2 is hyperlink_1
+
+
+def test_action_setting_hlink_uses_hover_element_when_hover_true() -> None:
+    element = _c_nvpr(
+        b'<a:hlinkClick action="ppaction://macro"/><a:hlinkHover action="ppaction://hlinkfile"/>'
     )
-    def clear_fixture(self, request, part_prop_, part_):
-        xPr_cxml, rId, expected_cxml = request.param
-        action_setting = ActionSetting(element(xPr_cxml), None)
+    action_setting = ActionSetting(element, ParentProxy(part=ActionPartStub()), hover=True)
 
-        part_prop_.return_value = part_
+    action = action_setting.action
 
-        calls = [call(rId)] if rId else []
-        expected_xml = xml(expected_cxml)
-        return action_setting, calls, expected_xml
+    assert action_setting._hlink is element.hlinkHover
+    assert action is PP_ACTION.OPEN_FILE
 
-    @pytest.fixture
-    def hyperlink_fixture(self, Hyperlink_, hyperlink_):
-        xPr, parent = "xPr", "parent"
-        action_setting = ActionSetting(xPr, parent)
-        return action_setting, hyperlink_, Hyperlink_, xPr, parent
 
-    @pytest.fixture
-    def _slide_index_fixture(self, request, part_prop_):
-        action_setting = ActionSetting(None, None)
-        slide_part = part_prop_.return_value
-        slides = slide_part.package.presentation_part.presentation.slides
-        slide = slide_part.slide
-        expected_value = 123
-        slides.index.return_value = expected_value
-        return action_setting, slides, slide, expected_value
-
-    @pytest.fixture(
-        params=[
-            (PP_ACTION.NONE, None),
-            (PP_ACTION.HYPERLINK, None),
-            (PP_ACTION.FIRST_SLIDE, 0),
-            (PP_ACTION.LAST_SLIDE, 5),
-            (PP_ACTION.NEXT_SLIDE, 3),
-            (PP_ACTION.PREVIOUS_SLIDE, 1),
-            (PP_ACTION.END_SHOW, None),
-            (PP_ACTION.NAMED_SLIDE, 4),
-            (PP_ACTION.OPEN_FILE, None),
-            (PP_ACTION.PLAY, None),
-            (PP_ACTION.NAMED_SLIDE_SHOW, None),
-            (PP_ACTION.OLE_VERB, None),
-            (PP_ACTION.RUN_MACRO, None),
-            (PP_ACTION.RUN_PROGRAM, None),
-            (PP_ACTION.LAST_SLIDE_VIEWED, None),
-        ]
+def test_action_setting_target_slide_returns_none_for_non_slide_jump_action() -> None:
+    action_setting = ActionSetting(
+        _c_nvpr(b'<a:hlinkClick action="ppaction://macro"/>'),
+        ParentProxy(part=ActionPartStub()),
     )
-    def target_get_fixture(self, request, action_prop_, _slide_index_prop_, part_prop_):
-        action_type, expected_value = request.param
-        cNvPr = element("p:cNvPr/a:hlinkClick{r:id=rId6}")
-        action_setting = ActionSetting(cNvPr, None)
-        action_prop_.return_value = action_type
-        _slide_index_prop_.return_value = 2
-        # this becomes the return value of ActionSetting._slides
-        prs_part_ = part_prop_.return_value.package.presentation_part
-        prs_part_.presentation.slides = [0, 1, 2, 3, 4, 5]
-        related_part_ = part_prop_.return_value.related_part
-        related_part_.return_value.slide = 4
-        return action_setting, expected_value
 
-    @pytest.fixture(params=[(PP_ACTION.NEXT_SLIDE, 2), (PP_ACTION.PREVIOUS_SLIDE, 0)])
-    def target_raise_fixture(self, request, action_prop_, part_prop_, _slide_index_prop_):
-        action_type, slide_idx = request.param
-        action_setting = ActionSetting(None, None)
-        action_prop_.return_value = action_type
-        # this becomes the return value of ActionSetting._slides
-        part_prop_.return_value.package.presentation.slides = [0, 1, 2]
-        _slide_index_prop_.return_value = slide_idx
-        return action_setting
-
-    # fixture components ---------------------------------------------
-
-    @pytest.fixture
-    def action_prop_(self, request):
-        return property_mock(request, ActionSetting, "action")
-
-    @pytest.fixture
-    def _clear_click_action_(self, request):
-        return method_mock(request, ActionSetting, "_clear_click_action")
-
-    @pytest.fixture
-    def Hyperlink_(self, request, hyperlink_):
-        return class_mock(request, "pptx.action.Hyperlink", return_value=hyperlink_)
-
-    @pytest.fixture
-    def hyperlink_(self, request):
-        return instance_mock(request, Hyperlink)
-
-    @pytest.fixture
-    def part_(self, request):
-        return instance_mock(request, XmlPart)
-
-    @pytest.fixture
-    def part_prop_(self, request):
-        return property_mock(request, ActionSetting, "part")
-
-    @pytest.fixture
-    def slide_(self, request):
-        return instance_mock(request, Slide)
-
-    @pytest.fixture
-    def _slide_index_prop_(self, request):
-        return property_mock(request, ActionSetting, "_slide_index")
+    # Act / Assert
+    assert action_setting.target_slide is None
 
 
-class DescribeHyperlink(object):
-    """Unit-test suite for `pptx.action.Hyperlink` objects."""
-
-    def it_knows_the_target_url_of_the_hyperlink(self, address_fixture):
-        hyperlink, rId, expected_address = address_fixture
-        address = hyperlink.address
-        hyperlink.part.target_ref.assert_called_once_with(rId)
-        assert address == expected_address
-
-    def it_knows_when_theres_no_url(self, no_address_fixture):
-        hyperlink = no_address_fixture
-        assert hyperlink.address is None
-
-    def it_can_remove_its_url(self, remove_fixture):
-        hyperlink, calls, expected_xml = remove_fixture
-
-        hyperlink.address = None
-
-        assert hyperlink.part.drop_rel.call_args_list == calls
-        assert hyperlink._element.xml == expected_xml
-
-    def it_can_set_its_target_url(self, update_fixture):
-        hyperlink, url, calls, expected_xml = update_fixture
-
-        hyperlink.address = url
-
-        assert hyperlink.part.relate_to.call_args_list == calls
-        assert hyperlink._element.xml == expected_xml
-
-    # fixtures -------------------------------------------------------
-
-    @pytest.fixture
-    def address_fixture(self, part_prop_):
-        cNvPr_cxml, rId = "p:cNvPr/a:hlinkClick{r:id=rId1}", "rId1"
-        expected_address = "http://foobar.com"
-        cNvPr = element(cNvPr_cxml)
-        hyperlink = Hyperlink(cNvPr, None)
-        part_prop_.return_value.target_ref.return_value = expected_address
-        return hyperlink, rId, expected_address
-
-    @pytest.fixture(params=["p:cNvPr", "p:cNvPr/a:hlinkClick"])
-    def no_address_fixture(self, request):
-        cNvPr_cxml = request.param
-        cNvPr = element(cNvPr_cxml)
-        hyperlink = Hyperlink(cNvPr, None)
-        return hyperlink
-
-    @pytest.fixture(
-        params=[
-            ("p:cNvPr{a:a=a,r:r=r}", []),
-            ("p:cNvPr{a:a=a,r:r=r}/a:hlinkClick", []),
-            ("p:cNvPr{a:a=a,r:r=r}/a:hlinkClick{r:id=rId3}", [call("rId3")]),
-        ]
+@pytest.mark.parametrize(
+    ("children", "expected_index"),
+    [
+        (b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=firstslide"/>', 0),
+        (b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=lastslide"/>', -1),
+    ],
+)
+def test_action_setting_target_slide_returns_first_or_last(
+    children: bytes, expected_index: int
+) -> None:
+    slides = [object(), object(), object()]
+    action_setting = ActionSetting(
+        _c_nvpr(children),
+        ParentProxy(part=ActionPartStub(slide=slides[1], slides=slides)),
     )
-    def remove_fixture(self, request, part_prop_):
-        cNvPr_cxml, calls = request.param
-        cNvPr = element(cNvPr_cxml)
-        expected_xml = xml("p:cNvPr{a:a=a,r:r=r}")
-        hyperlink = Hyperlink(cNvPr, None)
-        return hyperlink, calls, expected_xml
 
-    @pytest.fixture(
-        params=[
-            (
-                "p:cNvPr{a:a=a,r:r=r}",
-                "http://foo.com",
-                False,
-                True,
-                "p:cNvPr{a:a=a,r:r=r}/a:hlinkClick{r:id=rId3}",
-            ),
-            (
-                "p:cNvPr{a:a=a,r:r=r}",
-                "http://bar.com",
-                True,
-                True,
-                "p:cNvPr{a:a=a,r:r=r}/a:hlinkHover{r:id=rId3}",
-            ),
-            (
-                "p:cNvPr/a:hlinkClick{r:id=rId6}",
-                "http://baz.com",
-                False,
-                True,
-                "p:cNvPr/a:hlinkClick{r:id=rId3}",
-            ),
-            (
-                "p:cNvPr/a:hlinkHover{r:id=rId6}",
-                "http://zab.com",
-                True,
-                True,
-                "p:cNvPr/a:hlinkHover{r:id=rId3}",
-            ),
-            (
-                "p:cNvPr/a:hlinkHover{r:id=rId6}",
-                "http://boo.com",
-                False,
-                True,
-                "p:cNvPr/(a:hlinkClick{r:id=rId3},a:hlinkHover{r:id=rId6})",
-            ),
-            (
-                "p:cNvPr{a:a=a,r:r=r}/a:hlinkClick{r:id=rId6}",
-                None,
-                False,
-                False,
-                "p:cNvPr{a:a=a,r:r=r}",
-            ),
-        ]
+    target_slide = action_setting.target_slide
+
+    assert target_slide is slides[expected_index]
+
+
+@pytest.mark.parametrize(
+    ("children", "current_index", "expected_index"),
+    [
+        (b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=nextslide"/>', 1, 2),
+        (b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=previousslide"/>', 1, 0),
+    ],
+)
+def test_action_setting_target_slide_returns_next_or_previous(
+    children: bytes, current_index: int, expected_index: int
+) -> None:
+    slides = [object(), object(), object()]
+    action_setting = ActionSetting(
+        _c_nvpr(children),
+        ParentProxy(part=ActionPartStub(slide=slides[current_index], slides=slides)),
     )
-    def update_fixture(self, request, part_prop_):
-        cNvPr_cxml, url, hover, called, expected_cNvPr_cxml = request.param
-        cNvPr = element(cNvPr_cxml)
-        hyperlink = Hyperlink(cNvPr, None, hover)
-        calls = [call(url, RT.HYPERLINK, is_external=True)] if called else []
-        part_prop_.return_value.relate_to.return_value = "rId3"
-        expected_xml = xml(expected_cNvPr_cxml)
-        return hyperlink, url, calls, expected_xml
 
-    # fixture components ---------------------------------------------
+    target_slide = action_setting.target_slide
 
-    @pytest.fixture
-    def part_prop_(self, request):
-        return property_mock(request, Hyperlink, "part")
+    assert target_slide is slides[expected_index]
+
+
+@pytest.mark.parametrize(
+    ("children", "current_index", "error_message"),
+    [
+        (b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=nextslide"/>', 2, "no next slide"),
+        (
+            b'<a:hlinkClick action="ppaction://hlinkshowjump?jump=previousslide"/>',
+            0,
+            "no previous slide",
+        ),
+    ],
+)
+def test_action_setting_target_slide_raises_at_slide_collection_boundaries(
+    children: bytes, current_index: int, error_message: str
+) -> None:
+    slides = [object(), object(), object()]
+    action_setting = ActionSetting(
+        _c_nvpr(children),
+        ParentProxy(part=ActionPartStub(slide=slides[current_index], slides=slides)),
+    )
+
+    # Act / Assert
+    with pytest.raises(ValueError, match=error_message):
+        _ = action_setting.target_slide
+
+
+def test_action_setting_target_slide_resolves_named_slide() -> None:
+    target_slide = object()
+    part = ActionPartStub(related_parts_by_rid={"rId42": RelatedSlidePartStub(slide=target_slide)})
+    action_setting = ActionSetting(
+        _c_nvpr(b'<a:hlinkClick action="ppaction://hlinksldjump" r:id="rId42"/>'),
+        ParentProxy(part=part),
+    )
+
+    resolved = action_setting.target_slide
+
+    assert resolved is target_slide
+
+
+def test_action_setting_target_slide_setter_assigns_named_slide() -> None:
+    part = ActionPartStub(relate_to_rid="rId42")
+    action_setting = ActionSetting(
+        _c_nvpr(b'<a:hlinkClick action="ppaction://macro" r:id="rId9"/>'),
+        ParentProxy(part=part),
+    )
+    target_slide = SlideTargetStub(part="target-slide-part")
+
+    action_setting.target_slide = target_slide
+
+    assert part.dropped_rids == ["rId9"]
+    assert part.relate_to_calls == [("target-slide-part", RT.SLIDE, False)]
+    assert action_setting._element.hlinkClick is not None
+    assert action_setting._element.hlinkClick.action == "ppaction://hlinksldjump"
+    assert action_setting._element.hlinkClick.rId == "rId42"
+
+
+def test_action_setting_target_slide_setter_clears_action_on_none() -> None:
+    part = ActionPartStub()
+    action_setting = ActionSetting(
+        _c_nvpr(b'<a:hlinkClick action="ppaction://macro" r:id="rId9"/>'),
+        ParentProxy(part=part),
+    )
+
+    action_setting.target_slide = None
+
+    assert part.dropped_rids == ["rId9"]
+    assert action_setting._element.hlinkClick is None
+
+
+@pytest.mark.parametrize(
+    ("children", "expected_dropped_rids"),
+    [
+        (b"", []),
+        (b"<a:hlinkClick/>", []),
+        (b'<a:hlinkClick r:id="rId8"/>', ["rId8"]),
+    ],
+)
+def test_action_setting_clear_click_action(
+    children: bytes, expected_dropped_rids: list[str]
+) -> None:
+    part = ActionPartStub()
+    action_setting = ActionSetting(_c_nvpr(children), ParentProxy(part=part))
+
+    action_setting._clear_click_action()
+
+    assert part.dropped_rids == expected_dropped_rids
+    assert action_setting._element.hlinkClick is None
+
+
+@pytest.mark.parametrize(
+    ("children", "target_refs", "expected"),
+    [
+        (b"", {}, None),
+        (b"<a:hlinkClick/>", {}, None),
+        (b'<a:hlinkClick r:id="rId1"/>', {"rId1": "https://example.com"}, "https://example.com"),
+    ],
+)
+def test_hyperlink_address_getter(
+    children: bytes, target_refs: dict[str, str], expected: str | None
+) -> None:
+    hyperlink = Hyperlink(
+        _c_nvpr(children),
+        ParentProxy(part=ActionPartStub(target_refs_by_rid=target_refs)),
+    )
+
+    address = hyperlink.address
+
+    assert address == expected
+
+
+def test_hyperlink_address_setter_adds_click_hyperlink() -> None:
+    part = ActionPartStub(relate_to_rid="rId3")
+    hyperlink = Hyperlink(_c_nvpr(), ParentProxy(part=part))
+
+    hyperlink.address = "https://example.com"
+
+    assert part.relate_to_calls == [("https://example.com", RT.HYPERLINK, True)]
+    assert hyperlink._element.hlinkClick is not None
+    assert hyperlink._element.hlinkClick.rId == "rId3"
+
+
+def test_hyperlink_address_setter_adds_hover_hyperlink_when_hover_true() -> None:
+    part = ActionPartStub(relate_to_rid="rId3")
+    hyperlink = Hyperlink(_c_nvpr(), ParentProxy(part=part), hover=True)
+
+    hyperlink.address = "https://example.com"
+
+    assert part.relate_to_calls == [("https://example.com", RT.HYPERLINK, True)]
+    assert hyperlink._element.hlinkHover is not None
+    assert hyperlink._element.hlinkHover.rId == "rId3"
+
+
+def test_hyperlink_address_setter_replaces_existing_hyperlink() -> None:
+    part = ActionPartStub(relate_to_rid="rId3")
+    hyperlink = Hyperlink(
+        _c_nvpr(b'<a:hlinkClick r:id="rId6"/>'),
+        ParentProxy(part=part),
+    )
+
+    hyperlink.address = "https://example.com/new"
+
+    assert part.dropped_rids == ["rId6"]
+    assert part.relate_to_calls == [("https://example.com/new", RT.HYPERLINK, True)]
+    assert hyperlink._element.hlinkClick is not None
+    assert hyperlink._element.hlinkClick.rId == "rId3"
+
+
+@pytest.mark.parametrize(
+    ("children", "hover"),
+    [
+        (b'<a:hlinkClick r:id="rId6"/>', False),
+        (b'<a:hlinkHover r:id="rId6"/>', True),
+    ],
+)
+def test_hyperlink_address_setter_removes_hyperlink_when_none(
+    children: bytes, hover: bool
+) -> None:
+    part = ActionPartStub()
+    hyperlink = Hyperlink(_c_nvpr(children), ParentProxy(part=part), hover=hover)
+
+    hyperlink.address = None
+
+    assert part.dropped_rids == ["rId6"]
+    if hover:
+        assert hyperlink._element.hlinkHover is None
+    else:
+        assert hyperlink._element.hlinkClick is None

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import sys
 from struct import calcsize, unpack_from
+from typing import Any
 
 from pptx.util import lazyproperty
 
@@ -50,14 +51,14 @@ class FontFiles(object):
         raise OSError("unsupported operating system")
 
     @classmethod
-    def _iter_font_files_in(cls, directory):
+    def _iter_font_files_in(cls, directory: str):
         """
         Generate the OpenType font files found in and under *directory*. Each
         item is a key/value pair. The key is a (family_name, is_bold,
         is_italic) 3-tuple, like ('Arial', True, False), and the value is the
         absolute path to the font file.
         """
-        for root, dirs, files in os.walk(directory):
+        for root, _dirs, files in os.walk(directory):
             for filename in files:
                 file_ext = os.path.splitext(filename)[1]
                 if file_ext.lower() not in (".otf", ".ttf"):
@@ -99,13 +100,13 @@ class _Font(object):
     for its name and style characteristics, e.g. bold and italic.
     """
 
-    def __init__(self, stream):
+    def __init__(self, stream: _Stream):
         self._stream = stream
 
     def __enter__(self):
         return self
 
-    def __exit__(self, exception_type, exception_value, exception_tb):
+    def __exit__(self, exception_type: Any, exception_value: Any, exception_tb: Any):
         self._stream.close()
 
     @property
@@ -131,7 +132,7 @@ class _Font(object):
             return False
 
     @classmethod
-    def open(cls, font_file_path):
+    def open(cls, font_file_path: str):
         """
         Return a |_Font| instance loaded from *font_file_path*.
         """
@@ -166,7 +167,7 @@ class _Font(object):
         tmpl = ">4sLLL"
         for i in range(count):
             offset = i * 16
-            tag, checksum, off, len_ = unpack_from(tmpl, bufr, offset)
+            tag, _, off, len_ = unpack_from(tmpl, bufr, offset)
             yield tag.decode("utf-8"), off, len_
 
     @lazyproperty
@@ -191,11 +192,11 @@ class _Font(object):
 class _Stream(object):
     """A thin wrapper around a binary file that facilitates reading C-struct values."""
 
-    def __init__(self, file):
+    def __init__(self, file: Any):
         self._file = file
 
     @classmethod
-    def open(cls, path):
+    def open(cls, path: str):
         """Return |_Stream| providing binary access to contents of file at `path`."""
         return cls(open(path, "rb"))
 
@@ -206,14 +207,14 @@ class _Stream(object):
         """
         self._file.close()
 
-    def read(self, offset, length):
+    def read(self, offset: int, length: int):
         """
         Return *length* bytes from this stream starting at *offset*.
         """
         self._file.seek(offset)
         return self._file.read(length)
 
-    def read_fields(self, template, offset=0):
+    def read_fields(self, template: str, offset: int = 0):
         """
         Return a tuple containing the C-struct fields in this stream
         specified by *template* and starting at *offset*.
@@ -228,7 +229,7 @@ class _BaseTable(object):
     Base class for OpenType font file table objects.
     """
 
-    def __init__(self, tag, stream, offset, length):
+    def __init__(self, tag: str, stream: _Stream, offset: int, length: int):
         self._tag = tag
         self._stream = stream
         self._offset = offset
@@ -241,7 +242,7 @@ class _HeadTable(_BaseTable):
     information for the font, including its bold and/or italic style.
     """
 
-    def __init__(self, tag, stream, offset, length):
+    def __init__(self, tag: str, stream: _Stream, offset: int, length: int):
         super(_HeadTable, self).__init__(tag, stream, offset, length)
 
     @property
@@ -279,7 +280,7 @@ class _NameTable(_BaseTable):
     name-related strings for the font.
     """
 
-    def __init__(self, tag, stream, offset, length):
+    def __init__(self, tag: str, stream: _Stream, offset: int, length: int):
         super(_NameTable, self).__init__(tag, stream, offset, length)
 
     @property
@@ -320,7 +321,7 @@ class _NameTable(_BaseTable):
         The key is a (platform_id, name_id) 2-tuple and the value is the unicode text
         corresponding to that key.
         """
-        table_format, count, strings_offset = self._table_header
+        _table_format, count, strings_offset = self._table_header
         table_bytes = self._table_bytes
 
         for idx in range(count):
@@ -339,7 +340,7 @@ class _NameTable(_BaseTable):
         return unpack_from(">HHHHHH", bufr, name_hdr_offset)
 
     @staticmethod
-    def _raw_name_string(bufr, strings_offset, str_offset, length):
+    def _raw_name_string(bufr: bytes, strings_offset: int, str_offset: int, length: int):
         """
         Return the *length* bytes comprising the encoded string in *bufr* at
         *str_offset* in the strings area beginning at *strings_offset*.
@@ -355,12 +356,18 @@ class _NameTable(_BaseTable):
         `idx` position in `bufr`. `strings_offset` is the index into `bufr` where actual
         name strings begin. The returned name is a unicode string.
         """
-        platform_id, enc_id, lang_id, name_id, length, str_offset = self._name_header(bufr, idx)
+        platform_id, enc_id, _lang_id, name_id, length, str_offset = self._name_header(bufr, idx)
         name = self._read_name_text(bufr, platform_id, enc_id, strings_offset, str_offset, length)
         return platform_id, name_id, name
 
     def _read_name_text(
-        self, bufr, platform_id, encoding_id, strings_offset, name_str_offset, length
+        self,
+        bufr: bytes,
+        platform_id: int,
+        encoding_id: int,
+        strings_offset: int,
+        name_str_offset: int,
+        length: int,
     ):
         """
         Return the unicode name string at *name_str_offset* or |None| if
@@ -390,7 +397,7 @@ class _NameTable(_BaseTable):
         return dict(self._iter_names())
 
 
-def _TableFactory(tag, stream, offset, length):
+def _TableFactory(tag: str, stream: _Stream, offset: int, length: int):
     """
     Return an instance of |Table| appropriate to *tag*, loaded from
     *font_file* with content of *length* starting at *offset*.

@@ -3,24 +3,34 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import overload
 
 from pptx.chart.datalabel import DataLabel
 from pptx.chart.marker import Marker
 from pptx.dml.chtfmt import ChartFormat
+from pptx.oxml.xmlchemy import BaseOxmlElement
 from pptx.util import lazyproperty
 
 
-class _BasePoints(Sequence):
+class _BasePoints(Sequence["Point"]):
     """
     Sequence providing access to the individual data points in a series.
     """
 
-    def __init__(self, ser):
+    def __init__(self, ser: BaseOxmlElement):
         super(_BasePoints, self).__init__()
         self._element = ser
         self._ser = ser
 
-    def __getitem__(self, idx):
+    @overload
+    def __getitem__(self, idx: int) -> "Point": ...
+
+    @overload
+    def __getitem__(self, idx: slice) -> list["Point"]: ...
+
+    def __getitem__(self, idx: int | slice):
+        if isinstance(idx, slice):
+            return [self[i] for i in range(*idx.indices(self.__len__()))]
         if idx < 0 or idx >= self.__len__():
             raise IndexError("point index out of range")
         return Point(self._ser, idx)
@@ -58,7 +68,7 @@ class Point(object):
     font of its data label.
     """
 
-    def __init__(self, ser, idx):
+    def __init__(self, ser: BaseOxmlElement, idx: int):
         super(Point, self).__init__()
         self._element = ser
         self._ser = ser
