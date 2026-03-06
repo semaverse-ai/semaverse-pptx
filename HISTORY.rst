@@ -3,6 +3,20 @@
 Release History
 ---------------
 
+1.3.0 (2026-03-06)
+++++++++++++++++++
+
+- Modernize unit testing suite with syrupy snapshots and flat pytest functions.
+- Add comprehensive static type hints across core modules.
+- Fix ``CaseInsensitiveDict`` key handling.
+- Update development environment documentation (uv, ruff, pyright, pre-commit).
+- Restore Python 3.9 - 3.13 compatibility.
+
+1.2.0 (2026-03-04)
+++++++++++++++++++
+
+- Migrate dependency management to uv and extras.
+
 1.1.0 (2026-03-04)
 ++++++++++++++++++
 
